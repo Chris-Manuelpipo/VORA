@@ -149,6 +149,20 @@ const schema = z.object({
   DATABASE_SSL: boolean('false'),
 
   /**
+   * Délai pour ÉTABLIR une connexion à PostgreSQL.
+   *
+   * 5 s suffisaient pour une base locale, où la connexion prend 5 ms. Contre une base
+   * gérée et distante, la seule poignée de main TLS coûte 0,8 à 2 s (mesuré sur
+   * Clever Cloud depuis Yaoundé), et l'authentification SCRAM ajoute trois allers-retours
+   * par-dessus : le budget était trop juste, et `npm run seed` échouait sur un
+   * « Connection terminated due to connection timeout » qui n'accusait rien de précis.
+   *
+   * 10 s ne coûtent rien en local — ce délai ne se déclenche que si quelque chose ne va
+   * pas — et `GET /health` garde sa propre limite de 2 s, donc la supervision reste vive.
+   */
+  DATABASE_CONNECT_TIMEOUT_MS: z.coerce.number().int().min(1000).max(60_000).default(10_000),
+
+  /**
    * Applique les migrations au démarrage. Vrai par défaut, y compris en local où c'est
    * un no-op de quelques millisecondes : une base en retard sur le code est un bug qu'on
    * découvre au pire moment. `false` pour un déploiement où les migrations sont jouées

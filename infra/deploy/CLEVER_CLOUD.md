@@ -179,6 +179,7 @@ raisonnable ; ne les posez que si vous voulez changer le comportement.
 | `POSTGRESQL_ADDON_URI` | auto | — | Publiée par l'add-on lié. Utilisée si `DATABASE_URL` est absente. |
 | `DATABASE_URL` | — | — | Prioritaire sur la précédente. À poser seulement pour viser une autre base. |
 | `DATABASE_SSL` | ✅ `true` | `false` | Chiffre la connexion sans exiger que Node reconnaisse le certificat de l'add-on. Laissez `false` en local. |
+| `DATABASE_CONNECT_TIMEOUT_MS` | — | `10000` | Délai pour établir une connexion. La poignée de main TLS vers un add-on distant coûte 1 à 2 s ; 5 s étaient trop justes. |
 | `MIGRATE_ON_BOOT` | — | `true` | Applique les migrations au démarrage. `false` seulement si une étape séparée s'en charge. |
 
 ### Sécurité
@@ -401,6 +402,10 @@ Lisez les dernières lignes de `clever logs` : le processus dit **pourquoi** il 
 4. **Nombre de connexions** : les petits add-ons plafonnent bas. L'API ouvre jusqu'à
    10 connexions ; un `npm run seed` lancé en parallèle en prend d'autres.
    `select count(*) from pg_stat_activity;`
+5. **`Connection terminated due to connection timeout`** : ce n'est pas le réseau, c'est
+   le budget. Vérifiez que le port répond (`nc -vz <hôte> <port>`), puis relevez
+   `DATABASE_CONNECT_TIMEOUT_MS`. La poignée de main TLS vers un add-on distant prend 1 à
+   2 s à elle seule, avant même l'authentification.
 
 Le contrôle passe volontairement à 503 au bout de **2 secondes** sans réponse plutôt que
 d'attendre : une instance qui pend est retirée de la rotation au lieu de distribuer des

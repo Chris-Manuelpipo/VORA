@@ -1,0 +1,12 @@
+{
+  "apps": [
+    {
+      "app_id": "app_9ee3bcaa-0993-4578-9096-9d50334595c5",
+      "org_id": "user_6abb7604-ff37-4aca-9c35-c8555f0ef5a8",
+      "deploy_url": "https://github.com/Chris-Manuelpipo/VORA.git",
+      "git_ssh_url": "https://github.com/Chris-Manuelpipo/VORA.git",
+      "name": "VORA",
+      "alias": "VORA"
+    }
+  ]
+}

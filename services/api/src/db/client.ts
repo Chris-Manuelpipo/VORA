@@ -15,8 +15,9 @@ pg.types.setTypeParser(pg.types.builtins.INT8, (value) => Number(value));
 export const pool = new pg.Pool({
   connectionString: config.DATABASE_URL,
   max: config.isTest ? 4 : 10,
-  // Le réseau du hackathon est capricieux : mieux vaut échouer vite et reconnecter.
-  connectionTimeoutMillis: 5000,
+  // Assez large pour une base gérée et distante : la poignée de main TLS seule y coûte
+  // une à deux secondes. Voir DATABASE_CONNECT_TIMEOUT_MS dans lib/config.ts.
+  connectionTimeoutMillis: config.DATABASE_CONNECT_TIMEOUT_MS,
   idleTimeoutMillis: 30_000,
   application_name: 'vora-api',
   // `rejectUnauthorized: false` chiffre le transport sans vérifier la chaîne de
