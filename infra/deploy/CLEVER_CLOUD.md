@@ -75,11 +75,17 @@ copiés par `scripts/copy-migrations.mjs`).
 Dans *Environment variables* :
 
 ```
-CC_PRE_BUILD_HOOK=npm run build
+CC_POST_BUILD_HOOK=npm run build
 ```
 
-Si le build échoue avec `tsc: not found` ou `Cannot find module 'typescript'`, c'est que
-les dépendances de développement n'ont pas été installées. Ajoutez alors :
+**`CC_POST_BUILD_HOOK`, pas `CC_PRE_BUILD_HOOK`.** Le hook *pre-build* s'exécute **avant**
+l'installation des dépendances : `npm run build` y appellerait un `tsc` qui n'existe pas
+encore, et le déploiement échouerait en quelques secondes sur `tsc: not found`. Le hook
+*post-build* tourne une fois `node_modules/` en place.
+
+Si le build échoue quand même avec `tsc: not found` ou `Cannot find module 'typescript'`,
+c'est que les dépendances de développement ont été élaguées — `typescript` en est une.
+Ajoutez alors :
 
 ```
 CC_NODE_DEV_DEPENDENCIES=install
@@ -101,7 +107,7 @@ QUOTE_HMAC_SECRET=<openssl rand -hex 32>
 CORS_ORIGINS=https://<votre-back-office>
 PUBLIC_BASE_URL=https://<votre-app>.cleverapps.io
 DATABASE_SSL=true
-CC_PRE_BUILD_HOOK=npm run build
+CC_POST_BUILD_HOOK=npm run build
 ```
 
 **Ne recopiez pas les valeurs de `.env.example`.** Le démarrage est refusé si
@@ -146,8 +152,8 @@ raisonnable ; ne les posez que si vous voulez changer le comportement.
 | `LOG_LEVEL` | — | `info` | `fatal`·`error`·`warn`·`info`·`debug`·`trace`·`silent`. |
 | `TZ` | — | `Africa/Douala` | Fuseau du processus. |
 | `COMMIT_ID` | auto | `inconnu` | Renseignée par Clever Cloud sur un déploiement git. Exposée par `/health`. |
-| `CC_PRE_BUILD_HOOK` | ✅ `npm run build` | — | Compile le TypeScript et copie les migrations. |
-| `CC_NODE_DEV_DEPENDENCIES` | si besoin | — | `install` si le build ne trouve pas `typescript`. |
+| `CC_POST_BUILD_HOOK` | ✅ `npm run build` | — | Compile le TypeScript et copie les migrations. **Pas** `CC_PRE_BUILD_HOOK` : il s'exécute avant l'installation des dépendances, donc sans `tsc`. |
+| `CC_NODE_DEV_DEPENDENCIES` | si besoin | — | `install` si le build ne trouve pas `typescript` (dépendances de développement élaguées). |
 
 ### Base de données
 
@@ -323,7 +329,7 @@ Lisez les dernières lignes de `clever logs` : le processus dit **pourquoi** il 
 | `HOST=127.0.0.1 en production` | `HOST` posée à tort | Retirez la variable. |
 | `JWT_SECRET porte encore la valeur d'exemple` | Valeur de `.env.example` recopiée | `openssl rand -hex 32`. |
 | `DEMO_MODE=true avec NODE_ENV=production` | Combinaison interdite | Voir l'encadré du § 3. |
-| `Cannot find module '.../dist/index.js'` | Le build n'a pas tourné | `CC_PRE_BUILD_HOOK=npm run build` (§ 2.3). |
+| `Cannot find module '.../dist/index.js'` | Le build n'a pas tourné | `CC_POST_BUILD_HOOK=npm run build` (§ 2.3). |
 
 ### L'application démarre mais `/health` répond 503
 
