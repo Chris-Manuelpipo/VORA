@@ -17,6 +17,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
     "seed": "tsx src/db/seed/index.ts",
+    "seed:prod": "node dist/db/seed/index.js",
     "demo": "tsx src/demo/reset.ts",
     "test": "node ../../scripts/test-db.mjs",
     "test:unit": "vitest run unit.test",

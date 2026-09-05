@@ -272,22 +272,62 @@ cd /home/bas/app_xxx/services/api && npm run db:migrate
 l'arrêté préfectoral, la grille tarifaire et les comptes de démonstration : aucun
 redémarrage ne doit les réécrire.
 
+Sans lui : `POST /v1/quotes` répond **`TARIFF_NOT_FOUND`**, la recherche de repères ne
+rend rien, et **aucune zone moto n'existe — donc le géorepérage ne refuse plus rien.**
+
+> ⚠️ **`npm run seed` NE MARCHE PAS sur l'instance déployée.** Il passe par `tsx`, une
+> dépendance de développement, élaguée à l'installation. Utilisez **`npm run seed:prod`**,
+> qui exécute le seed déjà compilé dans `dist/`.
+
+### Méthode A — depuis l'instance (recommandée)
+
+Sur **votre poste**, une seule fois :
+
 ```bash
-clever ssh                      # depuis la racine du dépôt, application déjà liée
-cd /home/bas/app_xxx            # le chemin exact est affiché à la connexion
-npm run seed
+npm install -g clever-tools     # l'outil en ligne de commande de Clever Cloud
+clever login                    # ouvre le navigateur, puis revient au terminal
 ```
 
-Le seed est **idempotent** : il crée ce qui manque et laisse le reste tel quel. Sans lui,
-`POST /v1/quotes` répond `TARIFF_NOT_FOUND` — aucune grille n'est publiée.
+Puis, depuis la racine du dépôt :
 
-Alternative si `clever ssh` n'est pas disponible : lancez-le depuis votre poste contre la
-base distante.
+```bash
+clever link app_9ee3bcaa-0993-4578-9096-9d50334595c5    # une seule fois
+clever ssh
+```
+
+Vous êtes maintenant **dans le conteneur**. Le répertoire de l'application est affiché à
+la connexion ; c'est celui-ci :
+
+```bash
+cd /home/bas/app_9ee3bcaa-0993-4578-9096-9d50334595c5
+npm run seed:prod
+exit
+```
+
+### Méthode B — depuis votre poste, contre la base distante
+
+Si `clever ssh` ne passe pas (pare-feu, clé SSH non déclarée), le seed peut tourner
+depuis chez vous. Récupérez l'URI de l'add-on dans **Console → add-on PostgreSQL →
+Informations**, puis :
 
 ```bash
 cd services/api
-DATABASE_URL="$POSTGRESQL_ADDON_URI" DATABASE_SSL=true npm run seed
+DATABASE_URL="postgresql://…l'URI de l'add-on…" DATABASE_SSL=true npm run seed
 ```
+
+Ici `npm run seed` convient : c'est **votre** poste, `tsx` y est installé.
+
+> L'URI contient le mot de passe de la base. Ne la collez ni dans un canal d'équipe, ni
+> dans un fichier suivi par git.
+
+### Vérifier que ça a marché
+
+```bash
+curl -s https://<votre-app>.cleverapps.io/v1/geo/zones?kind=moto_forbidden
+```
+
+Vous devez voir **une** zone, « Centre urbain — interdiction moto », avec son polygone.
+Une `FeatureCollection` vide signifie que le seed n'a pas tourné.
 
 ### Créer le compte ops
 
