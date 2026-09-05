@@ -1162,6 +1162,55 @@ describe('annulation : gratuite dans les 2 min ou sous 300 m, payante ensuite', 
     });
   }, 30_000);
 
+  it('un chauffeur qui a DÉJÀ roulé peut accepter : le compteur reste un entier', async () => {
+    // Régression. Le compteur kilométrique s'accumule en flottant ; la colonne
+    // `driver_odometer_start_m` est un `integer`. Un chauffeur immobile écrivait 0 et
+    // passait ; un chauffeur ayant roulé écrivait 292,558… et PostgreSQL refusait
+    // l'acceptation. Le bug ne se voyait qu'après un vrai déplacement — c'est le
+    // simulateur de démonstration qui l'a fait apparaître.
+    driverPresence.clear();
+
+    const passenger = await createPassenger(app, 'Aïcha Compteur');
+    const driver = await createDriver(app, { displayName: 'Serge Compteur' });
+    await goOnline(driver);
+
+    // Le chauffeur roule AVANT de recevoir la moindre offre.
+    for (const point of [
+      { lat: 3.8585, lng: 11.4885 },
+      { lat: 3.8562, lng: 11.4878 },
+    ]) {
+      await app.inject({
+        method: 'POST',
+        url: '/v1/driver/position',
+        headers: auth(driver),
+        payload: point,
+      });
+    }
+
+    const odometre = driverPresence.odometer(driver.id);
+    expect(odometre).not.toBeNull();
+    expect(odometre).toBeGreaterThan(0);
+    expect(Number.isInteger(odometre)).toBe(true);
+
+    const quote = await askQuote(passenger, MELEN, OBILI);
+    const created = await order(passenger, offerOf(quote, 'eco').quoteId!, 'eco');
+    const rideId = created.json().id;
+
+    const offer = await waitForOffer(rideId, driver.id);
+    const accept = await app.inject({
+      method: 'POST',
+      url: `/v1/driver/offers/${offer.id}/accept`,
+      headers: auth(driver),
+    });
+
+    expect(accept.statusCode).toBe(200);
+    expect(accept.json().accepted).toBe(true);
+
+    const ride = await ridesRepository.findRideRow(rideId);
+    expect(ride?.status).toBe('accepted');
+    expect(Number.isInteger(ride?.driverOdometerStartM)).toBe(true);
+  }, 40_000);
+
   it('le chauffeur redevient disponible dès l’annulation', async () => {
     const { passenger, driver, rideId } = await courseAcceptee('Aïcha Rapide');
     expect(driverPresence.get(driver.id)?.availability).toBe('on_ride');

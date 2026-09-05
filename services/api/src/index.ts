@@ -75,7 +75,31 @@ async function prepareDatabase(): Promise<void> {
 
 await prepareDatabase();
 
-const app = await buildApp();
+/**
+ * LE SEUL ENDROIT DU DÉPÔT QUI CHARGE LE SIMULATEUR.
+ *
+ * `index.ts` n'est pas un module métier : c'est le montage du processus. Il décide, en
+ * lisant DEMO_MODE, si l'application sert en plus les routes de démonstration.
+ *
+ * L'import est DYNAMIQUE et sous condition : quand DEMO_MODE=false, le fichier
+ * `demo/routes.js` n'est jamais lu, ses dépendances ne sont jamais chargées, la flotte
+ * n'existe pas et `/v1/demo/*` répond 404 — un 404 de routeur, pas un 403 de garde.
+ * Le produit tourne sans le simulateur parce qu'il ne le connaît pas.
+ */
+const demoPlugins = [];
+let startDemoFleet: (() => Promise<void>) | null = null;
+
+if (config.DEMO_MODE) {
+  const { demoRoutes } = await import('./demo/routes.js');
+  const { startSimulator } = await import('./demo/simulator.js');
+  demoPlugins.push(demoRoutes);
+  startDemoFleet = async () => {
+    await startSimulator(app);
+  };
+  logger.warn('DEMO_MODE=true : routes /v1/demo/* montées et flotte simulée active.');
+}
+
+const app = await buildApp({ plugins: demoPlugins });
 
 // La passerelle se greffe sur le serveur HTTP de Fastify : il faut donc qu'il existe et
 // que `app.jwt` soit décoré, d'où le `ready()` avant le `listen()`. Les tests, eux,
@@ -94,6 +118,10 @@ const shutdown = async (signal: string): Promise<void> => {
   stopping = true;
 
   app.log.info({ signal }, 'Arrêt demandé');
+  if (config.DEMO_MODE) {
+    const { stopSimulator } = await import('./demo/simulator.js');
+    await stopSimulator().catch(() => undefined);
+  }
   driverPresence.stop();
   await closeRealtime();
   await app.close();
@@ -118,6 +146,10 @@ try {
     },
     `VORA API à l'écoute sur ${config.HOST}:${config.PORT}`,
   );
+
+  // La flotte simulée démarre UNE FOIS LE PORT OUVERT : elle appelle l'API comme un
+  // client, et son démarrage ne doit pas retarder le contrôle de santé de la plateforme.
+  if (startDemoFleet) await startDemoFleet();
 } catch (error) {
   app.log.error(error);
   driverPresence.stop();

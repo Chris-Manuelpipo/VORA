@@ -44,6 +44,7 @@ import {
 import { computeDriverEarnings, formatAmount } from '../pricing/fare.js';
 import { redeemQuote } from '../pricing/service.js';
 import { driverPresence } from '../dispatch/presence.js';
+import * as dispatch from '../dispatch/service.js';
 import {
   boardingCodeMatches,
   forgetBoardingCode,
@@ -126,6 +127,38 @@ export async function listRides(
   const rides = bundles.map((bundle) => toRideDto(bundle, { id: viewer.id, role: viewer.role }));
 
   return { rides, next_cursor: hasMore && last ? last.createdAt.toISOString() : null };
+}
+
+export interface PayableRide {
+  id: string;
+  passengerId: string;
+  driverId: string | null;
+  status: RideStatus;
+  paymentMethod: PaymentMethod;
+  /** Le montant dû : le prix final s'il existe, sinon le prix ferme du devis. */
+  amount: number;
+}
+
+/**
+ * Ce que le module `payments` a besoin de savoir d'une course pour l'encaisser — et
+ * rien de plus.
+ *
+ * `rides` possède la course : c'est donc lui qui expose cette vue, plutôt que de laisser
+ * un autre module lire sa table (CLAUDE.md § 7). Le jour où encaisser demandera une
+ * condition supplémentaire, elle s'ajoutera ici, une fois, et vaudra pour tout le monde.
+ */
+export async function payableRide(rideId: string): Promise<PayableRide | null> {
+  const ride = await repository.findRideRow(rideId);
+  if (!ride) return null;
+
+  return {
+    id: ride.id,
+    passengerId: ride.passengerId,
+    driverId: ride.driverId,
+    status: ride.status,
+    paymentMethod: ride.paymentMethod,
+    amount: ride.priceFinal ?? ride.priceQuoted,
+  };
 }
 
 // ─── Diffusion ───────────────────────────────────────────────────────────────
@@ -704,8 +737,7 @@ async function cancelByDriver(
     patch: { cancelledBy: 'driver', cancelReason: reason ?? null, cancelFee: 0 },
   });
 
-  const dispatch = await import('../dispatch/repository.js');
-  await dispatch.recordDriverCancellation(driverId);
+  await dispatch.noteDriverCancellation(driverId);
 
   finishRide(cancelled);
   announce(cancelled, { feeXaf: 0, free: true });
@@ -756,12 +788,11 @@ export async function markPaid(input: {
       paymentMethod: input.method,
     });
 
-    const dispatch = await import('../dispatch/repository.js');
     // En espèces, le chauffeur encaisse le brut : il doit à VORA la commission et la
     // retenue DGI. En Mobile Money, VORA encaisse et reverse : aucune dette.
     const cashDue =
       input.method === 'cash' ? (paid.commission ?? 0) + (paid.dgiAmount ?? 0) : 0;
-    await dispatch.completeRideStats(paid.driverId, cashDue);
+    await dispatch.noteRideCompleted(paid.driverId, cashDue);
   }
 
   finishRide(paid);

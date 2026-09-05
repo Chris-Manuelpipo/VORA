@@ -6,37 +6,19 @@
 // chauffeur resté « en ligne » d'une démonstration précédente — mais SANS refaire
 // `db:reset`, qui rejouerait les migrations et reséèmerait 120 repères pour rien.
 //
-// CE QUI EST EFFACÉ : tout ce qui est transactionnel — courses, journal, devis, offres,
-// gains, paiements, notes, clés d'idempotence.
-// CE QUI RESTE : les comptes, les véhicules, les repères, les zones, les tarifs. Ce sont
-// les données de référence ; les effacer coûterait une minute de reséquençage à chaque
-// répétition.
+// Ce qui est effacé et ce qui reste : voir `dataset.ts`, partagé avec l'endpoint
+// `POST /v1/demo/reset` pour qu'il n'existe qu'UNE définition de « repartir de zéro ».
 //
 // Ce fichier vit dans `demo/` et n'est importé par AUCUN module métier (CLAUDE.md § 7).
 
-import { sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { closeDatabase, db } from '../db/client.js';
 import { DEMO_ACCOUNTS, seedAll } from '../db/seed/index.js';
 import { config } from '../lib/config.js';
 import { formatVoraId } from '../modules/identity/vora-id.js';
 import { users } from '../db/schema.js';
-import { eq } from 'drizzle-orm';
-
-/**
- * Tables vidées, dans cet ordre. `CASCADE` suffirait depuis `rides`, mais les nommer
- * toutes rend la liste relisible : quand une table apparaîtra dans le schéma, on verra
- * tout de suite si elle a sa place ici ou dans les données de référence.
- */
-const TRANSACTIONAL_TABLES = [
-  'ride_events',
-  'dispatch_offers',
-  'driver_earnings',
-  'payment_intents',
-  'ratings',
-  'idempotency_keys',
-  'rides',
-  'quotes',
-] as const;
+import { FLEET } from './fleet.js';
+import { resetDemoData } from './dataset.js';
 
 function refuse(reason: string, fix: string): never {
   console.error(`\n\x1b[31m✗ ${reason}\x1b[0m\n   ${fix}\n`);
@@ -62,23 +44,9 @@ async function main(): Promise<void> {
   const target = new URL(config.DATABASE_URL);
   console.log(`· Remise à zéro de la démonstration sur ${target.pathname.slice(1)}`);
 
-  await db.execute(
-    sql.raw(`TRUNCATE TABLE ${TRANSACTIONAL_TABLES.join(', ')} RESTART IDENTITY CASCADE`),
-  );
-  console.log(`✓  ${TRANSACTIONAL_TABLES.length} tables transactionnelles vidées`);
-
-  // Les chauffeurs repartent hors ligne et sans dette : un chauffeur laissé « en ligne »
-  // par la démonstration précédente recevrait des courses que personne ne conduit.
-  await db.execute(sql`
-    UPDATE driver_profiles
-       SET online = false,
-           cash_debt = 0,
-           current_vehicle_id = coalesce(
-             current_vehicle_id,
-             (select v.id from vehicles v where v.driver_id = driver_profiles.user_id and v.active limit 1)
-           )
-  `);
-  console.log('✓  Chauffeurs remis hors ligne, dettes d’espèces à zéro');
+  const report = await resetDemoData();
+  console.log(`✓  ${report.tables} tables transactionnelles vidées`);
+  console.log(`✓  ${report.drivers} chauffeurs remis hors ligne, dettes d'espèces à zéro`);
 
   // Le seed est idempotent : il recrée ce qui manquerait sans dupliquer le reste.
   await seedAll();
@@ -105,6 +73,14 @@ async function printCredentials(): Promise<void> {
   console.log(
     '\n  Un compte ops n’est pas semé : créez-le avec POST /v1/auth/otp/verify puis\n' +
       "  passez son rôle à « ops » en base (npm run db:psql).\n",
+  );
+
+  const cars = FLEET.filter((member) => member.kind === 'car').length;
+  const motos = FLEET.length - cars;
+  console.log(
+    `  Flotte simulée : ${FLEET.length} chauffeurs (${cars} voitures, ${motos} motos),\n` +
+      `  démarrée automatiquement au lancement de l'API tant que DEMO_MODE=true.\n` +
+      `  Pilotage : POST /v1/demo/scenario  ·  en-tête X-Demo-Token: ${config.DEMO_CONTROL_TOKEN}\n`,
   );
 }
 

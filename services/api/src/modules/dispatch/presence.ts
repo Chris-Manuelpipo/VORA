@@ -124,7 +124,13 @@ export class InMemoryDriverPresenceStore implements DriverPresenceStore {
   }
 
   odometer(driverId: string): number | null {
-    return this.get(driverId)?.odometerM ?? null;
+    const presence = this.get(driverId);
+    if (!presence) return null;
+    // ENTIER de mètres. Le compteur s'accumule en flottant pour ne pas dériver sur des
+    // milliers de relevés, mais il SORT arrondi : `rides.driver_odometer_start_m` est une
+    // colonne `integer`, et un flottant y provoque une erreur PostgreSQL au moment de
+    // l'acceptation — c'est-à-dire au pire moment, sur un chauffeur qui a déjà roulé.
+    return Math.round(presence.odometerM);
   }
 
   get(driverId: string): DriverPresence | null {

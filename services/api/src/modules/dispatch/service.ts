@@ -179,6 +179,26 @@ export function nearestApproachEtaS(pickup: LatLng, kind: VehicleKind): number |
   return approachEtaS({ lat: nearest.lat, lng: nearest.lng }, pickup, kind);
 }
 
+// ─── Statistiques du chauffeur, appelées par le module `rides` ───────────────
+//
+// `driver_profiles` appartient au dispatch : c'est lui qui s'en sert pour classer les
+// chauffeurs (§ 5.4). Le module `rides` sait qu'une course s'est terminée ou qu'un
+// chauffeur a annulé, mais il n'a pas à écrire dans une table qui n'est pas la sienne —
+// il le dit au dispatch, qui en tire les conséquences sur le score.
+
+/** Le chauffeur a annulé : sa fiabilité baisse, donc son score. */
+export async function noteDriverCancellation(driverId: string): Promise<void> {
+  await repository.recordDriverCancellation(driverId);
+}
+
+/**
+ * Course terminée et payée. `cashDue` est ce que le chauffeur doit à VORA quand il a
+ * encaissé des espèces — commission et retenue DGI qu'il a gardées en main.
+ */
+export async function noteRideCompleted(driverId: string, cashDue: number): Promise<void> {
+  await repository.completeRideStats(driverId, cashDue);
+}
+
 /**
  * Carte live de la page ops. Prénom et ID VORA suffisent à identifier un chauffeur au
  * téléphone ; ni numéro ni e-mail ne franchissent cette frontière (CLAUDE.md § 5.6).

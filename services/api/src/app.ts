@@ -7,6 +7,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import {
   serializerCompiler,
   validatorCompiler,
+  type FastifyPluginAsyncZod,
   type ZodTypeProvider,
 } from 'fastify-type-provider-zod';
 import { registerAuth } from './lib/auth.js';
@@ -44,7 +45,23 @@ async function checkDatabase(): Promise<'up' | 'down'> {
   return Promise.race([probe, timeout]);
 }
 
-export async function buildApp(): Promise<FastifyInstance> {
+export interface BuildOptions {
+  /**
+   * Greffons enregistrés sous `/v1` EN PLUS des modules métier.
+   *
+   * Ce paramètre existe pour UNE raison : le simulateur de démonstration expose des
+   * routes (`/v1/demo/*`) qui ne doivent exister que si DEMO_MODE=true — et ce fichier,
+   * qui est le cœur de l'application, ne doit contenir AUCUNE référence à `demo/`.
+   * C'est `index.ts`, le point d'entrée du processus, qui décide de charger ou non ce
+   * module ; l'application, elle, se contente d'enregistrer ce qu'on lui donne.
+   *
+   * Conséquence vérifiable : `buildApp()` sans argument sert le produit entier. C'est ce
+   * que font tous les tests d'intégration, et c'est ce que fait la production.
+   */
+  plugins?: FastifyPluginAsyncZod[];
+}
+
+export async function buildApp(options: BuildOptions = {}): Promise<FastifyInstance> {
   const app = Fastify({
     logger: loggerOptions,
     trustProxy: true,
@@ -118,6 +135,11 @@ export async function buildApp(): Promise<FastifyInstance> {
       await v1.register(dispatchRoutes);
       await v1.register(paymentsRoutes);
       await v1.register(opsRoutes);
+
+      // Greffons optionnels — voir `BuildOptions.plugins`. Vide en production.
+      for (const plugin of options.plugins ?? []) {
+        await v1.register(plugin);
+      }
     },
     { prefix: '/v1' },
   );

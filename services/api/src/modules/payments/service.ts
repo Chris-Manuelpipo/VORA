@@ -14,7 +14,6 @@ import { AppError } from '../../lib/errors.js';
 import type { PaymentMethod } from '../../db/schema.js';
 import { formatAmount } from '../pricing/fare.js';
 import * as rides from '../rides/service.js';
-import * as ridesRepository from '../rides/repository.js';
 import * as repository from './repository.js';
 import { PAYMENT_METHODS } from './repository.js';
 import type { MobileMoneyResponse, PaymentMethodsResponse } from './schemas.js';
@@ -70,13 +69,13 @@ export function listMethods(): PaymentMethodsResponse {
  * comptabilité de la journée a deux formes selon le moyen de paiement.
  */
 export async function confirmCash(rideId: string, driverId: string) {
-  const ride = await ridesRepository.findRideRow(rideId);
+  const ride = await rides.payableRide(rideId);
   if (!ride) throw new AppError('NOT_FOUND', 'Cette course est introuvable.');
   if (ride.driverId !== driverId) {
     throw new AppError('FORBIDDEN', "Cette course n'est pas la vôtre.");
   }
 
-  const amount = ride.priceFinal ?? ride.priceQuoted;
+  const { amount } = ride;
   const intent = await repository.createIntent({
     rideId,
     method: 'cash',
@@ -112,7 +111,7 @@ export async function payWithMobileMoney(
   rideId: string,
   passengerId: string,
 ): Promise<MobileMoneyResponse> {
-  const ride = await ridesRepository.findRideRow(rideId);
+  const ride = await rides.payableRide(rideId);
   if (!ride) throw new AppError('NOT_FOUND', 'Cette course est introuvable.');
   if (ride.passengerId !== passengerId) {
     throw new AppError('FORBIDDEN', "Cette course n'est pas la vôtre.");
@@ -130,7 +129,7 @@ export async function payWithMobileMoney(
     };
   }
 
-  const amount = ride.priceFinal ?? ride.priceQuoted;
+  const { amount } = ride;
   const intent = await repository.createIntent({
     rideId,
     method: 'mobile_money',

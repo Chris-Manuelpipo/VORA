@@ -78,6 +78,20 @@ const schema = z.object({
   DEMO_MODE: boolean('false'),
   DEMO_OTP_CODE: z.string().regex(/^\d{6}$/).default('123456'),
 
+  /**
+   * Jeton des endpoints de pilotage de la démonstration (`/v1/demo/*`). Ces routes ne
+   * sont montées que si DEMO_MODE=true, et DEMO_MODE est interdit en production : le
+   * jeton protège donc surtout d'un camarade facétieux sur le réseau du hackathon.
+   */
+  DEMO_CONTROL_TOKEN: z.string().min(4).default('vora-demo'),
+  /** Accélération de la course simulée : ×8 par défaut. Une course de 20 min en 2 min 30. */
+  DEMO_RIDE_SPEEDUP: z.coerce.number().min(1).max(60).default(8),
+  /** Le chauffeur simulé accepte entre 4 et 8 s : assez pour qu'on voie le compte à rebours. */
+  DEMO_ACCEPT_MIN_S: z.coerce.number().min(0).default(4),
+  DEMO_ACCEPT_MAX_S: z.coerce.number().min(0).default(8),
+  /** Pause après « Je suis arrivé », le temps de montrer le code sur le téléphone. */
+  DEMO_BOARDING_PAUSE_S: z.coerce.number().min(0).default(6),
+
   // Durée de vie et tolérance d'un code de vérification.
   OTP_TTL_S: z.coerce.number().int().min(30).max(3600).default(300),
   OTP_MAX_ATTEMPTS: z.coerce.number().int().min(1).max(10).default(5),
