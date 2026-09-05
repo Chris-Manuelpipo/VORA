@@ -9,18 +9,38 @@ import dotenv from 'dotenv';
 import { z } from 'zod';
 
 /**
- * Le `.env` vit à la racine du dépôt, mais l'API démarre depuis `services/api`.
- * On remonte donc jusqu'à le trouver, au lieu de dépendre du répertoire courant.
+ * Le `.env` vit à la RACINE DU DÉPÔT, mais l'API démarre depuis `services/api`.
+ * On remonte donc jusqu'à lui.
+ *
+ * Et on remonte jusqu'à la racine, pas jusqu'au premier `.env` rencontré : c'est ce même
+ * fichier que lisent `scripts/db-setup.mjs` et `scripts/test-db.mjs`. Un `.env` oublié dans
+ * `services/api/` ferait travailler l'API sur une base et l'outillage sur une autre, sans
+ * le moindre message. La racine se reconnaît à son `.git` ; à défaut (image Docker, tarball
+ * sans historique), on retombe sur le premier `.env` trouvé.
  */
 function loadDotEnv(): string | null {
   let directory = dirname(fileURLToPath(import.meta.url));
+  let nearest: string | null = null;
+
   for (let depth = 0; depth < 6; depth += 1) {
     const candidate = resolve(directory, '.env');
+    const isRepositoryRoot = existsSync(resolve(directory, '.git'));
+
     if (existsSync(candidate)) {
-      dotenv.config({ path: candidate });
-      return candidate;
+      if (isRepositoryRoot) {
+        dotenv.config({ path: candidate });
+        return candidate;
+      }
+      nearest ??= candidate;
     }
+
+    if (isRepositoryRoot) break;
     directory = resolve(directory, '..');
+  }
+
+  if (nearest) {
+    dotenv.config({ path: nearest });
+    return nearest;
   }
   return null;
 }
@@ -64,9 +84,21 @@ const schema = z.object({
 
   QUOTE_TTL_S: z.coerce.number().int().min(30).default(120),
 
+  // Base des liens publics de partage de trajet. Le lien est ouvert par un proche, dans
+  // un navigateur, hors de l'application : il lui faut une adresse joignable depuis
+  // l'extérieur, pas l'hôte interne sur lequel l'API écoute.
+  PUBLIC_BASE_URL: z.string().url().default('http://localhost:3000'),
+  // Un trajet partagé reste consultable quelques heures : le temps du trajet, plus la
+  // marge pour que le proche ouvre le lien après coup. Au-delà, le jeton ne vaut plus rien.
+  SHARE_LINK_TTL_S: z.coerce.number().int().min(300).default(4 * 3600),
+
   OSRM_BASE_URL: z.string().url().default('https://router.project-osrm.org'),
   OSRM_PROFILE: z.string().default('driving'),
   OSRM_TIMEOUT_MS: z.coerce.number().int().min(200).default(2000),
+  // Interrupteur de démonstration : `false` force le repli haversine sans toucher au
+  // réseau. CLAUDE.md § 3 demande d'avoir essayé le repli AVANT de passer devant le
+  // jury ; sans ce drapeau, l'essayer demande de débrancher le wifi de la salle.
+  OSRM_ENABLED: boolean('true'),
   FALLBACK_DISTANCE_FACTOR: z.coerce.number().min(1).default(1.35),
   FALLBACK_SPEED_KMH: z.coerce.number().min(1).default(22),
 
@@ -77,9 +109,45 @@ const schema = z.object({
 
   PAYMENT_PROVIDER: z.enum(['simulated']).default('simulated'),
   PAYMENT_SIMULATED_DELAY_MS: z.coerce.number().int().min(0).default(3000),
+
+  // ─── Déploiement ───────────────────────────────────────────────────────────
+
+  /**
+   * Empreinte du commit déployé, exposée par `GET /health`. Clever Cloud renseigne
+   * `COMMIT_ID` tout seul sur un déploiement git : savoir QUELLE version répond est la
+   * première question qu'on se pose quand quelque chose ne va pas.
+   */
+  COMMIT_ID: z.string().default('inconnu'),
+
+  /**
+   * TLS vers PostgreSQL. Les add-ons gérés présentent souvent un certificat que Node ne
+   * reconnaît pas : `DATABASE_SSL=true` chiffre la connexion sans exiger cette chaîne de
+   * confiance. C'est un compromis, et il est explicite — on ne l'active pas par défaut,
+   * et jamais sur une base locale.
+   */
+  DATABASE_SSL: boolean('false'),
+
+  /**
+   * Applique les migrations au démarrage. Vrai par défaut, y compris en local où c'est
+   * un no-op de quelques millisecondes : une base en retard sur le code est un bug qu'on
+   * découvre au pire moment. `false` pour un déploiement où les migrations sont jouées
+   * par une étape séparée.
+   */
+  MIGRATE_ON_BOOT: boolean('true'),
 });
 
-const parsed = schema.safeParse(process.env);
+/**
+ * Clever Cloud publie l'URI de l'add-on PostgreSQL sous `POSTGRESQL_ADDON_URI`, et non
+ * sous `DATABASE_URL`. On accepte les deux plutôt que d'obliger à recopier une chaîne de
+ * connexion à la main dans la console : une chaîne recopiée est une chaîne qui finit par
+ * pointer sur l'ancienne base après une restauration.
+ */
+const environment = {
+  ...process.env,
+  DATABASE_URL: process.env.DATABASE_URL || process.env.POSTGRESQL_ADDON_URI,
+};
+
+const parsed = schema.safeParse(environment);
 
 if (!parsed.success) {
   const details = parsed.error.issues
@@ -105,12 +173,58 @@ export const config = {
     .filter((radius) => Number.isFinite(radius)),
 } as const;
 
+/** Refuse de démarrer, avec la correction exacte à appliquer. */
+function refuse(problem: string, fix: string): never {
+  console.error(`\n\x1b[31m✗ ${problem}\x1b[0m\n   ${fix}\n`);
+  process.exit(1);
+}
+
 // Le mode démonstration n'a rien à faire en production : le code OTP y serait constant.
 if (config.isProduction && config.DEMO_MODE) {
-  console.error(
-    '\n\x1b[31m✗ DEMO_MODE=true avec NODE_ENV=production : le code de vérification serait constant.\x1b[0m\n   Mettez DEMO_MODE=false.\n',
+  refuse(
+    'DEMO_MODE=true avec NODE_ENV=production : le code de vérification serait constant.',
+    'Mettez DEMO_MODE=false.',
   );
-  process.exit(1);
+}
+
+// ─── Garde-fous de déploiement ───────────────────────────────────────────────
+//
+// Ils ne servent qu'en production, et ils servent tous à la même chose : transformer une
+// erreur silencieuse — une API injoignable, un jeton signé avec la clé d'exemple — en un
+// refus de démarrer, lisible dans les journaux au premier essai.
+
+if (config.isProduction) {
+  // Une plateforme comme Clever Cloud route le trafic vers le conteneur : écouter sur la
+  // boucle locale rend l'application injoignable, et le symptôme est un contrôle de
+  // santé qui échoue sans la moindre erreur applicative. C'est long à diagnostiquer.
+  if (['127.0.0.1', 'localhost', '::1'].includes(config.HOST)) {
+    refuse(
+      `HOST=${config.HOST} en production : l'API ne serait joignable que depuis son propre conteneur.`,
+      'Laissez HOST vide (0.0.0.0 par défaut) ou mettez HOST=0.0.0.0.',
+    );
+  }
+
+  // Les valeurs d'exemple de `.env.example` signent de vrais jetons et de vrais devis.
+  for (const [name, value] of [
+    ['JWT_SECRET', config.JWT_SECRET],
+    ['QUOTE_HMAC_SECRET', config.QUOTE_HMAC_SECRET],
+  ] as const) {
+    if (value.includes('changeme')) {
+      refuse(
+        `${name} porte encore la valeur d'exemple : n'importe qui pourrait forger un jeton.`,
+        `Générez-en une : openssl rand -hex 32, puis mettez-la dans ${name}.`,
+      );
+    }
+  }
+
+  // Un avertissement, pas un refus : une application mobile n'envoie pas d'en-tête
+  // Origin, donc une API qui ne sert que Flutter fonctionne très bien ainsi.
+  if (config.corsOrigins.some((origin) => origin.includes('localhost'))) {
+    console.warn(
+      `⚠  CORS_ORIGINS contient localhost en production (${config.CORS_ORIGINS}).\n` +
+        "   Sans effet pour les applications mobiles, mais le back-office déployé sera refusé.\n",
+    );
+  }
 }
 
 export type Config = typeof config;
