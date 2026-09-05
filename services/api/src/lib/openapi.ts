@@ -31,6 +31,11 @@ const TAGS = [
   { name: 'dispatch', description: 'Mise en ligne, position, réponse aux offres.' },
   { name: 'payments', description: 'Espèces et Mobile Money (adaptateur simulé).' },
   { name: 'ops', description: 'Tableau de bord, dossiers chauffeurs, majoration.' },
+  {
+    name: 'support',
+    description:
+      'Assistant de support : il explique, il ne décide rien. Sur action explicite seulement.',
+  },
   { name: 'demo', description: 'Pilotage de la démonstration (DEMO_MODE uniquement).' },
 ];
 

@@ -124,6 +124,24 @@ const schema = z.object({
   PAYMENT_PROVIDER: z.enum(['simulated']).default('simulated'),
   PAYMENT_SIMULATED_DELAY_MS: z.coerce.number().int().min(0).default(3000),
 
+  // ─── Assistant de support (module isolé, hors chemin critique) ─────────────
+  //
+  // Les quatre variables sont VIDES par défaut, et c'est délibéré : sans elles,
+  // `POST /v1/support/ask` répond quand même, à partir de la FAQ seule. Un support qui
+  // se tait parce qu'une clé manque ne serait pas un support.
+
+  /**
+   * `false` (défaut) : l'assistant répond uniquement à partir de la FAQ, sans réseau.
+   * `true` : il tente d'abord le modèle distant, et retombe sur la FAQ au moindre
+   * problème (clé absente, appel en échec, délai dépassé).
+   */
+  LLM_ENABLED: boolean('false'),
+  /** Racine d'une API compatible OpenAI, sans `/chat/completions`. Vide → FAQ seule. */
+  LLM_BASE_URL: z.string().default(''),
+  LLM_MODEL: z.string().default(''),
+  /** Secret. Absent → FAQ seule, sans erreur et sans appel réseau. */
+  LLM_API_KEY: z.string().default(''),
+
   // ─── Déploiement ───────────────────────────────────────────────────────────
 
   /**

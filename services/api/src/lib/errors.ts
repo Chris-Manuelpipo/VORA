@@ -48,6 +48,13 @@ export const ERROR_CODES = {
   DEBT_LIMIT_REACHED: 403,
   NO_DRIVER_AVAILABLE: 503,
   PAYMENT_FAILED: 402,
+
+  // Messages prédéfinis liés à la course
+  MESSAGING_CLOSED: 409,
+  MESSAGE_QUOTA_REACHED: 429,
+
+  // Assistant de support
+  SUPPORT_QUOTA_REACHED: 429,
 } as const;
 
 export type ErrorCode = keyof typeof ERROR_CODES;

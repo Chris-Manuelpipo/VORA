@@ -22,6 +22,7 @@ import { opsRoutes } from './modules/ops/routes.js';
 import { paymentsRoutes } from './modules/payments/routes.js';
 import { pricingRoutes } from './modules/pricing/routes.js';
 import { ridesRoutes } from './modules/rides/routes.js';
+import { supportRoutes } from './modules/support/routes.js';
 import { databaseHealth } from './db/client.js';
 
 /**
@@ -175,6 +176,9 @@ export async function buildApp(options: BuildOptions = {}): Promise<FastifyInsta
       await v1.register(dispatchRoutes);
       await v1.register(paymentsRoutes);
       await v1.register(opsRoutes);
+      // Isolé du chemin critique : aucun des modules ci-dessus ne l'appelle, et l'API
+      // sert des courses à l'identique s'il tombe.
+      await v1.register(supportRoutes);
 
       // Greffons optionnels — voir `BuildOptions.plugins`. Vide en production.
       for (const plugin of options.plugins ?? []) {

@@ -14,6 +14,7 @@ import { db } from '../db/client.js';
 import { clearBoardingCodes } from '../modules/rides/boarding.js';
 import { resetSurge } from '../modules/pricing/surge.js';
 import { resetRoutingCircuit } from '../modules/geo/routing.js';
+import { resetSupportMemory } from '../modules/support/limits.js';
 import { clearBuffers } from '../realtime/bus.js';
 import { driverPresence } from '../modules/dispatch/presence.js';
 
@@ -67,6 +68,8 @@ export async function resetDemoData(): Promise<ResetReport> {
   clearBuffers();
   resetSurge();
   resetRoutingCircuit();
+  // Quota horaire et cache de l'assistant : une démonstration repart avec ses 10 questions.
+  resetSupportMemory();
 
   return { tables: TRANSACTIONAL_TABLES.length, drivers: drivers.rowCount ?? 0 };
 }
