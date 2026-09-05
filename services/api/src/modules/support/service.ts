@@ -60,6 +60,21 @@ export async function ask(input: AskInput): Promise<AnswerDto> {
   }
 
   const context = await buildContext(viewer, input.question);
+
+  /**
+   * CONTEXTE VIDE → ESCALADE IMMÉDIATE, SANS APPELER LE MODÈLE.
+   *
+   * Aucune fiche ne correspond et la personne n'a pas de course en cours : il n'y a
+   * littéralement rien à partir de quoi répondre. Interroger un modèle ici, c'est le
+   * mettre en situation d'inventer — et le payer pour ça. Le serveur sait avant lui
+   * qu'il ne sait pas ; il le dit, et un humain reprend.
+   */
+  if (context.faq.length === 0 && !context.ride) {
+    const answer = fallbackAnswer(context);
+    log({ input, provider: 'aucun', startedAt, answer, hasRide: false });
+    return toDto(answer);
+  }
+
   const key = cacheKey(input.question, contextFingerprint(context));
 
   const cached = readCache(key);
