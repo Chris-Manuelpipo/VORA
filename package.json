@@ -16,6 +16,7 @@
     "db:psql": "node scripts/db-shell.mjs",
     "dev": "npm run dev --workspace services/api",
     "build": "npm run build --workspace services/api",
+    "prestart": "npm run build",
     "start": "npm run start --workspace services/api",
     "db:generate": "npm run db:generate --workspace services/api",
     "db:migrate": "npm run db:migrate --workspace services/api",

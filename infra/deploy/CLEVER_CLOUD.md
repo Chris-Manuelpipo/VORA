@@ -66,33 +66,51 @@ environnements ne divergent pas.
    lien qui publie `POSTGRESQL_ADDON_URI` dans l'environnement de l'application ; sans
    lui, l'API démarre sans base et s'arrête sur `PostgreSQL ne répond pas`.
 
-### 2.3 Faire compiler le TypeScript
+### 2.3 La compilation : rien à configurer
 
-L'API démarre depuis `dist/`, il faut donc compiler avant de lancer. Le script de build
-compile **et copie les migrations** (`tsc` n'émet que du JavaScript ; les `.sql` sont
-copiés par `scripts/copy-migrations.mjs`).
-
-Dans *Environment variables* :
+**Il n'y a aucune variable à poser pour le build.** L'API démarre depuis `dist/`, et
+c'est `npm` lui-même qui s'en charge : le script `prestart` de la racine appelle
+`npm run build` avant `start`, sans qu'aucun réglage de plateforme n'intervienne.
 
 ```
-CC_POST_BUILD_HOOK=npm run build
+npm start
+ └─ prestart : npm run build
+     ├─ tsc -p tsconfig.build.json      compile src/ SANS les tests
+     └─ scripts/copy-migrations.mjs     copie les .sql dans dist/
+ └─ start    : node dist/index.js
 ```
 
-**`CC_POST_BUILD_HOOK`, pas `CC_PRE_BUILD_HOOK`.** Le hook *pre-build* s'exécute **avant**
-l'installation des dépendances : `npm run build` y appellerait un `tsc` qui n'existe pas
-encore, et le déploiement échouerait en quelques secondes sur `tsc: not found`. Le hook
-*post-build* tourne une fois `node_modules/` en place.
+Trois pièges ont été réglés dans le dépôt plutôt que dans la console, parce qu'un réglage
+de console se perd et ne se teste pas :
 
-Si le build échoue quand même avec `tsc: not found` ou `Cannot find module 'typescript'`,
-c'est que les dépendances de développement ont été élaguées — `typescript` en est une.
-Ajoutez alors :
+1. **`tsc` doit exister à l'installation.** Une plateforme qui installe avec
+   `NODE_ENV=production` élague les dépendances de développement. `typescript`,
+   `@types/node` et `@types/pg` sont donc de vraies `dependencies` de `services/api` :
+   le build fonctionne quel que soit le mode d'installation.
+2. **Les tests ne sont pas compilés.** `tsconfig.build.json` les exclut. Ils importent
+   `vitest` et `socket.io-client`, deux dépendances de développement : les compiler
+   ferait échouer le build de production pour des fichiers qui n'y servent à rien.
+   `npm run typecheck` continue de tout vérifier, tests compris.
+3. **`tsc` n'émet que du JavaScript.** Les migrations sont des `.sql` écrits à la main ;
+   `scripts/copy-migrations.mjs` les copie dans `dist/db/migrations`. Sans cette copie,
+   l'API démarre, applique zéro migration, et sert des `relation "users" does not exist`
+   sur une base pourtant saine.
+
+> **Hooks `CC_*` : inutiles ici, et à ne pas poser.** `CC_PRE_BUILD_HOOK` s'exécute
+> **avant** l'installation des dépendances — `npm run build` y appellerait un `tsc`
+> inexistant, et le déploiement échouerait en quelques secondes sur `tsc: not found`.
+> `CC_POST_BUILD_HOOK=npm run build` fonctionnerait, mais ferait le travail deux fois.
+
+### 2.3 bis Version de Node
+
+Le dépôt vise **Node 20** (`.nvmrc`, `CLAUDE.md`). `engines` accepte `>=20`, donc la
+plateforme peut choisir une version bien plus récente — un déploiement observé tournait
+sous Node 26 alors que les tests passent sous Node 20. Ça marche, mais ça fait diverger
+production et développement. Pour aligner les deux :
 
 ```
-CC_NODE_DEV_DEPENDENCIES=install
+CC_NODE_VERSION=20
 ```
-
-La commande de démarrage par défaut (`npm start`) convient : à la racine du dépôt elle
-délègue au workspace, qui lance `node dist/index.js`.
 
 ### 2.4 Poser les variables d'environnement
 
@@ -107,7 +125,6 @@ QUOTE_HMAC_SECRET=<openssl rand -hex 32>
 CORS_ORIGINS=https://<votre-back-office>
 PUBLIC_BASE_URL=https://<votre-app>.cleverapps.io
 DATABASE_SSL=true
-CC_POST_BUILD_HOOK=npm run build
 ```
 
 **Ne recopiez pas les valeurs de `.env.example`.** Le démarrage est refusé si
@@ -152,8 +169,8 @@ raisonnable ; ne les posez que si vous voulez changer le comportement.
 | `LOG_LEVEL` | — | `info` | `fatal`·`error`·`warn`·`info`·`debug`·`trace`·`silent`. |
 | `TZ` | — | `Africa/Douala` | Fuseau du processus. |
 | `COMMIT_ID` | auto | `inconnu` | Renseignée par Clever Cloud sur un déploiement git. Exposée par `/health`. |
-| `CC_POST_BUILD_HOOK` | ✅ `npm run build` | — | Compile le TypeScript et copie les migrations. **Pas** `CC_PRE_BUILD_HOOK` : il s'exécute avant l'installation des dépendances, donc sans `tsc`. |
-| `CC_NODE_DEV_DEPENDENCIES` | si besoin | — | `install` si le build ne trouve pas `typescript` (dépendances de développement élaguées). |
+| `CC_NODE_VERSION` | conseillé `20` | choix plateforme | Aligne la production sur `.nvmrc`. Sans elle, une version bien plus récente peut être choisie. |
+| `CC_PRE_BUILD_HOOK` / `CC_POST_BUILD_HOOK` | ❌ ne pas poser | — | Le build passe par le script `prestart` de npm (§ 2.3). Le hook *pre-build* échouerait sur `tsc: not found`. |
 
 ### Base de données
 
@@ -329,7 +346,8 @@ Lisez les dernières lignes de `clever logs` : le processus dit **pourquoi** il 
 | `HOST=127.0.0.1 en production` | `HOST` posée à tort | Retirez la variable. |
 | `JWT_SECRET porte encore la valeur d'exemple` | Valeur de `.env.example` recopiée | `openssl rand -hex 32`. |
 | `DEMO_MODE=true avec NODE_ENV=production` | Combinaison interdite | Voir l'encadré du § 3. |
-| `Cannot find module '.../dist/index.js'` | Le build n'a pas tourné | `CC_POST_BUILD_HOOK=npm run build` (§ 2.3). |
+| `Cannot find module '.../dist/index.js'` | Le build n'a pas tourné | Le script `prestart` doit exister à la racine (§ 2.3). Vérifiez que le journal montre `> vora@0.1.0 prestart` avant le démarrage. |
+| `sh: 1: tsc: not found` | `CC_PRE_BUILD_HOOK` posée | Supprimez-la : le hook tourne avant l'installation des dépendances (§ 2.3). |
 
 ### L'application démarre mais `/health` répond 503
 

@@ -1,0 +1,19 @@
+{
+  // VORA — compilation de PRODUCTION.
+  //
+  // Deux différences avec tsconfig.json, et elles vont ensemble :
+  //
+  //   1. les tests sont exclus. Ils n'ont rien à faire dans `dist/` — mais surtout, ils
+  //      importent `vitest` et `socket.io-client`, qui sont des dépendances de
+  //      DÉVELOPPEMENT. Sur une plateforme qui installe avec NODE_ENV=production, ces
+  //      paquets sont élagués : compiler les tests ferait échouer le build de production
+  //      pour des fichiers qui n'y servent à rien ;
+  //
+  //   2. `scripts/` est exclu aussi : ce sont des outils de poste de travail.
+  //
+  // tsconfig.json reste la référence du développement et de `npm run typecheck` : lui
+  // vérifie TOUT, tests compris, et c'est là que les erreurs doivent apparaître.
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist", "src/tests/**"]
+}
