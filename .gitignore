@@ -44,7 +44,12 @@ pgdata/
 # Captures et livrables générés
 captures/
 CLAUDE.md
-docs/.api-examples/
+# docs/ reste hors du dépôt (briefs, maquettes, PDF fournis) — SAUF les deux
+# livrables destinés au développeur frontend, qui travaille sur une autre machine
+# et n'a que GitHub pour les lire.
+docs/*
+!docs/API_CONTRACT.md
+!docs/api.http
 
 # Réponses capturées par npm run docs:api (regénérables)
 .api-examples/
