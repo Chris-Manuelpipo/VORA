@@ -145,3 +145,48 @@ describe('les modules métier ne se contournent pas entre eux', () => {
     ).toEqual([]);
   });
 });
+
+describe('le chemin critique ne dépend pas de l’assistant de support', () => {
+  // LA QUESTION DU JURY, deuxième version : « et si votre IA tombe ? »
+  //
+  // Le devis, la commande, le dispatch et le paiement ne doivent RIEN lui demander. Un
+  // assistant qui répond mal fait un support médiocre ; un assistant dont dépend une
+  // commande fait une application en panne. La frontière est asymétrique, comme pour le
+  // simulateur : `support/` appelle le service `rides` pour lire une course, jamais
+  // l'inverse.
+  it('aucun module métier n’importe support/', () => {
+    const offenders: string[] = [];
+    const modulesRoot = join(SRC, 'modules');
+
+    for (const file of filesUnder(modulesRoot)) {
+      if (relative(file).startsWith('modules/support/')) continue;
+
+      for (const specifier of importsOf(file)) {
+        if (/(^|\/)support\//.test(specifier)) {
+          offenders.push(`${relative(file)} → ${specifier}`);
+        }
+      }
+    }
+
+    expect(
+      offenders,
+      `Ces modules métier dépendent de l'assistant de support :\n  ${offenders.join('\n  ')}\n` +
+        "Le produit doit commander, dispatcher et encaisser sans lui.",
+    ).toEqual([]);
+  });
+
+  it('le support lit les courses par le SERVICE rides, pas par sa base', () => {
+    const contextFile = join(SRC, 'modules/support/context.ts');
+
+    // Le service applique le filtrage par destinataire de `toRideDto` : le net du
+    // chauffeur ne peut pas atterrir dans le contexte d'un passager. Lire la base
+    // directement contournerait ce filtre — et personne ne s'en apercevrait.
+    const imports = importsOf(contextFile);
+    expect(imports).toContain('../rides/service.js');
+    // Ni connexion à la base, ni repository : le seul chemin vers une course est le
+    // service qui sait déjà quoi montrer à qui. (Le type `UserRole`, lui, est effacé à
+    // la compilation — il ne donne accès à rien.)
+    expect(imports).not.toContain('../../db/client.js');
+    expect(imports.filter((specifier) => specifier.endsWith('repository.js'))).toEqual([]);
+  });
+});
