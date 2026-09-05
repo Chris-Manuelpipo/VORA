@@ -31,7 +31,13 @@ import {
   NO_SHOW_WAIT_S,
   vehicleKindForOffer,
 } from '../../domain/rules.js';
-import { assertTransition, isActive, type Actor, type RideStatus } from '../../domain/states.js';
+import {
+  assertTransition,
+  isActive,
+  nextStatuses,
+  type Actor,
+  type RideStatus,
+} from '../../domain/states.js';
 import { forget, publish } from '../../realtime/bus.js';
 import {
   driverRoom,
@@ -99,7 +105,11 @@ export async function getRide(
     // Le code n'est calculé que pour le passager : le chauffeur ne doit pas pouvoir le
     // faire apparaître, fût-ce dans un journal de requêtes.
     boardingCode: isPassenger ? await boardingCodeForPassenger(ride) : null,
-    cancellation: isActive(ride.status) ? cancellationPolicy(ride) : undefined,
+    // Seulement tant qu'annuler est RÉELLEMENT possible. `isActive` était trop large :
+    // une course payée est encore « vivante » (elle attend sa note), mais elle ne
+    // s'annule plus — et un bouton « Annuler » sur une course payée est un bug qui se
+    // voit à l'écran. C'est la machine à états qui tranche, pas une liste recopiée.
+    cancellation: canStillCancel(ride.status) ? cancellationPolicy(ride) : undefined,
     approachDistanceM: approachDistanceM(ride),
   });
 }
@@ -563,6 +573,11 @@ export async function noShow(
 }
 
 // ─── Annulation (CLAUDE.md § 5.3) ────────────────────────────────────────────
+
+/** Une annulation est-elle encore une transition permise depuis cet état ? */
+function canStillCancel(status: RideStatus): boolean {
+  return nextStatuses(status).some((next) => next.startsWith('cancelled_'));
+}
 
 export interface CancellationPolicy {
   free: boolean;

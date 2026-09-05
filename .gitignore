@@ -44,4 +44,7 @@ pgdata/
 # Captures et livrables générés
 captures/
 CLAUDE.md
-docs/
+docs/.api-examples/
+
+# Réponses capturées par npm run docs:api (regénérables)
+.api-examples/

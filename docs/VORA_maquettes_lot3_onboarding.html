@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VORA — Maquettes lot 3 · onboarding, messagerie et appel VORA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blanc:#FFFFFF;--bleu:#1F5EFF;--bleu-presse:#174BD1;--bleu-nuit:#0B2A6F;--bleu-ciel:#E8F0FF;--bleu-pale:#F4F7FF;
+  --jaune:#FFC42E;--encre:#1E293B;--gris:#5B6B84;--gris-clair:#94A3B8;--bordure:#DDE3EE;--surface:#F4F6FA;
+  --ok:#0F7A47;--ok-fond:#DDF5E7;--attention:#B25E00;--attention-fond:#FFF1DD;--sos:#D92D20;--sos-fond:#FDE3E1;
+  --font-display:'Sora','Trebuchet MS',system-ui,sans-serif;--font-body:'IBM Plex Sans','Segoe UI',Roboto,system-ui,sans-serif;
+  --ombre-2:0 4px 12px rgba(11,42,111,.10),0 2px 4px rgba(11,42,111,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;background:#EAEEF5;font-family:var(--font-body);color:var(--encre);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.board{max-width:1640px;margin:0 auto;padding:32px 32px 80px}
+.head{margin:0 0 40px;max-width:90ch}
+.head .eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--bleu);margin:0 0 6px}
+.head h1{font-family:var(--font-display);font-weight:800;color:var(--bleu-nuit);font-size:30px;margin:0 0 8px;letter-spacing:-.01em}
+.head p{margin:0 0 6px;color:var(--gris);font-size:15px;line-height:1.5}
+.head .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.head .legend span{background:#fff;border:1px solid var(--bordure);border-radius:999px;padding:5px 11px;font-size:12px;color:var(--gris)}
+.part{font-family:var(--font-display);font-weight:800;color:var(--bleu-nuit);font-size:24px;margin:0 0 24px;padding-top:16px;border-top:2px solid var(--bleu-nuit)}
+.lot{margin:0 0 60px;scroll-margin-top:24px}
+.lot h2{font-family:var(--font-display);font-weight:700;color:var(--bleu-nuit);font-size:20px;margin:0 0 4px}
+.lot .desc{color:var(--gris);font-size:14px;margin:0 0 18px;max-width:90ch;line-height:1.5}
+.frames{display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start}
+.item{width:360px}
+.item .state{font-size:12px;font-weight:600;color:var(--bleu-nuit);margin:0 0 8px 4px;text-transform:uppercase;letter-spacing:.06em}
+.item .cap{font-size:12px;color:var(--gris);margin:10px 4px 0;line-height:1.5}
+.item .cap b{color:var(--bleu-nuit);font-weight:600}
+
+.frame{position:relative;width:360px;height:800px;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 0 0 8px #0F172A,0 18px 40px rgba(11,42,111,.22);font-size:14px;line-height:1.35;color:var(--encre)}
+.frame.bleu{background:var(--bleu);color:#fff}
+.frame.nuit{background:var(--bleu-nuit);color:#fff}
+.sb{position:absolute;top:0;left:0;right:0;height:28px;background:linear-gradient(#fff 40%,rgba(255,255,255,0));display:flex;justify-content:space-between;align-items:center;padding:0 16px;font-size:12px;font-weight:600;color:var(--encre);z-index:5}
+.frame.bleu .sb,.frame.nuit .sb{color:#fff;background:none}
+.sb .r{display:flex;gap:6px;align-items:center}
+.sb i{display:inline-block;width:14px;height:8px;background:currentColor;border-radius:1px;opacity:.85}
+.sb i.b{width:18px;border-radius:3px}
+.gesture{position:absolute;bottom:6px;left:50%;width:100px;height:4px;margin-left:-50px;border-radius:2px;background:rgba(30,41,59,.30);z-index:12}
+.frame.bleu .gesture,.frame.nuit .gesture{background:rgba(255,255,255,.4)}
+.screen{position:absolute;top:28px;left:0;right:0;bottom:0;padding:12px 16px 26px}
+.top{display:flex;align-items:center;gap:10px;margin:0 0 14px}
+.back{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--encre);flex:none;margin-left:-8px}
+.back svg{width:22px;height:22px}
+.h{font-family:var(--font-display);font-weight:700;color:var(--bleu-nuit);font-size:22px;margin:0 0 6px;letter-spacing:-.01em;line-height:1.15}
+.h.big{font-size:26px}
+.sub{color:var(--gris);font-size:14px;margin:0 0 16px;line-height:1.45}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--bleu);margin:0 0 4px}
+.bottom{position:absolute;left:16px;right:16px;bottom:28px}
+.btn{height:52px;border-radius:12px;font-weight:600;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:2px solid transparent;font-family:var(--font-body)}
+.btn-primaire{background:var(--bleu);color:#fff}
+.btn-secondaire{background:#fff;color:var(--bleu);border-color:var(--bleu)}
+.btn-tertiaire{background:transparent;color:var(--bleu)}
+.btn-desactive{background:var(--surface);color:var(--gris-clair);border-color:var(--bordure)}
+.btn.tall{height:64px;font-size:18px}
+.btn + .btn{margin-top:8px}
+.btn svg{width:20px;height:20px}
+.field{display:flex;flex-direction:column;gap:6px;margin:0 0 14px}
+.field label{font-size:14px;font-weight:600}
+.field .in{display:flex;align-items:center;height:52px;border:1.5px solid var(--bordure);border-radius:12px;padding:0 14px;font-size:16px;background:#fff;gap:10px}
+.field .in.focus{border-color:var(--bleu);box-shadow:0 0 0 3px var(--bleu-ciel)}
+.field .in.err{border-color:var(--sos)}
+.field .in .pre{color:var(--gris);font-weight:500;padding-right:10px;border-right:1px solid var(--bordure)}
+.field .in .ph{color:var(--gris-clair)}
+.field .in .caret{width:2px;height:20px;background:var(--bleu);margin-left:-8px}
+.field .help{font-size:13px;color:var(--gris)}
+.field .help.err{color:var(--sos)}
+.field .in svg{width:20px;height:20px;color:var(--gris);margin-left:auto}
+.two{display:flex;gap:10px}.two .field{flex:1}
+.otp{display:flex;gap:8px;justify-content:center;margin:8px 0 10px}
+.otp span{width:46px;height:56px;border-radius:12px;border:1.5px solid var(--bordure);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:24px;color:var(--bleu-nuit)}
+.otp span.on{border-color:var(--bleu);background:var(--bleu-ciel)}
+.otp span.err{border-color:var(--sos);background:var(--sos-fond);color:var(--sos)}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 0}
+.key{height:54px;border-radius:12px;background:var(--surface);font-family:var(--font-display);font-weight:700;font-size:22px;display:flex;align-items:center;justify-content:center}
+.key.ghost{background:transparent}
+.lang{display:flex;flex-direction:column;gap:10px}
+.lang a{height:64px;border-radius:12px;border:2px solid var(--bordure);display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-family:var(--font-display);font-weight:700;font-size:18px;color:var(--bleu-nuit)}
+.lang a.on{border-color:var(--bleu);background:var(--bleu-ciel)}
+.lang a small{font-family:var(--font-body);font-weight:500;font-size:13px;color:var(--gris)}
+.avatar-add{width:96px;height:96px;border-radius:50%;background:var(--bleu-ciel);color:var(--bleu-nuit);font-family:var(--font-display);font-weight:700;font-size:34px;display:flex;align-items:center;justify-content:center;margin:0 auto 6px;position:relative}
+.avatar-add .cam{position:absolute;right:-2px;bottom:-2px;width:34px;height:34px;border-radius:50%;background:var(--bleu);color:#fff;display:flex;align-items:center;justify-content:center;border:3px solid #fff}
+.avatar-add .cam svg{width:16px;height:16px}
+.illu{border-radius:16px;background:var(--surface);border:1px solid var(--bordure);padding:16px;display:flex;flex-direction:column;align-items:center;gap:10px;margin:0 0 16px}
+.rowi{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--bordure)}
+.rowi:last-child{border-bottom:0}
+.rowi .ic{width:40px;height:40px;border-radius:10px;background:var(--bleu-pale);display:flex;align-items:center;justify-content:center;flex:none;color:var(--bleu)}
+.rowi .ic svg{width:20px;height:20px}
+.rowi .av{width:40px;height:40px;border-radius:50%;background:var(--bleu-ciel);color:var(--bleu-nuit);font-family:var(--font-display);font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.rowi .t{flex:1;min-width:0}
+.rowi .t b{font-weight:600;display:block}
+.rowi .t small{display:block;color:var(--gris);font-size:12px}
+.badge{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge svg{width:12px;height:12px}
+.badge-verifie{background:var(--bleu-ciel);color:var(--bleu-nuit)}
+.badge-ok{background:var(--ok-fond);color:var(--ok)}
+.badge-attention{background:var(--attention-fond);color:var(--attention)}
+.badge-sos{background:var(--sos-fond);color:var(--sos)}
+.badge-neutre{background:var(--surface);color:var(--gris)}
+.stepper{margin:0 0 16px}
+.stepper .bar{display:flex;gap:4px;margin:0 0 8px}
+.stepper .bar i{flex:1;height:4px;border-radius:2px;background:var(--bordure)}
+.stepper .bar i.on{background:var(--bleu)}
+.stepper .lbl{font-size:12px;font-weight:600;color:var(--gris);letter-spacing:.04em;text-transform:uppercase}
+.tiles{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0 0 14px}
+.tile{border:1.5px dashed var(--gris-clair);border-radius:12px;height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:600;color:var(--bleu);text-align:center;padding:8px;position:relative}
+.tile svg{width:24px;height:24px}
+.tile small{font-weight:400;color:var(--gris);font-size:11px}
+.tile.done{border:1.5px solid var(--ok);background:var(--ok-fond);color:var(--ok)}
+.tile.done .thumb{position:absolute;inset:6px;border-radius:8px;background:linear-gradient(135deg,#C9D6EA,#EDF0F5);opacity:.55}
+.tile.done .lbl{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px}
+.tile.bad{border:1.5px solid var(--sos);background:var(--sos-fond);color:var(--sos)}
+.tile.wide{grid-column:1 / -1;height:88px}
+.note{background:var(--bleu-pale);border-left:3px solid var(--bleu);padding:10px 12px;border-radius:0 12px 12px 0;font-size:13px;color:var(--encre);margin:0 0 14px;line-height:1.4}
+.note.warn{background:var(--attention-fond);border-color:var(--attention);color:var(--attention)}
+.note.bad{background:var(--sos-fond);border-color:var(--sos);color:var(--sos)}
+.check{display:flex;align-items:flex-start;gap:12px;padding:12px 0;font-size:14px}
+.check i{width:24px;height:24px;border-radius:6px;border:2px solid var(--gris-clair);flex:none;display:flex;align-items:center;justify-content:center}
+.check i.on{background:var(--bleu);border-color:var(--bleu);color:#fff}
+.check i svg{width:16px;height:16px}
+.dots{display:flex;gap:6px;justify-content:center;margin:10px 0}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--bordure)}
+.dots i.on{background:var(--bleu);width:20px;border-radius:4px}
+.code{display:flex;gap:8px;justify-content:center}
+.code span{width:44px;height:52px;border-radius:10px;background:var(--bleu-nuit);color:#fff;font-family:var(--font-display);font-weight:800;font-size:24px;display:flex;align-items:center;justify-content:center}
+.map{position:absolute;top:0;left:0;width:360px;height:560px;display:block}
+.ov{position:absolute;top:0;left:0;width:360px;height:560px;pointer-events:none}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;box-shadow:0 -6px 20px rgba(11,42,111,.10);padding:8px 16px 26px;z-index:6}
+.handle{width:36px;height:4px;border-radius:2px;background:var(--bordure);margin:4px auto 12px}
+.pill{position:absolute;top:40px;left:16px;right:16px;z-index:4;background:#fff;border-radius:12px;box-shadow:var(--ombre-2);padding:10px 12px;display:flex;align-items:center;gap:10px;font-size:14px}
+.pill small{display:block;color:var(--gris);font-size:11px}
+.pill svg{width:20px;height:20px;color:var(--bleu)}
+.banner{position:absolute;top:34px;left:12px;right:12px;z-index:7;background:var(--attention-fond);color:var(--attention);border:1px solid #F5D9AD;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:500;line-height:1.35}
+.status{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bordure);font-size:14px}
+.status:last-child{border-bottom:0}
+.status .t{flex:1}
+.status .t small{display:block;color:var(--gris);font-size:12px}
+.pulse{animation:pulse 1.8s ease-out infinite;transform-origin:center;transform-box:fill-box}
+@keyframes pulse{0%{transform:scale(.6);opacity:.7}100%{transform:scale(1.6);opacity:0}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none;opacity:.3}}
+
+.seg{display:flex;background:var(--surface);border-radius:12px;padding:4px;margin:0 0 14px}
+.seg span{flex:1;text-align:center;padding:9px 0;border-radius:9px;font-size:14px;font-weight:600;color:var(--gris)}
+.seg span.on{background:#fff;color:var(--bleu-nuit);box-shadow:var(--ombre-2)}
+.idbox{border:1.5px solid var(--bleu);background:var(--bleu-pale);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;margin:0 0 10px}
+.idbox .num{font-family:var(--font-display);font-weight:800;font-size:24px;color:var(--bleu-nuit);letter-spacing:.06em;font-variant-numeric:tabular-nums;line-height:1.1}
+.idbox .badge{margin-left:auto}
+.chathead{display:flex;align-items:center;gap:10px;padding:0 0 10px;border-bottom:1px solid var(--bordure);margin:0 0 6px}
+.chathead .av{width:40px;height:40px;border-radius:50%;background:var(--bleu-ciel);color:var(--bleu-nuit);font-family:var(--font-display);font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.chathead .t{flex:1;min-width:0}.chathead .t b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.chathead .t small{display:block;color:var(--gris);font-size:12px}
+.chathead .call{width:44px;height:44px;border-radius:12px;background:var(--bleu);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.chathead .call svg{width:22px;height:22px}
+.sysmsg{text-align:center;font-size:11px;color:var(--gris);margin:6px 0 10px}
+.chat{display:flex;flex-direction:column;gap:8px}
+.bub{max-width:80%;padding:10px 12px;border-radius:16px;font-size:14px;line-height:1.35}
+.bub.in{background:var(--surface);border-bottom-left-radius:4px;align-self:flex-start}
+.bub.out{background:var(--bleu);color:#fff;border-bottom-right-radius:4px;align-self:flex-end}
+.bub small{display:block;font-size:11px;opacity:.7;margin-top:4px}
+.voice{display:flex;align-items:center;gap:10px}
+.voice .play{width:32px;height:32px;border-radius:50%;background:var(--bleu);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.voice .play svg{width:16px;height:16px}
+.wave{display:flex;align-items:center;gap:2px;height:22px}
+.wave i{width:3px;border-radius:2px;background:currentColor;opacity:.6}
+.quick{display:flex;gap:8px;overflow:hidden;margin:0 0 10px}
+.quick span{flex:none;padding:8px 12px;border:1.5px solid var(--bordure);border-radius:999px;font-size:13px;font-weight:500;white-space:nowrap}
+.inbar{display:flex;align-items:center;gap:8px}
+.inbar .in{flex:1;height:48px;border:1.5px solid var(--bordure);border-radius:24px;padding:0 16px;display:flex;align-items:center;color:var(--gris-clair);font-size:15px}
+.inbar .mic{width:48px;height:48px;border-radius:50%;background:var(--bleu);color:#fff;display:flex;align-items:center;justify-content:center;flex:none}
+.inbar .mic svg{width:22px;height:22px}
+.inbar.rec .in{border-color:var(--sos);color:var(--sos);font-weight:600}
+.inbar.rec .mic{background:var(--sos);box-shadow:0 0 0 8px rgba(217,45,32,.18)}
+.callscr{position:absolute;inset:0;background:var(--bleu-nuit);color:#fff;display:flex;flex-direction:column;align-items:center;padding:64px 24px 36px;text-align:center}
+.callscr .eyebrow{color:#6D9BFF}
+.callscr .big{width:112px;height:112px;border-radius:50%;background:#12388F;font-family:var(--font-display);font-weight:800;font-size:42px;display:flex;align-items:center;justify-content:center;margin:16px 0 14px;position:relative}
+.callscr .big .v{position:absolute;right:-2px;bottom:-2px;width:30px;height:30px;border-radius:50%;background:#fff;color:var(--bleu);display:flex;align-items:center;justify-content:center}
+.callscr .big .v svg{width:18px;height:18px}
+.callscr .name{font-family:var(--font-display);font-weight:700;font-size:22px}
+.callscr .st{color:#B7C4E2;font-size:14px;margin:6px 0 0}
+.callscr .timer{font-family:var(--font-display);font-weight:800;font-size:30px;font-variant-numeric:tabular-nums;margin:4px 0 0}
+.callscr .hint{margin-top:auto;background:#12388F;border-radius:12px;padding:10px 12px;font-size:13px;color:#B7C4E2;width:100%}
+.callbtns{display:flex;gap:22px;margin-top:18px;align-items:flex-start}
+.cb{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;color:#B7C4E2;width:76px;text-align:center}
+.cb i{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#12388F;color:#fff}
+.cb i svg{width:28px;height:28px}
+.cb.hang i{background:var(--sos)}
+.cb.acc i{background:var(--ok);width:76px;height:76px}
+.cb.hang.lg i{width:76px;height:76px}
+.cb i.rot svg{transform:rotate(135deg)}
+.nuit .chathead{border-color:#12388F}.nuit .chathead .t small{color:#B7C4E2}.nuit .chathead .av{background:#12388F;color:#fff}
+.nuit .sysmsg{color:#8FA3CC}
+.nuit .bub.in{background:#12388F;color:#F4F7FF}
+.nuit .quick span{border-color:#12388F;color:#F4F7FF}
+.nuit .inbar .in{border-color:#12388F;color:#8FA3CC}
+.nuit .h{color:#fff}.nuit .sub{color:#B7C4E2}
+.nuit .back{color:#fff}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="vsym" viewBox="0 0 120 120"><path d="M26 24 L60 84 L94 24" fill="none" stroke="currentColor" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="86" r="16" fill="#FFC42E" stroke="var(--ring,#fff)" stroke-width="5"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-cam" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6l7-3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6-5.2-6-10.5a6 6 0 0 1 12 0C18 15.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 8.5l2.5 4 2.5-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 20a6 6 0 0 1 12 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18 8v6M15 11h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 10h18M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 3v4h4M9 12h6M9 16h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M4 13l1.5-5A2 2 0 0 1 7.4 6.5h9.2a2 2 0 0 1 1.9 1.5L20 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H4a1 1 0 0 1-1-1v-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="i-moto" viewBox="0 0 24 24"><circle cx="5.5" cy="16.5" r="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18.5" cy="16.5" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5.5 16.5L10 9h4l3 4.5h1.5M13 6h3l2 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-share" viewBox="0 0 24 24"><path d="M4 12h12M12 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="12" r="2" fill="currentColor"/></symbol>
+<symbol id="i-helmet" viewBox="0 0 24 24"><path d="M4 13a8 8 0 0 1 16 0v3H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M12 16v3M4 16h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="map" viewBox="0 0 360 560">
+  <rect width="360" height="560" fill="#F4F6FA"/>
+  <g fill="#EDF0F5"><rect x="0" y="0" width="82" height="120" rx="6"/><rect x="132" y="0" width="118" height="70" rx="6"/><rect x="292" y="0" width="68" height="92" rx="6"/><rect x="0" y="182" width="62" height="140" rx="6"/><rect x="122" y="118" width="88" height="112" rx="6"/><rect x="252" y="142" width="108" height="78" rx="6"/><rect x="70" y="362" width="88" height="118" rx="6"/><rect x="204" y="300" width="76" height="92" rx="6"/><rect x="302" y="282" width="58" height="128" rx="6"/><rect x="0" y="472" width="60" height="88" rx="6"/><rect x="204" y="442" width="140" height="118" rx="6"/></g>
+  <rect x="20" y="132" width="90" height="42" rx="8" fill="#E6F2EA"/>
+  <g fill="none" stroke="#DDE3EE" stroke-width="16" stroke-linecap="round"><path d="M-10 440 L370 110"/><path d="M100 -10 L120 570"/><path d="M230 -10 L290 570"/><path d="M-10 250 L370 230"/><path d="M-10 400 L370 470"/></g>
+  <g fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"><path d="M-10 440 L370 110"/><path d="M100 -10 L120 570"/><path d="M230 -10 L290 570"/><path d="M-10 250 L370 230"/><path d="M-10 400 L370 470"/></g>
+  <g fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"><path d="M40 60 L60 250"/><path d="M180 70 L200 230"/><path d="M300 92 L330 232"/><path d="M160 300 L200 490"/></g>
+  <g font-family="IBM Plex Sans, system-ui, sans-serif" font-size="11" fill="#5B6B84" font-weight="500"><text x="14" y="372">Ngoa-Ekellé</text><text x="262" y="132">Melen</text><text x="28" y="122">Cité U</text></g>
+</symbol>
+<symbol id="m-repere" viewBox="0 0 44 52"><path d="M22 48S6 34 6 20a16 16 0 0 1 32 0c0 14-16 28-16 28z" fill="#FFC42E" stroke="#fff" stroke-width="3"/><path d="M15 15l7 11 7-11" fill="none" stroke="#0B2A6F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-mute" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M4 4l16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z" fill="currentColor"/></symbol>
+<symbol id="i-spk" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a8 8 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-msg" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 7l9 6 9-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+</defs></svg>
+
+<div class="board">
+<header class="head">
+  <p class="eyebrow">Maquettes · lot 3 · onboarding · v0.1 · août 2026</p>
+  <h1>VORA — la première fois</h1>
+  <p>Côté passager, sept écrans pour aller de l'installation à l'accueil, dont trois qu'on peut sauter (photo, contacts de confiance, permission) ; plus le point de rendez-vous (PA-10) qui n'était pas dans le lot 1. Côté chauffeur, le dossier en cinq étapes avec sauvegarde à chaque étape, le suivi de la vérification, puis le guide et la charte. Chaque écran est montré avec l'état qui compte : format faux, code faux, permission refusée, photo floue, pièce refusée.</p>
+  <p><b style="color:var(--bleu-nuit)">Mise à jour du 30 août</b> : le compte se crée par téléphone <em>ou</em> par e-mail (un canal vérifié au minimum), chaque personne reçoit un ID VORA, et aucun numéro ne circule entre chauffeur et passager : la partie C montre la messagerie et l'appel VORA, communs aux deux applis.</p>
+  <div class="legend"><span>PA-01 → PA-07 Passager</span><span>PA-10 Point de rendez-vous</span><span>CH-01 → CH-02 Bienvenue chauffeur</span><span>CH-03 → CH-06 Dossier</span><span>CH-07 Statut</span><span>CH-08 Guide et charte</span><span>PA-23 / CH-21 Messagerie VORA</span><span>PA-24 / CH-22 Appel VORA</span></div>
+</header>
+
+<h2 class="part">A · Passager</h2>
+
+<!-- ======================================================= PA-01 / PA-02 -->
+<section class="lot" id="pa01">
+  <h2>PA-01 · Démarrage et PA-02 · Langue</h2>
+  <p class="desc">L'écran de démarrage disparaît avant qu'on le remarque. Le premier vrai écran pose une seule question, la langue, et donne la promesse en une phrase dans les deux langues.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">PA-01 · démarrage</p>
+      <div class="frame bleu">
+        <div class="sb"><span>21:40</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px"><svg width="104" height="104" style="color:#fff;--ring:#1F5EFF"><use href="#vsym"/></svg><div style="font-family:var(--font-display);font-weight:700;font-size:26px;letter-spacing:.14em">VORA</div></div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : fond Bleu VORA plein, symbole blanc, mot en Sora espacé. Moins de 300 ms, aucune animation.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">PA-02 · langue et bienvenue</p>
+      <div class="frame">
+        <div class="sb"><span>21:40</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div style="text-align:center;padding:40px 0 10px"><svg width="72" height="72" style="color:var(--bleu)"><use href="#vsym"/></svg></div>
+          <p class="h big" style="text-align:center">Bienvenue sur VORA</p>
+          <p class="sub" style="text-align:center">Prix ferme, chauffeurs vérifiés, chaque trajet compte.<br><span style="color:var(--gris-clair)">Fixed fares, verified drivers, every ride counts.</span></p>
+          <p class="eyebrow" style="text-align:center;margin:26px 0 10px">Choisissez votre langue · Choose your language</p>
+          <div class="lang">
+            <a class="on" href="#pa03">Français <small>Cameroun</small></a>
+            <a>English <small>Cameroon</small></a>
+          </div>
+          <div class="bottom"><p style="font-size:12px;color:var(--gris);text-align:center;margin:0">Vous pourrez changer de langue à tout moment dans votre profil.</p></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : deux grands boutons de langue, 64 px, sélection Bleu ciel. Pas de drapeau : le nom de la langue suffit et évite les débats.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= PA-03 / PA-04 -->
+<section class="lot" id="pa03">
+  <h2>PA-03 · Créer un compte et PA-04 · Code de vérification</h2>
+  <p class="desc">Téléphone ou e-mail, au choix : un seul canal vérifié suffit, l'autre s'ajoute plus tard depuis le profil. Le code fait 6 chiffres dans les deux cas. Ni le numéro ni l'e-mail ne seront jamais montrés à un chauffeur, et l'écran le dit avant de demander quoi que ce soit.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">PA-03 · par téléphone</p>
+      <div class="frame">
+        <div class="sb"><span>21:40</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div class="top"><a class="back" href="#pa01"><svg><use href="#i-back"/></svg></a></div>
+          <p class="h">Créer votre compte</p>
+          <p class="sub">Un code de vérification vous sera envoyé. Ni votre numéro ni votre e-mail ne seront montrés aux chauffeurs : ils vous joignent par la messagerie VORA.</p>
+          <div class="seg"><span class="on">Téléphone</span><span>E-mail</span></div>
+          <div class="field"><label>Numéro</label><div class="in focus"><span class="pre">+237</span>6 91 23 45 6<span class="caret"></span></div><span class="help">9 chiffres, MTN ou Orange</span></div>
+          <div class="keys"><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span><span class="key">8</span><span class="key">9</span><span class="key ghost"></span><span class="key">0</span><span class="key ghost">⌫</span></div>
+          <div class="bottom"><a class="btn btn-primaire" href="#pa04">Recevoir le code par SMS</a></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : sélecteur Téléphone / E-mail, champ avec préfixe fixe, pavé numérique. Le bouton dit par quel canal le code arrive.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">PA-03 · par e-mail</p>
+      <div class="frame">
+        <div class="sb"><span>21:40</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div class="top"><span class="back"><svg><use href="#i-back"/></svg></span></div>
+          <p class="h">Créer votre compte</p>
+          <p class="sub">Un code de vérification vous sera envoyé. Ni votre numéro ni votre e-mail ne seront montrés aux chauffeurs : ils vous joignent par la messagerie VORA.</p>
+          <div class="seg"><span>Téléphone</span><span class="on">E-mail</span></div>
+          <div class="field"><label>Adresse e-mail</label><div class="in focus">aicha.ngo@gmail.com<span class="caret"></span></div><span class="help">Le code arrive en moins d'une minute. Vérifiez les indésirables.</span></div>
+          <div class="note">Sans téléphone, vous ne recevrez pas les SMS de secours quand le réseau est faible. Vous pourrez en ajouter un plus tard dans votre profil.</div>
+          <div class="bottom"><a class="btn btn-primaire" href="#pa04b">Recevoir le code par e-mail</a></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : l'e-mail est un vrai choix, pas un pis-aller ; on dit seulement ce qu'on perd sans téléphone (les SMS de secours), sans insister.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">PA-03 · état : format faux</p>
+      <div class="frame">
+        <div class="sb"><span>21:40</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div class="top"><span class="back"><svg><use href="#i-back"/></svg></span></div>
+          <p class="h">Créer votre compte</p>
+          <p class="sub">Un code de vérification vous sera envoyé. Ni votre numéro ni votre e-mail ne seront montrés aux chauffeurs.</p>
+          <div class="seg"><span class="on">Téléphone</span><span>E-mail</span></div>
+          <div class="field"><label>Numéro</label><div class="in err"><span class="pre">+237</span>91 23 45</div><span class="help err">Le numéro doit avoir 9 chiffres après +237 et commencer par 6.</span></div>
+          <div class="keys"><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span><span class="key">8</span><span class="key">9</span><span class="key ghost"></span><span class="key">0</span><span class="key ghost">⌫</span></div>
+          <div class="bottom"><span class="btn btn-desactive">Recevoir le code par SMS</span></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : l'erreur dit la règle exacte. Le bouton désactivé est accompagné du message qui dit ce qui manque.</p>
+    </div>
+
+    <div class="item" id="pa04">
+      <p class="state">PA-04 · code reçu par SMS</p>
+      <div class="frame">
+        <div class="sb"><span>21:41</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div class="top"><a class="back" href="#pa03"><svg><use href="#i-back"/></svg></a></div>
+          <p class="h">Entrez le code reçu</p>
+          <p class="sub">Envoyé par SMS au +237 6 91 23 45 67. <a href="#pa03" style="color:var(--bleu);font-weight:600">Changer</a></p>
+          <div class="otp"><span class="on">4</span><span class="on">8</span><span class="on">2</span><span></span><span></span><span></span></div>
+          <p style="text-align:center;font-size:13px;color:var(--gris);margin:0 0 4px">Renvoyer le SMS dans 0:42</p>
+          <a class="btn btn-tertiaire" style="height:44px"><svg><use href="#i-phone"/></svg>Recevoir le code par appel</a>
+          <div class="keys"><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span><span class="key">8</span><span class="key">9</span><span class="key ghost"></span><span class="key">0</span><span class="key ghost">⌫</span></div>
+          <div class="bottom"><a class="btn btn-primaire" href="#pa05">Vérifier</a></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : six cases de code (remplies en Bleu ciel), compte à rebours de renvoi, repli par appel vocal toujours visible : à Yaoundé, le SMS met parfois deux minutes.</p>
+    </div>
+
+    <div class="item" id="pa04b">
+      <p class="state">PA-04 · code reçu par e-mail</p>
+      <div class="frame">
+        <div class="sb"><span>21:41</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div class="top"><span class="back"><svg><use href="#i-back"/></svg></span></div>
+          <p class="h">Entrez le code reçu</p>
+          <p class="sub">Envoyé par e-mail à aicha.ngo@gmail.com. Pas reçu ? Regardez dans les indésirables.</p>
+          <div class="otp"><span class="on">7</span><span class="on">3</span><span class="on">0</span><span class="on">9</span><span class="on">1</span><span></span></div>
+          <p style="text-align:center;font-size:13px;color:var(--gris);margin:0 0 4px">Renvoyer l'e-mail dans 0:42</p>
+          <a class="btn btn-tertiaire" style="height:44px"><svg><use href="#i-phone"/></svg>Utiliser un téléphone à la place</a>
+          <div class="keys"><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span><span class="key">8</span><span class="key">9</span><span class="key ghost"></span><span class="key">0</span><span class="key ghost">⌫</span></div>
+          <div class="bottom"><a class="btn btn-primaire" href="#pa05">Vérifier</a></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : même écran, même code. La seule différence est la sortie de secours : passer au téléphone si l'e-mail ne vient pas.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">PA-04 · état : code faux</p>
+      <div class="frame">
+        <div class="sb"><span>21:41</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div class="top"><span class="back"><svg><use href="#i-back"/></svg></span></div>
+          <p class="h">Entrez le code reçu</p>
+          <p class="sub">Envoyé par SMS au +237 6 91 23 45 67.</p>
+          <div class="otp"><span class="err">4</span><span class="err">8</span><span class="err">1</span><span class="err">2</span><span class="err">9</span><span class="err">0</span></div>
+          <div class="note bad">Code incorrect. Vérifiez le dernier message reçu de VORA : il reste 2 essais, puis un nouveau code sera envoyé.</div>
+          <a class="btn btn-tertiaire" style="height:44px"><svg><use href="#i-phone"/></svg>Recevoir le code par appel</a>
+          <div class="keys"><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span><span class="key">8</span><span class="key">9</span><span class="key ghost"></span><span class="key">0</span><span class="key ghost">⌫</span></div>
+          <div class="bottom"><a class="btn btn-secondaire" href="#pa04">Réessayer</a></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : cases en Rouge SOS, message qui dit combien d'essais restent et ce qui se passe ensuite. Pas de blocage silencieux.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= PA-05 / PA-06 / PA-07 -->
+<section class="lot" id="pa05">
+  <h2>PA-05 · Prénom, PA-06 · Localisation, PA-07 · Contacts de confiance</h2>
+  <p class="desc">Trois écrans, un seul obligatoire (le prénom). La permission de localisation est expliquée avant la demande système, et son refus ne bloque rien. Les contacts de confiance sont proposés maintenant parce que le premier trajet de nuit n'est pas le bon moment pour les chercher.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">PA-05 · prénom, photo et ID VORA</p>
+      <div class="frame">
+        <div class="sb"><span>21:41</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div class="top"><span class="back"><svg><use href="#i-back"/></svg></span></div>
+          <p class="h">Comment vous appelle-t-on ?</p>
+          <p class="sub">Le chauffeur verra votre prénom, et votre photo si vous en mettez une.</p>
+          <div class="avatar-add">A<span class="cam"><svg><use href="#i-cam"/></svg></span></div>
+          <p style="text-align:center;font-size:12px;color:var(--gris);margin:0 0 12px">Photo (facultatif)</p>
+          <div class="field"><label>Prénom</label><div class="in focus">Aïcha<span class="caret"></span></div></div>
+          <div class="idbox"><div><p class="eyebrow" style="margin:0">Votre ID VORA</p><div class="num">4821 7730</div></div><span class="badge badge-verifie">Généré</span></div>
+          <p style="font-size:12px;color:var(--gris);margin:0;line-height:1.45">C'est votre identifiant chez VORA : sur vos reçus, pour le support, pour parrainer. Votre numéro et votre e-mail, eux, restent invisibles.</p>
+          <div class="bottom"><a class="btn btn-primaire" href="#pa06">Continuer</a></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : avatar avec initiale, champ prénom, encadré ID VORA en Sora 800 (8 chiffres en deux groupes, pour être dicté au support). L'ID est expliqué une fois ici, puis vit dans le profil et sur les reçus.</p>
+    </div>
+
+    <div class="item" id="pa06">
+      <p class="state">PA-06 · permission localisation</p>
+      <div class="frame">
+        <div class="sb"><span>21:41</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div class="illu" style="margin-top:20px;padding:0;overflow:hidden;height:190px;position:relative">
+            <svg viewBox="0 60 360 190" style="width:100%;height:100%"><use href="#map" width="360" height="560"/><g transform="translate(180 160)"><circle r="30" fill="#1F5EFF" opacity=".15"/><circle r="9" fill="#1F5EFF" stroke="#fff" stroke-width="3"/></g><g transform="translate(250 120) scale(.8)"><use href="#m-repere" width="44" height="52" x="-22" y="-48"/></g></svg>
+          </div>
+          <p class="h">Pour vous trouver au bon endroit</p>
+          <p class="sub">VORA utilise votre position pour placer le point de rendez-vous et calculer le prix ferme. Vous pouvez toujours la corriger à la main. Rien n'est enregistré en dehors de vos courses.</p>
+          <div class="bottom">
+            <a class="btn btn-primaire" href="#pa07">Autoriser la localisation</a>
+            <a class="btn btn-tertiaire" href="#pa06b">Plus tard</a>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : l'explication vient avant la boîte de dialogue Android, en une phrase qui dit à quoi ça sert et ce qu'on n'en fait pas.</p>
+    </div>
+
+    <div class="item" id="pa06b">
+      <p class="state">PA-06 · état : permission refusée (accueil)</p>
+      <div class="frame">
+        <div class="sb"><span>21:42</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map" style="opacity:.85"><use href="#map"/></svg>
+        <div class="banner">Localisation désactivée. Indiquez votre point de départ pour commander ; vous pouvez réactiver la localisation dans Profil.</div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <p class="sub" style="margin:0 0 8px">Bonjour Aïcha</p>
+          <div class="field" style="margin:0 0 10px"><div class="in"><svg style="margin:0;color:var(--bleu)"><use href="#i-pin"/></svg><span class="ph">D'où partez-vous ?</span></div></div>
+          <div class="field" style="margin:0"><div class="in"><svg style="margin:0;color:var(--bleu)"><use href="#i-pin"/></svg><span class="ph">Où allez-vous ?</span></div></div>
+          <p class="eyebrow" style="margin:16px 0 4px;color:var(--gris)">Repères populaires</p>
+          <div class="rowi" style="padding:10px 0"><div class="ic" style="background:#FFF4D6;color:var(--bleu-nuit)"><svg><use href="#i-pin"/></svg></div><div class="t"><b>Carrefour Ngoa-Ekellé</b><small>Ngoa-Ekellé</small></div></div>
+          <div class="rowi" style="padding:10px 0"><div class="ic" style="background:#FFF4D6;color:var(--bleu-nuit)"><svg><use href="#i-pin"/></svg></div><div class="t"><b>Carrefour Bastos</b><small>Bastos</small></div></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : l'appli continue en mode dégradé, un champ de départ apparaît, et les repères populaires remplacent « près de vous ». Rien n'est bloqué.</p>
+    </div>
+
+    <div class="item" id="pa07">
+      <p class="state">PA-07 · contacts de confiance</p>
+      <div class="frame">
+        <div class="sb"><span>21:42</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div class="top"><span class="back"><svg><use href="#i-back"/></svg></span></div>
+          <p class="h">Qui prévenir en cas de besoin ?</p>
+          <p class="sub">Vos contacts de confiance reçoivent un SMS avec votre position si vous appuyez sur SOS, et peuvent suivre votre trajet en direct quand vous le partagez. Ils ne sont contactés que par vous.</p>
+          <div class="rowi"><div class="av">M</div><div class="t"><b>Marie Ngo</b><small>+237 6 77 •• •• 34 · sœur</small></div><span class="badge badge-ok"><svg><use href="#i-check"/></svg>Ajoutée</span></div>
+          <div class="rowi"><div class="ic"><svg><use href="#i-users"/></svg></div><div class="t"><b>Ajouter depuis mes contacts</b><small>Jusqu'à 3 personnes</small></div><svg width="20" height="20" style="color:var(--gris-clair)"><use href="#i-chev"/></svg></div>
+          <div class="bottom">
+            <a class="btn btn-primaire">C'est bon</a>
+            <a class="btn btn-tertiaire">Plus tard</a>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : ligne de contact avec badge Ajoutée, ligne d'ajout, primaire + tertiaire. L'écran explique le SOS et le partage avant de demander quoi que ce soit.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= PA-10 -->
+<section class="lot" id="pa10">
+  <h2>PA-10 · Point de rendez-vous</h2>
+  <p class="desc">Le GPS n'a jamais le dernier mot. La carte se déplace sous une aiguille fixe, le repère le plus proche est proposé, et le passager peut ajouter une phrase et une photo que le chauffeur verra en approche.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal</p>
+      <div class="frame">
+        <div class="sb"><span>21:42</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map"><use href="#map"/></svg>
+        <svg class="ov" viewBox="0 0 360 560">
+          <g transform="translate(150 250) scale(.8)"><use href="#m-repere" width="44" height="52" x="-22" y="-48"/></g>
+          <text x="164" y="262" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="11" font-weight="600" fill="#0B2A6F">Carrefour Ngoa-Ekellé</text>
+          <g transform="translate(180 300)"><circle cy="0" r="6" fill="#1F5EFF" opacity=".25"/><path d="M0 0 L0 -44" stroke="#0B2A6F" stroke-width="3" stroke-linecap="round"/><circle cy="-52" r="12" fill="#1F5EFF" stroke="#fff" stroke-width="3"/><circle cy="-52" r="4" fill="#FFC42E"/></g>
+        </svg>
+        <div class="pill"><svg><use href="#i-pin"/></svg><div>Déplacez la carte pour placer l'aiguille<small>Repère le plus proche : Carrefour Ngoa-Ekellé · 40 m</small></div></div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <p class="h" style="font-size:18px">Où le chauffeur doit-il vous trouver ?</p>
+          <div class="field"><label>Précision (facultatif)</label><div class="in focus">Devant la boulangerie<span class="caret"></span></div><span class="help">Le chauffeur la lira en approche</span></div>
+          <a class="btn btn-secondaire" style="height:48px"><svg><use href="#i-cam"/></svg>Ajouter une photo du lieu</a>
+          <a class="btn btn-primaire" href="#pa07" style="margin-top:10px">C'est ici</a>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : aiguille fixe au centre (tête Bleu VORA, point jaune), pilule d'aide, champ de précision, bouton photo secondaire, validation primaire. Le repère proche est proposé mais jamais imposé.</p>
+    </div>
+
+  </div>
+</section>
+
+<h2 class="part">B · Chauffeur</h2>
+
+<!-- ======================================================= CH-01 / CH-02 -->
+<section class="lot" id="ch01">
+  <h2>CH-01 · Bienvenue et CH-02 · Numéro</h2>
+  <p class="desc">Boris est méfiant : il a entendu parler des 15 %. Le premier écran ne vend rien, il dit les quatre choses qu'un chauffeur veut savoir, puis passe à la langue. Le numéro et le code sont identiques au passager, avec l'habillage Bleu nuit de l'appli chauffeur.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">CH-01 · bienvenue chauffeur</p>
+      <div class="frame nuit">
+        <div class="sb"><span>08:12</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div style="text-align:center;padding:26px 0 8px"><svg width="72" height="72" style="color:#fff;--ring:#0B2A6F"><use href="#vsym"/></svg></div>
+          <p class="h big" style="text-align:center;color:#fff">Chaque trajet compte.</p>
+          <p class="sub" style="text-align:center;color:#B7C4E2">VORA Chauffeur · Yaoundé</p>
+          <div style="margin:10px 0 0">
+            <div class="rowi" style="border-color:#12388F"><div class="ic" style="background:#12388F;color:#6D9BFF"><span style="font-family:var(--font-display);font-weight:800;font-size:13px">15%</span></div><div class="t"><b style="color:#fff">15 % de commission, pas plus</b><small style="color:#B7C4E2">Forfait de 50 F par course pour les motos</small></div></div>
+            <div class="rowi" style="border-color:#12388F"><div class="ic" style="background:#12388F;color:#6D9BFF"><svg><use href="#i-check"/></svg></div><div class="t"><b style="color:#fff">Prix ferme, destination visible</b><small style="color:#B7C4E2">Avant d'accepter, vous savez où et pour combien</small></div></div>
+            <div class="rowi" style="border-color:#12388F"><div class="ic" style="background:#12388F;color:#6D9BFF"><svg><use href="#i-share"/></svg></div><div class="t"><b style="color:#fff">Annulations compensées</b><small style="color:#B7C4E2">300 F reversés si le passager annule tard</small></div></div>
+            <div class="rowi" style="border:0"><div class="ic" style="background:#12388F;color:#6D9BFF"><svg><use href="#i-shield"/></svg></div><div class="t"><b style="color:#fff">Véhicules en règle uniquement</b><small style="color:#B7C4E2">7 pièces vérifiées, badge Vérifié pour les passagers</small></div></div>
+          </div>
+          <div class="bottom">
+            <a class="btn btn-primaire" href="#ch02">Continuer en français</a>
+            <a class="btn btn-tertiaire" style="color:#6D9BFF">Continue in English</a>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : quatre promesses vérifiables, avec les chiffres. La langue se choisit par le bouton lui-même, pas par un écran de plus.</p>
+    </div>
+
+    <div class="item" id="ch02">
+      <p class="state">CH-02 · téléphone obligatoire, invisible des passagers</p>
+      <div class="frame">
+        <div class="sb"><span>08:13</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div class="top"><span class="back"><svg><use href="#i-back"/></svg></span></div>
+          <p class="h">Votre numéro de téléphone</p>
+          <p class="sub">Obligatoire pour un chauffeur : vos gains arrivent sur ce numéro par MoMo ou Orange Money, et c'est ainsi que l'équipe VORA vous joint. Les passagers ne le voient jamais : ils vous contactent par la messagerie et l'appel VORA.</p>
+          <div class="field"><label>Numéro</label><div class="in"><span class="pre">+237</span>6 99 12 34 56</div><span class="help">Un code de vérification arrive par SMS</span></div>
+          <div class="field"><label>E-mail (facultatif)</label><div class="in"><svg style="margin:0 0 0 -2px"><use href="#i-mail"/></svg><span class="ph">Pour vos relevés mensuels</span></div></div>
+          <div class="note">Boris, préparez vos pièces : CNI, permis, carte grise, assurance, visite technique, licence ou carte bleue, certificat de capacité. Vous pouvez remplir le dossier en plusieurs fois.</div>
+          <div class="bottom"><a class="btn btn-primaire" href="#ch03">Recevoir le code</a></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : même écran que le passager, trois différences : le téléphone est obligatoire et on dit pourquoi (paiements, ops), on promet qu'il reste invisible, et la liste des pièces est annoncée avant de commencer.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= CH-03 -->
+<section class="lot" id="ch03">
+  <h2>CH-03 · Dossier, étape 1 : identité</h2>
+  <p class="desc">Chaque pièce est une photo guidée avec ses règles (nette, sans reflet, quatre coins). Chaque étape est sauvegardée : Boris peut fermer l'appli et reprendre. Le bouton Continuer ne s'active que quand tout est là, et dit ce qui manque.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal · en cours</p>
+      <div class="frame">
+        <div class="sb"><span>08:15</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div class="stepper"><div class="bar"><i class="on"></i><i></i><i></i><i></i><i></i></div><div class="lbl">Étape 1 sur 5 · Identité</div></div>
+          <p class="h">Votre pièce d'identité</p>
+          <p class="sub">CNI ou passeport. Photo nette, sans reflet, les quatre coins visibles.</p>
+          <div class="tiles">
+            <div class="tile done"><div class="thumb"></div><div class="lbl"><svg><use href="#i-check"/></svg>CNI recto<small>Photo prise</small></div></div>
+            <div class="tile"><svg><use href="#i-cam"/></svg>CNI verso<small>À photographier</small></div>
+            <div class="tile wide"><svg><use href="#i-user"/></svg>Selfie<small>Visage entier, sans lunettes de soleil, ni casquette</small></div>
+          </div>
+          <div class="two">
+            <div class="field"><label>N° de CNI</label><div class="in">1234567890</div></div>
+            <div class="field"><label>Expire le</label><div class="in"><span class="ph">JJ/MM/AAAA</span><svg><use href="#i-cal"/></svg></div></div>
+          </div>
+          <div class="bottom"><p style="font-size:12px;color:var(--gris);text-align:center;margin:0 0 8px">Il manque : le verso, le selfie, la date d'expiration</p><span class="btn btn-desactive">Continuer</span></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : barre d'étapes (5 segments), tuiles de capture (à faire en pointillé bleu, faite en vert avec miniature), champs courts côte à côte, bouton désactivé avec la liste de ce qui manque.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">État · photo floue</p>
+      <div class="frame">
+        <div class="sb"><span>08:16</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div class="stepper"><div class="bar"><i class="on"></i><i></i><i></i><i></i><i></i></div><div class="lbl">Étape 1 sur 5 · Identité</div></div>
+          <p class="h">Votre pièce d'identité</p>
+          <p class="sub">CNI ou passeport. Photo nette, sans reflet, les quatre coins visibles.</p>
+          <div class="tiles">
+            <div class="tile done"><div class="thumb"></div><div class="lbl"><svg><use href="#i-check"/></svg>CNI recto<small>Photo prise</small></div></div>
+            <div class="tile bad"><svg><use href="#i-cam"/></svg>CNI verso<small style="color:var(--sos)">Photo floue · reprendre</small></div>
+            <div class="tile wide"><svg><use href="#i-user"/></svg>Selfie<small>Visage entier, sans lunettes de soleil, ni casquette</small></div>
+          </div>
+          <div class="note bad">La photo du verso est floue ou trop sombre. Posez la carte à plat, sous une lumière, et tenez le téléphone à 20 cm. L'appli vérifie tout de suite.</div>
+          <div class="bottom"><a class="btn btn-secondaire"><svg><use href="#i-cam"/></svg>Reprendre le verso</a></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : le contrôle de netteté est immédiat, sur le téléphone, pour ne pas découvrir 48 h plus tard que la pièce est illisible. Le conseil est concret : à plat, lumière, 20 cm.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= CH-04 / CH-05 / CH-06 -->
+<section class="lot" id="ch04">
+  <h2>CH-04 · Permis, CH-05 · Véhicule, CH-06 · Documents professionnels</h2>
+  <p class="desc">Même mécanique à chaque étape. Le véhicule ajoute la plaque et les photos ; la moto ajoute les casques. Les pièces professionnelles sont celles qu'exige le ministère : l'appli le dit tel quel, parce que c'est l'argument « en règle » de VORA.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">CH-04 · permis</p>
+      <div class="frame">
+        <div class="sb"><span>08:19</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div class="stepper"><div class="bar"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div><div class="lbl">Étape 2 sur 5 · Permis de conduire</div></div>
+          <p class="h">Votre permis</p>
+          <p class="sub">Catégorie B pour une voiture, A pour une moto. Les deux faces.</p>
+          <div class="tiles">
+            <div class="tile done"><div class="thumb"></div><div class="lbl"><svg><use href="#i-check"/></svg>Permis recto<small>Photo prise</small></div></div>
+            <div class="tile done"><div class="thumb"></div><div class="lbl"><svg><use href="#i-check"/></svg>Permis verso<small>Photo prise</small></div></div>
+          </div>
+          <div class="two">
+            <div class="field"><label>Catégorie</label><div class="in">B</div></div>
+            <div class="field"><label>Expire le</label><div class="in">14/03/2029<svg><use href="#i-cal"/></svg></div></div>
+          </div>
+          <div class="field"><label>Délivré depuis</label><div class="in">2014<svg><use href="#i-cal"/></svg></div><span class="help">3 ans de permis minimum</span></div>
+          <div class="bottom"><a class="btn btn-primaire" href="#ch05">Continuer</a></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : quand tout est là, le bouton est bleu, sans message. La règle métier (3 ans de permis) est sous le champ, pas dans une pop-up après coup.</p>
+    </div>
+
+    <div class="item" id="ch05">
+      <p class="state">CH-05 · véhicule (voiture)</p>
+      <div class="frame">
+        <div class="sb"><span>08:24</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen" style="overflow:hidden">
+          <div class="stepper"><div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div><div class="lbl">Étape 3 sur 5 · Véhicule</div></div>
+          <p class="h">Votre voiture</p>
+          <div class="two">
+            <div class="field"><label>Plaque</label><div class="in" style="font-family:var(--font-display);font-weight:700;letter-spacing:.06em">CE 913 NR</div></div>
+            <div class="field"><label>Couleur</label><div class="in">Grise</div></div>
+          </div>
+          <div class="field"><label>Marque et modèle</label><div class="in">Toyota Corolla</div></div>
+          <div class="tiles">
+            <div class="tile done"><div class="thumb"></div><div class="lbl"><svg><use href="#i-check"/></svg>Carte grise</div></div>
+            <div class="tile done"><div class="thumb"></div><div class="lbl"><svg><use href="#i-check"/></svg>Assurance<small>exp. 30/01/2027</small></div></div>
+            <div class="tile"><svg><use href="#i-doc"/></svg>Visite technique<small>+ date d'expiration</small></div>
+            <div class="tile"><svg><use href="#i-car"/></svg>Photos avant / arrière<small>plaque lisible</small></div>
+          </div>
+          <div class="note">L'assurance doit couvrir le transport de personnes. Une assurance « particulier » sera refusée.</div>
+          <div class="bottom"><p style="font-size:12px;color:var(--gris);text-align:center;margin:0 0 8px">Il manque : la visite technique, les photos</p><span class="btn btn-desactive">Continuer</span></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : plaque en Sora comme partout dans l'appli, quatre tuiles de pièces avec la date sur celles qui expirent, note bleue sur la règle d'assurance.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">CH-05 · variante moto (Ismaël)</p>
+      <div class="frame">
+        <div class="sb"><span>16:02</span><span class="r"><i></i><span style="font-size:10px">3G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div class="stepper"><div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div><div class="lbl">Étape 3 sur 5 · Moto</div></div>
+          <p class="h">Votre moto <span class="badge badge-repere" style="vertical-align:middle;margin-left:4px">VORA Moto</span></p>
+          <div class="two">
+            <div class="field"><label>Immatriculation</label><div class="in" style="font-family:var(--font-display);font-weight:700;letter-spacing:.06em">CE 2214 M</div></div>
+            <div class="field"><label>Couleur</label><div class="in">Bleue</div></div>
+          </div>
+          <div class="tiles">
+            <div class="tile done"><div class="thumb"></div><div class="lbl"><svg><use href="#i-check"/></svg>Carte grise</div></div>
+            <div class="tile done"><div class="thumb"></div><div class="lbl"><svg><use href="#i-check"/></svg>Assurance<small>exp. 12/11/2026</small></div></div>
+            <div class="tile"><svg><use href="#i-moto"/></svg>Photo de la moto<small>plaque lisible</small></div>
+            <div class="tile"><svg><use href="#i-helmet"/></svg>Les 2 casques<small>le vôtre et celui du passager</small></div>
+          </div>
+          <div class="field"><label>Zone de travail habituelle</label><div class="in">Emana · Etoudi · Nkolbisson<svg><use href="#i-chev"/></svg></div><span class="help">Périphérie uniquement : le centre urbain est interdit aux motos</span></div>
+          <div class="bottom"><p style="font-size:12px;color:var(--gris);text-align:center;margin:0 0 8px">Il manque : la photo de la moto, les casques</p><span class="btn btn-desactive">Continuer</span></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : les deux casques sont une pièce du dossier, pas un conseil. La zone de travail prépare le géorepérage et rappelle l'interdiction du centre dès l'inscription.</p>
+    </div>
+
+    <div class="item" id="ch06">
+      <p class="state">CH-06 · documents professionnels</p>
+      <div class="frame">
+        <div class="sb"><span>08:31</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div class="stepper"><div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div><div class="lbl">Étape 4 sur 5 · Documents professionnels</div></div>
+          <p class="h">Vos documents de transport</p>
+          <p class="sub">Exigés par le ministère des Transports pour tout véhicule de transport de personnes. Sans eux, aucune course ne peut vous être proposée.</p>
+          <div class="tiles">
+            <div class="tile done"><div class="thumb"></div><div class="lbl"><svg><use href="#i-check"/></svg>Carte bleue<small>exp. 31/12/2026</small></div></div>
+            <div class="tile"><svg><use href="#i-doc"/></svg>Certificat de capacité T<small>+ date</small></div>
+          </div>
+          <div class="rowi"><div class="ic"><svg><use href="#i-doc"/></svg></div><div class="t"><b>Vous n'avez pas encore ces documents ?</b><small>Les démarches se font sur ssdtmint.cm. VORA vous explique comment, étape par étape.</small></div><svg width="20" height="20" style="color:var(--gris-clair)"><use href="#i-chev"/></svg></div>
+          <div class="bottom"><p style="font-size:12px;color:var(--gris);text-align:center;margin:0 0 8px">Il manque : le certificat de capacité T</p><span class="btn btn-desactive">Continuer</span></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : on nomme l'autorité et la plateforme officielle. Le chauffeur qui n'a pas encore ses papiers n'est pas rejeté : il est guidé, et son dossier reste en brouillon.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= CH-07 -->
+<section class="lot" id="ch07">
+  <h2>CH-07 · Récapitulatif et statut du dossier</h2>
+  <p class="desc">Le chauffeur voit chaque pièce et son statut. En cas de refus, le motif est précis et il ne renvoie que la pièce concernée. Un SMS part à chaque changement de statut, parce qu'il ne va pas ouvrir l'appli tous les jours pour vérifier.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal · en revue</p>
+      <div class="frame">
+        <div class="sb"><span>08:40</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div class="stepper"><div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div><div class="lbl">Étape 5 sur 5 · Vérification</div></div>
+          <p class="h">Votre dossier est en revue</p>
+          <p class="sub">Réponse sous 48 h ouvrées, par SMS au +237 6 99 12 34 56. En attendant, vous pouvez lire le guide.</p>
+          <div class="status"><span class="badge badge-attention">En revue</span><div class="t">Pièce d'identité</div></div>
+          <div class="status"><span class="badge badge-attention">En revue</span><div class="t">Permis de conduire<small>exp. 14/03/2029</small></div></div>
+          <div class="status"><span class="badge badge-attention">En revue</span><div class="t">Carte grise · CE 913 NR</div></div>
+          <div class="status"><span class="badge badge-attention">En revue</span><div class="t">Assurance<small>exp. 30/01/2027</small></div></div>
+          <div class="status"><span class="badge badge-attention">En revue</span><div class="t">Visite technique<small>exp. 19/09/2026</small></div></div>
+          <div class="status"><span class="badge badge-attention">En revue</span><div class="t">Carte bleue<small>exp. 31/12/2026</small></div></div>
+          <div class="status"><span class="badge badge-attention">En revue</span><div class="t">Certificat de capacité T<small>exp. 31/12/2026</small></div></div>
+          <div class="bottom"><a class="btn btn-secondaire" href="#ch08">Lire le guide en attendant</a></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : lignes de statut avec badge (orange = en revue), dates d'expiration déjà visibles, action secondaire vers le guide.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">État · une pièce refusée</p>
+      <div class="frame">
+        <div class="sb"><span>14:05</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <p class="h">Une pièce à renvoyer</p>
+          <p class="sub">Le reste du dossier est validé. Dès que l'assurance est acceptée, vous pourrez passer en ligne.</p>
+          <div class="note bad"><b>Assurance refusée</b> · Le document envoyé est expiré (31/07/2026). Envoyez l'attestation en cours de validité, avec la mention « transport de personnes ».</div>
+          <div class="status"><span class="badge badge-sos">Refusée</span><div class="t">Assurance<small>expirée le 31/07/2026</small></div></div>
+          <div class="status"><span class="badge badge-ok">Validée</span><div class="t">Pièce d'identité</div></div>
+          <div class="status"><span class="badge badge-ok">Validée</span><div class="t">Permis de conduire</div></div>
+          <div class="status"><span class="badge badge-ok">Validée</span><div class="t">Carte grise · CE 913 NR</div></div>
+          <div class="status"><span class="badge badge-ok">Validée</span><div class="t">Visite technique</div></div>
+          <div class="status"><span class="badge badge-ok">Validée</span><div class="t">Carte bleue</div></div>
+          <div class="status"><span class="badge badge-ok">Validée</span><div class="t">Certificat de capacité T</div></div>
+          <div class="bottom"><a class="btn btn-primaire"><svg><use href="#i-cam"/></svg>Renvoyer l'assurance</a></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : le motif est un motif type de l'ops (expirée, illisible, mauvais document, mention manquante), toujours suivi de ce qu'il faut envoyer. Une seule pièce à refaire, pas le dossier.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">État · dossier vérifié</p>
+      <div class="frame">
+        <div class="sb"><span>10:20</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div style="text-align:center;padding:48px 0 10px"><div class="avatar-add" style="background:var(--bleu-ciel);color:var(--bleu);margin-bottom:10px"><svg width="44" height="44"><use href="#i-shield"/></svg></div></div>
+          <p class="h big" style="text-align:center">Dossier vérifié</p>
+          <p class="sub" style="text-align:center">Boris, votre Corolla CE 913 NR est en règle. Les passagers verront le badge <span class="badge badge-verifie"><svg><use href="#i-shield"/></svg>Chauffeur vérifié</span> à côté de votre nom.</p>
+          <div class="illu" style="margin-top:8px"><p style="margin:0;font-size:13px;color:var(--gris);text-align:center">Prochaine échéance : visite technique le 19/09/2026. Vous serez prévenu 30 jours et 7 jours avant.</p></div>
+          <div class="bottom">
+            <a class="btn btn-primaire" href="#ch08">Lire le guide et la charte</a>
+            <p style="font-size:12px;color:var(--gris);text-align:center;margin:8px 0 0">2 minutes, puis vous passez en ligne.</p>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : le badge est montré au chauffeur tel que les passagers le verront. La prochaine échéance est annoncée le jour de la validation, pas le jour de l'expiration.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= CH-08 -->
+<section class="lot" id="ch08">
+  <h2>CH-08 · Guide et charte</h2>
+  <p class="desc">Six écrans, une image et une phrase chacun, puis la charte à accepter. Pas de texte long : un chauffeur lit ça sur le trottoir, entre deux courses. Le guide reste accessible depuis le profil.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Guide · écran 2 sur 6</p>
+      <div class="frame">
+        <div class="sb"><span>10:21</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <div class="top" style="justify-content:space-between"><span class="eyebrow" style="margin:0">Le guide VORA · 2 / 6</span><a class="btn btn-tertiaire" href="#ch08b" style="width:auto;height:36px;padding:0 8px;font-size:14px">Passer</a></div>
+          <div class="illu" style="height:250px;justify-content:center;margin-top:10px;background:var(--bleu-nuit);border:0">
+            <p class="eyebrow" style="color:#6D9BFF">Code de montée</p>
+            <div class="code"><span>4</span><span>8</span><span>2</span><span>1</span></div>
+            <p style="margin:10px 0 0;font-size:12px;color:#B7C4E2;text-align:center">Le passager le lit sur son écran, avec votre plaque</p>
+          </div>
+          <p class="h" style="text-align:center;margin-top:18px">Le passager vous dit un code de 4 chiffres</p>
+          <p class="sub" style="text-align:center">Vous le saisissez, la course démarre. Sans code valide, pas de course : c'est votre protection autant que la sienne.</p>
+          <div class="dots"><i></i><i class="on"></i><i></i><i></i><i></i><i></i></div>
+          <div class="bottom"><a class="btn btn-primaire">Suivant</a></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : illustration faite avec les composants réels de l'appli (ici les cases du code), titre, une phrase, points de pagination. Les six écrans : prix ferme, code de montée, pas de supplément, annulations compensées, casques et tenue (moto), SOS.</p>
+    </div>
+
+    <div class="item" id="ch08b">
+      <p class="state">Charte à accepter</p>
+      <div class="frame">
+        <div class="sb"><span>10:23</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen">
+          <p class="eyebrow">Avant de passer en ligne</p>
+          <p class="h">La charte VORA</p>
+          <p class="sub">Six engagements. Les passagers connaissent la même liste.</p>
+          <div class="check"><i class="on"><svg><use href="#i-check"/></svg></i><div>Je ne demande jamais plus que le prix affiché dans l'appli.</div></div>
+          <div class="check"><i class="on"><svg><use href="#i-check"/></svg></i><div>Je démarre la course seulement avec le code de montée.</div></div>
+          <div class="check"><i class="on"><svg><use href="#i-check"/></svg></i><div>Je vais au point de rendez-vous indiqué, et j'appelle si je ne le trouve pas.</div></div>
+          <div class="check"><i class="on"><svg><use href="#i-check"/></svg></i><div>Je n'annule pas une course acceptée sans raison.</div></div>
+          <div class="check"><i class="on"><svg><use href="#i-check"/></svg></i><div>Je garde mes pièces à jour et je les renvoie quand l'appli me le demande.</div></div>
+          <div class="check"><i class="on"><svg><use href="#i-check"/></svg></i><div>Je respecte le code de la route et les passagers, quels qu'ils soient.</div></div>
+          <div class="bottom">
+            <a class="btn btn-primaire tall">J'accepte, je passe en ligne</a>
+            <p style="font-size:12px;color:var(--gris);text-align:center;margin:8px 0 0">Trois manquements confirmés entraînent l'exclusion.</p>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : six phrases à la première personne, cochées une à une. La sanction est annoncée en une ligne, sans menace. Le bouton mène directement à CH-09 En ligne.</p>
+    </div>
+
+  </div>
+</section>
+
+<h2 class="part">C · Messagerie et appel VORA (commun aux deux applis)</h2>
+
+<section class="lot" id="msg">
+  <h2>PA-23 / CH-21 · Messagerie VORA et PA-24 / CH-22 · Appel VORA</h2>
+  <p class="desc">Aucun numéro ne circule. La conversation est liée à la course : elle s'ouvre à l'acceptation et se ferme 30 minutes après la fin. Trois façons de se parler, de la plus robuste à la plus fragile sur un réseau faible : les messages prédéfinis, le message vocal de 10 secondes, l'appel VORA. Quand l'appel échoue, l'appli propose le vocal, jamais un écran vide.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">PA-23 · messagerie, passager</p>
+      <div class="frame">
+        <div class="sb"><span>21:44</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen" style="padding-top:8px">
+          <div class="chathead"><a class="back" href="#pa01" style="margin:0"><svg><use href="#i-back"/></svg></a><div class="av">B</div><div class="t"><b>Boris N. · CE 913 NR</b><small>Chauffeur vérifié · numéros masqués</small></div><a class="call" href="#pa24"><svg><use href="#i-phone"/></svg></a></div>
+          <p class="sysmsg">Conversation liée à votre course · se ferme 30 min après l'arrivée</p>
+          <div class="chat">
+            <div class="bub in">J'arrive dans 3 min, je suis sur l'avenue.<small>21:43</small></div>
+            <div class="bub out">Je suis devant la boulangerie, en robe bleue.<small>21:44 · lu</small></div>
+            <div class="bub in"><div class="voice"><span class="play"><svg><use href="#i-play"/></svg></span><span class="wave"><i style="height:6px"></i><i style="height:10px"></i><i style="height:16px"></i><i style="height:12px"></i><i style="height:20px"></i><i style="height:8px"></i><i style="height:14px"></i><i style="height:18px"></i><i style="height:10px"></i><i style="height:6px"></i><i style="height:12px"></i><i style="height:16px"></i><i style="height:8px"></i><i style="height:4px"></i></span><span style="font-size:12px">0:07</span></div><small>21:45 · message vocal</small></div>
+          </div>
+          <div class="bottom">
+            <div class="quick"><span>« Je suis là »</span><span>« Où êtes‑vous ? »</span><span>« J'arrive »</span></div>
+            <div class="inbar"><div class="in">Écrire un message…</div><span class="mic"><svg><use href="#i-mic"/></svg></span></div>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : en-tête avec plaque et bouton d'appel, message système, bulles (reçu = Surface, envoyé = Bleu VORA), bulle vocale avec lecture, raccourcis prédéfinis, barre de saisie avec micro à maintenir.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">CH-21 · messagerie, chauffeur, enregistrement vocal</p>
+      <div class="frame nuit">
+        <div class="sb" style="color:#fff;background:none"><span>21:45</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="screen" style="padding-top:8px">
+          <div class="chathead"><span class="back" style="margin:0"><svg><use href="#i-back"/></svg></span><div class="av">A</div><div class="t"><b style="color:#fff">Aïcha · en course</b><small>ID VORA 4821 7730 · numéros masqués</small></div><span class="call"><svg><use href="#i-phone"/></svg></span></div>
+          <p class="sysmsg">Vous êtes en approche · 1,2 km</p>
+          <div class="chat">
+            <div class="bub out">J'arrive dans 3 min, je suis sur l'avenue.<small>21:43 · lu</small></div>
+            <div class="bub in">Je suis devant la boulangerie, en robe bleue.<small>21:44</small></div>
+          </div>
+          <div class="bottom">
+            <p style="text-align:center;font-size:12px;color:#B7C4E2;margin:0 0 10px">Relâchez pour envoyer · glissez à gauche pour annuler</p>
+            <div class="inbar rec"><div class="in">● Enregistrement · 0:04 / 0:10</div><span class="mic"><svg><use href="#i-mic"/></svg></span></div>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : le vocal se fait à une main, en maintenant le micro ; 10 s maximum, compressé, il passe là où l'appel échoue. Mode nuit, comme le reste de l'appli chauffeur après 19 h.</p>
+    </div>
+
+    <div class="item" id="pa24">
+      <p class="state">PA-24 · appel VORA sortant, passager</p>
+      <div class="frame">
+        <div class="sb" style="color:#fff;background:none"><span>21:46</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="callscr">
+          <p class="eyebrow">Appel VORA · numéro masqué</p>
+          <div class="big">B<span class="v"><svg><use href="#i-shield"/></svg></span></div>
+          <div class="name">Boris N.</div>
+          <p class="st">Toyota Corolla grise · CE 913 NR</p>
+          <div class="timer">0:12</div>
+          <div class="hint">Réseau faible ? Le message vocal passe toujours. <b style="color:#fff">Envoyer un vocal</b></div>
+          <div class="callbtns">
+            <div class="cb"><i><svg><use href="#i-mute"/></svg></i>Muet</div>
+            <div class="cb hang lg"><i class="rot"><svg><use href="#i-phone"/></svg></i>Raccrocher</div>
+            <div class="cb"><i><svg><use href="#i-spk"/></svg></i>Haut-parleur</div>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : écran d'appel Bleu nuit, avatar avec bouclier, chronomètre en Sora, trois commandes dont Raccrocher en Rouge SOS, seule exception à la règle du rouge (ajoutée à la charte). Le repli vocal est proposé pendant l'appel, pas après.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">PA-24 · état : l'appel n'aboutit pas</p>
+      <div class="frame">
+        <div class="sb" style="color:#fff;background:none"><span>21:46</span><span class="r"><span style="font-size:10px;color:#F5A524">Réseau faible</span><i class="b"></i></span></div>
+        <div class="callscr">
+          <p class="eyebrow">Appel VORA · numéro masqué</p>
+          <div class="big">B</div>
+          <div class="name">Boris ne répond pas</div>
+          <p class="st">Ou le réseau est trop faible pour l'appel. Il a reçu une notification d'appel manqué.</p>
+          <div style="margin-top:auto;width:100%">
+            <a class="btn btn-primaire" href="#msg"><svg><use href="#i-mic"/></svg>Envoyer un message vocal</a>
+            <a class="btn btn-secondaire" style="background:transparent;color:#6D9BFF;border-color:#6D9BFF">Réessayer l'appel</a>
+            <a class="btn btn-tertiaire" style="color:#6D9BFF">Retour</a>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : l'échec dit ce qui s'est passé et met le vocal en premier, parce que c'est ce qui marche quand l'appel ne marche pas. Le chauffeur voit l'appel manqué dans sa messagerie.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">CH-22 · appel VORA entrant, chauffeur, sur verrouillage</p>
+      <div class="frame">
+        <div class="sb" style="color:#fff;background:none"><span>21:46</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="callscr">
+          <p class="eyebrow">Appel VORA entrant</p>
+          <div class="big">A</div>
+          <div class="name">Aïcha</div>
+          <p class="st">Course en cours · Carrefour Ngoa-Ekellé · numéro masqué</p>
+          <div class="hint" style="text-align:center">Haut-parleur activé automatiquement en conduite</div>
+          <div class="callbtns" style="gap:40px">
+            <div class="cb hang lg"><i class="rot"><svg><use href="#i-phone"/></svg></i>Refuser</div>
+            <div class="cb acc"><i><svg><use href="#i-phone"/></svg></i>Répondre</div>
+          </div>
+          <a class="btn btn-tertiaire" style="color:#6D9BFF;margin-top:14px">Répondre par message</a>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : l'appel entrant s'affiche par-dessus le verrouillage et la navigation, avec deux cibles de 76 px et une réponse par message en un tap. Répondre passe en vert (« OK »), refuser en rouge : la convention téléphonique prime sur la charte, et la charte le note.</p>
+    </div>
+
+  </div>
+</section>
+
+<footer style="color:var(--gris);font-size:13px;max-width:90ch;line-height:1.6">
+  <p><b style="color:var(--bleu-nuit)">Lots restants</b> : 4 (Mes courses, profil et aide passager ; notation passager, solde MoMo, pièces et profil chauffeur ; SOS chauffeur), 5 (back-office web), puis le site web public qui remplace la variante anglaise.</p>
+</footer>
+
+</div>
+</body>
+</html>

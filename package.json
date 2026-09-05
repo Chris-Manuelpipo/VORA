@@ -24,6 +24,7 @@
     "demo": "npm run demo --workspace services/api",
     "test": "npm run test --workspace services/api",
     "test:unit": "npm run test:unit --workspace services/api",
+    "docs:api": "bash scripts/capture-api-examples.sh && node scripts/generate-api-contract.mjs",
     "lint": "npm run lint --workspace services/api",
     "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md,yml,yaml}\"",
     "docker:prod": "docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d --build"

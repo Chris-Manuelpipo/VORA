@@ -1,0 +1,408 @@
+###############################################################################
+# VORA — parcours complet, prêt à exécuter.
+#
+# Format `.http` : lisible par l'extension REST Client de VS Code et par le client
+# HTTP de JetBrains. Chaque requête se lance d'un clic ; les jetons et identifiants
+# se propagent tout seuls d'une requête à l'autre (`{{nom.response.body.champ}}`),
+# il n'y a donc rien à recopier à la main.
+#
+# Préalable : l'API tourne avec DEMO_MODE=true.
+#   npm run db:setup && npm run seed && npm run dev
+#
+# Exécutez les blocs DANS L'ORDRE : le § 4 a besoin du jeton du § 1.
+###############################################################################
+
+@base = http://localhost:3000
+# Instance déployée — décommentez pour travailler dessus :
+# @base = https://app-9ee3bcaa-0993-4578-9096-9d50334595c5.cleverapps.io
+
+@demoToken = vora-demo
+
+# Repères réels de Yaoundé, aux coordonnées du seed.
+@melenLat = 3.8541
+@melenLng = 11.4872
+@obiliLat = 3.8482
+@obiliLng = 11.4931
+# DANS le centre urbain interdit aux motos — sert au § 3.
+@marcheLat = 3.8664
+@marcheLng = 11.5183
+
+
+###############################################################################
+# § 0 — L'API répond-elle ?
+###############################################################################
+
+### Santé. 200 si la base répond, 503 sinon.
+GET {{base}}/health
+
+### La spécification complète, pour générer un client.
+GET {{base}}/openapi.json
+
+### L'interface d'essai s'ouvre dans un navigateur : {{base}}/docs
+
+
+###############################################################################
+# § 1 — Passagère
+#
+# Le code vaut TOUJOURS 123456 en mode démonstration, et il est renvoyé dans la
+# réponse (champ `demo_code`). Aucun SMS n'est envoyé.
+###############################################################################
+
+### Demander un code
+# @name otpPassenger
+POST {{base}}/v1/auth/otp/request
+Content-Type: application/json
+
+{
+  "channel": "phone",
+  "value": "+237691234567"
+}
+
+### Vérifier le code et ouvrir la session
+# @name loginPassenger
+POST {{base}}/v1/auth/otp/verify
+Content-Type: application/json
+
+{
+  "value": "+237691234567",
+  "code": "123456",
+  "role": "passenger",
+  "display_name": "Aïcha Mballa"
+}
+
+@passengerToken = {{loginPassenger.response.body.access_token}}
+
+### Mon profil. Le téléphone n'en sort que MASQUÉ, même pour son propriétaire.
+GET {{base}}/v1/me
+Authorization: Bearer {{passengerToken}}
+
+
+###############################################################################
+# § 2 — Trouver où l'on va
+#
+# À Yaoundé on ne cherche pas une adresse, on cherche un repère.
+###############################################################################
+
+### Recherche tolérante aux fautes et aux accents absents
+GET {{base}}/v1/geo/search?q=carefour warda&lat={{melenLat}}&lng={{melenLng}}
+
+### Une phrase entière fonctionne aussi
+GET {{base}}/v1/geo/search?q=en face de la pharmacie de melen
+
+### Les zones interdites aux motos, en GeoJSON prêt à dessiner
+GET {{base}}/v1/geo/zones?kind=moto_forbidden
+
+### Un itinéraire. `routing` dit s'il vient d'OSRM ou du repli — ne le cachez pas.
+GET {{base}}/v1/geo/route?from_lat={{melenLat}}&from_lng={{melenLng}}&to_lat={{obiliLat}}&to_lng={{obiliLng}}
+
+
+###############################################################################
+# § 3 — Le prix ferme
+#
+# PREMIER MOMENT DE VÉRITÉ : ce prix s'affiche avant la commande et ne bouge plus.
+###############################################################################
+
+### La grille publiée (publique : le prix se lit avant même de se connecter)
+GET {{base}}/v1/pricing/tariffs
+
+### Devis : trois offres signées, valables 2 minutes
+# @name quote
+POST {{base}}/v1/quotes
+Authorization: Bearer {{passengerToken}}
+Content-Type: application/json
+
+{
+  "pickup":  { "lat": {{melenLat}}, "lng": {{melenLng}}, "label": "Carrefour Melen" },
+  "dropoff": { "lat": {{obiliLat}}, "lng": {{obiliLng}}, "label": "Carrefour Obili" }
+}
+
+@quoteId = {{quote.response.body.offers.0.quoteId}}
+
+### LE MÊME TRAJET, MAIS VERS LE CENTRE : l'offre moto est REFUSÉE.
+# Regardez `offers[2]` : `available: false`, la raison, et l'identifiant de la zone
+# à dessiner sur la carte. Les offres voiture, elles, restent disponibles.
+POST {{base}}/v1/quotes
+Authorization: Bearer {{passengerToken}}
+Content-Type: application/json
+
+{
+  "pickup":  { "lat": {{melenLat}}, "lng": {{melenLng}}, "label": "Carrefour Melen" },
+  "dropoff": { "lat": {{marcheLat}}, "lng": {{marcheLng}}, "label": "Marché Central" }
+}
+
+
+###############################################################################
+# § 4 — Commander
+#
+# `Idempotency-Key` est OBLIGATOIRE. Relancez la MÊME requête avec la MÊME clé :
+# vous récupérez la course déjà créée, pas une seconde.
+###############################################################################
+
+### Commander
+# @name createRide
+POST {{base}}/v1/rides
+Authorization: Bearer {{passengerToken}}
+Content-Type: application/json
+Idempotency-Key: parcours-demo-001
+
+{
+  "quoteId": "{{quoteId}}",
+  "offer": "eco",
+  "paymentMethod": "cash"
+}
+
+@rideId = {{createRide.response.body.id}}
+
+### Sans Idempotency-Key → 400 IDEMPOTENCY_KEY_REQUIRED
+POST {{base}}/v1/rides
+Authorization: Bearer {{passengerToken}}
+Content-Type: application/json
+
+{
+  "quoteId": "{{quoteId}}",
+  "offer": "eco",
+  "paymentMethod": "cash"
+}
+
+### Suivre la course.
+# Rejouez cette requête toutes les 2 s : un chauffeur SIMULÉ accepte en 4 à 8 s,
+# arrive, démarre et encaisse. `boarding_code` apparaît dès l'acceptation — et il
+# n'apparaît QUE pour la passagère.
+GET {{base}}/v1/rides/{{rideId}}
+Authorization: Bearer {{passengerToken}}
+
+### Le journal : ce qui s'est passé, dans l'ordre. C'est la mémoire des litiges.
+GET {{base}}/v1/rides/{{rideId}}/events
+Authorization: Bearer {{passengerToken}}
+
+### Mon historique
+GET {{base}}/v1/rides?limit=10
+Authorization: Bearer {{passengerToken}}
+
+
+###############################################################################
+# § 5 — Sécurité pendant la course
+###############################################################################
+
+### Partager son trajet : un lien PUBLIC, sans compte
+# @name share
+POST {{base}}/v1/rides/{{rideId}}/share
+Authorization: Bearer {{passengerToken}}
+
+### Ouvrir le lien partagé — AUCUNE authentification.
+# Le proche voit la plaque, le véhicule et le point qui bouge. Ni prix, ni nom
+# complet, ni le moindre numéro.
+GET {{share.response.body.url}}
+
+### SOS. Ne change PAS le statut de la course : elle continue, c'est le problème.
+POST {{base}}/v1/rides/{{rideId}}/sos
+Authorization: Bearer {{passengerToken}}
+Content-Type: application/json
+
+{
+  "lat": {{melenLat}},
+  "lng": {{melenLng}},
+  "note": "essai depuis la collection"
+}
+
+
+###############################################################################
+# § 6 — Après la course
+###############################################################################
+
+### Noter (course payée uniquement). La note du passager clôt la course.
+POST {{base}}/v1/rides/{{rideId}}/rating
+Authorization: Bearer {{passengerToken}}
+Content-Type: application/json
+
+{
+  "stars": 5,
+  "tags": ["conduite prudente", "véhicule propre"]
+}
+
+### Annuler. Le serveur décide seul si c'est gratuit — ne le calculez pas côté client.
+# Gratuit dans les 2 min suivant l'acceptation OU tant que le chauffeur a parcouru
+# moins de 300 m. Sinon 300 F (100 F en moto), reversés INTÉGRALEMENT au chauffeur.
+POST {{base}}/v1/rides/{{rideId}}/cancel
+Authorization: Bearer {{passengerToken}}
+Content-Type: application/json
+
+{
+  "reason": "changement de programme"
+}
+
+### « Attendre 2 min » — relance le dispatch sur une course expirée, au même prix.
+POST {{base}}/v1/rides/{{rideId}}/retry
+Authorization: Bearer {{passengerToken}}
+
+
+###############################################################################
+# § 7 — Côté chauffeur
+#
+# Boris est un compte de démonstration : dossier validé, Toyota Corolla blanche.
+###############################################################################
+
+### Code pour Boris
+POST {{base}}/v1/auth/otp/request
+Content-Type: application/json
+
+{
+  "channel": "phone",
+  "value": "+237677001122"
+}
+
+### Session chauffeur
+# @name loginDriver
+POST {{base}}/v1/auth/otp/verify
+Content-Type: application/json
+
+{
+  "value": "+237677001122",
+  "code": "123456",
+  "role": "driver"
+}
+
+@driverToken = {{loginDriver.response.body.access_token}}
+
+### Se mettre en ligne. Dossier non validé → 403 DRIVER_NOT_APPROVED.
+POST {{base}}/v1/driver/online
+Authorization: Bearer {{driverToken}}
+Content-Type: application/json
+
+{
+  "position": { "lat": {{melenLat}}, "lng": {{melenLng}} }
+}
+
+### Remonter sa position (repli REST de l'événement Socket.IO `driver.position`)
+POST {{base}}/v1/driver/position
+Authorization: Bearer {{driverToken}}
+Content-Type: application/json
+
+{
+  "lat": 3.8550,
+  "lng": 11.4880,
+  "heading": 210,
+  "speed": 24
+}
+
+### Accepter une offre. `offerId` arrive par l'événement `ride.offer`.
+# `{ "accepted": false }` n'est PAS une erreur : un autre chauffeur a été plus
+# rapide, ou les 15 s sont passées. Affichez « Trop tard ».
+POST {{base}}/v1/driver/offers/REMPLACEZ-PAR-offerId/accept
+Authorization: Bearer {{driverToken}}
+
+### « Je suis arrivé »
+POST {{base}}/v1/rides/{{rideId}}/arrived
+Authorization: Bearer {{driverToken}}
+Content-Type: application/json
+
+{ "lat": {{melenLat}}, "lng": {{melenLng}} }
+
+### Démarrer avec le code de montée — les 4 chiffres lus sur l'écran de la passagère.
+# 3 échecs → alerte ops. Le chauffeur ne peut pas deviner ce code : il n'apparaît
+# jamais dans SES réponses.
+POST {{base}}/v1/rides/{{rideId}}/start
+Authorization: Bearer {{driverToken}}
+Content-Type: application/json
+
+{ "boardingCode": "0000" }
+
+### Arrivée à destination. `price_final` = `price_quoted`, toujours.
+POST {{base}}/v1/rides/{{rideId}}/complete
+Authorization: Bearer {{driverToken}}
+Content-Type: application/json
+
+{ "lat": {{obiliLat}}, "lng": {{obiliLng}} }
+
+### Encaissement en espèces — TROISIÈME MOMENT DE VÉRITÉ : `earnings.net`.
+POST {{base}}/v1/rides/{{rideId}}/payments/cash-confirm
+Authorization: Bearer {{driverToken}}
+
+### Paiement Mobile Money (simulé : ~3 s d'attente, puis succès)
+POST {{base}}/v1/rides/{{rideId}}/payments/mobile-money
+Authorization: Bearer {{passengerToken}}
+
+### Passager absent : 5 min d'attente (voiture) / 3 min (moto) après « Je suis arrivé »
+POST {{base}}/v1/rides/{{rideId}}/no-show
+Authorization: Bearer {{driverToken}}
+
+### Mes gains. Exact au franc, frais d'annulation compris.
+GET {{base}}/v1/driver/earnings?period=day
+Authorization: Bearer {{driverToken}}
+
+
+###############################################################################
+# § 8 — Administration
+#
+# Aucun compte ops n'est semé. Créez-en un normalement, puis en base :
+#   update users set role = 'ops' where phone = '+237690000001';
+###############################################################################
+
+### Session ops (après avoir passé le rôle en base)
+# @name loginOps
+POST {{base}}/v1/auth/otp/verify
+Content-Type: application/json
+
+{
+  "value": "+237690000001",
+  "code": "123456",
+  "role": "passenger"
+}
+
+@opsToken = {{loginOps.response.body.access_token}}
+
+### Les six compteurs, la majoration et l'état du disjoncteur de routage
+GET {{base}}/v1/ops/dashboard
+Authorization: Bearer {{opsToken}}
+
+### Carte live des chauffeurs
+GET {{base}}/v1/dispatch/drivers
+Authorization: Bearer {{opsToken}}
+
+### File de revue des dossiers
+GET {{base}}/v1/ops/drivers?status=pending
+Authorization: Bearer {{opsToken}}
+
+### Valider un dossier : c'est CE geste qui autorise la mise en ligne
+POST {{base}}/v1/ops/drivers/REMPLACEZ-PAR-userId/decision
+Authorization: Bearer {{opsToken}}
+Content-Type: application/json
+
+{ "decision": "approve" }
+
+### Pluie sur Yaoundé : majoration jusqu'à +50 %, en ligne séparée, plafonnée ×1,5
+POST {{base}}/v1/ops/surge
+Authorization: Bearer {{opsToken}}
+Content-Type: application/json
+
+{ "percent": 50, "reason": "Pluie sur Yaoundé" }
+
+### Couper la majoration
+POST {{base}}/v1/ops/surge
+Authorization: Bearer {{opsToken}}
+Content-Type: application/json
+
+{ "percent": 0 }
+
+
+###############################################################################
+# § 9 — Pilotage de la démonstration (DEMO_MODE=true uniquement)
+###############################################################################
+
+### État de la flotte simulée : 12 chauffeurs, leur phase, leur position
+GET {{base}}/v1/demo/status
+X-Demo-Token: {{demoToken}}
+
+### Mettre la scène en place. La réponse rend le mode d'emploi du présentateur.
+POST {{base}}/v1/demo/scenario
+X-Demo-Token: {{demoToken}}
+Content-Type: application/json
+
+{ "name": "moto_zone_interdite" }
+
+### Autres scénarios :
+#   nominal · aucun_chauffeur · annulation_tardive · pluie · sos
+
+### Remise à zéro : efface les courses, garde repères, zones, tarifs et comptes
+POST {{base}}/v1/demo/reset
+X-Demo-Token: {{demoToken}}

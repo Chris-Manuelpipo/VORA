@@ -134,6 +134,13 @@ const schema = z.object({
   COMMIT_ID: z.string().default('inconnu'),
 
   /**
+   * Sert `GET /openapi.json` et `GET /docs`. Vrai par défaut : le développeur frontend
+   * travaille sur une autre machine, et une API dont on ne peut pas lire le contrat lui
+   * coûte un aller-retour par question. `false` referme les deux routes d'un coup.
+   */
+  DOCS_ENABLED: boolean('true'),
+
+  /**
    * TLS vers PostgreSQL. Les add-ons gérés présentent souvent un certificat que Node ne
    * reconnaît pas : `DATABASE_SSL=true` chiffre la connexion sans exiger cette chaîne de
    * confiance. C'est un compromis, et il est explicite — on ne l'active pas par défaut,

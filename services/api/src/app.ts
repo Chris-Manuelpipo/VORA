@@ -14,6 +14,7 @@ import { registerAuth } from './lib/auth.js';
 import { config } from './lib/config.js';
 import { registerErrorHandler } from './lib/http.js';
 import { loggerOptions } from './lib/logger.js';
+import { registerOpenApi } from './lib/openapi.js';
 import { dispatchRoutes } from './modules/dispatch/routes.js';
 import { geoRoutes } from './modules/geo/routes.js';
 import { identityRoutes } from './modules/identity/routes.js';
@@ -81,6 +82,41 @@ export async function buildApp(options: BuildOptions = {}): Promise<FastifyInsta
   app.setSerializerCompiler(serializerCompiler);
   registerErrorHandler(app);
 
+  /**
+   * Un POST SANS CORPS avec `Content-Type: application/json` est accepté.
+   *
+   * Plusieurs actions n'ont rien à transmettre : `/cash-confirm`, `/no-show`, `/share`,
+   * `/sos`, `/retry`, `/driver/offline`, accept et decline. Or la plupart des clients
+   * HTTP — axios, dio, `curl -X POST -H 'Content-Type: application/json'` — posent
+   * l'en-tête de toute façon, et Fastify refuse alors la requête avec un 400
+   * « Body cannot be empty ».
+   *
+   * Le développeur voit un 400 sur un appel parfaitement correct, et cherche l'erreur
+   * dans son code. On traite donc un corps vide comme `{}` : c'est ce qu'il voulait dire.
+   */
+  app.addContentTypeParser<string>(
+    'application/json',
+    { parseAs: 'string' },
+    (_request, body, done) => {
+      if (body === undefined || body === null || body.trim() === '') {
+        done(null, {});
+        return;
+      }
+
+      try {
+        done(null, JSON.parse(body));
+      } catch {
+        // Même forme d'erreur que le parseur par défaut de Fastify : le gestionnaire
+        // d'erreurs la traduit en VALIDATION_ERROR.
+        const error = new Error('Corps de requête JSON invalide.') as Error & {
+          statusCode?: number;
+        };
+        error.statusCode = 400;
+        done(error, undefined);
+      }
+    },
+  );
+
   await app.register(cors, {
     origin: config.corsOrigins,
     credentials: true,
@@ -98,6 +134,10 @@ export async function buildApp(options: BuildOptions = {}): Promise<FastifyInsta
   });
 
   await registerAuth(app);
+
+  // AVANT les routes : @fastify/swagger observe les schémas au moment où chaque route
+  // est déclarée. Enregistré après, il ne verrait rien.
+  await registerOpenApi(app);
 
   /**
    * Contrôle de santé de la plateforme. SANS authentification et SANS limite de débit :

@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VORA — Maquettes lot 1 · boucle passager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blanc:#FFFFFF;--bleu:#1F5EFF;--bleu-presse:#174BD1;--bleu-nuit:#0B2A6F;--bleu-ciel:#E8F0FF;--bleu-pale:#F4F7FF;
+  --jaune:#FFC42E;--encre:#1E293B;--gris:#5B6B84;--gris-clair:#94A3B8;--bordure:#DDE3EE;--surface:#F4F6FA;
+  --ok:#0F7A47;--ok-fond:#DDF5E7;--attention:#B25E00;--attention-fond:#FFF1DD;--sos:#D92D20;--sos-fond:#FDE3E1;
+  --font-display:'Sora','Trebuchet MS',system-ui,sans-serif;--font-body:'IBM Plex Sans','Segoe UI',Roboto,system-ui,sans-serif;
+  --ombre-2:0 4px 12px rgba(11,42,111,.10),0 2px 4px rgba(11,42,111,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;background:#EAEEF5;font-family:var(--font-body);color:var(--encre);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.board{max-width:1640px;margin:0 auto;padding:32px 32px 80px}
+.head{margin:0 0 40px;max-width:90ch}
+.head .eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--bleu);margin:0 0 6px}
+.head h1{font-family:var(--font-display);font-weight:800;color:var(--bleu-nuit);font-size:30px;margin:0 0 8px;letter-spacing:-.01em}
+.head p{margin:0 0 6px;color:var(--gris);font-size:15px;line-height:1.5}
+.head .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.head .legend span{background:#fff;border:1px solid var(--bordure);border-radius:999px;padding:5px 11px;font-size:12px;color:var(--gris)}
+.lot{margin:0 0 60px;scroll-margin-top:24px}
+.lot h2{font-family:var(--font-display);font-weight:700;color:var(--bleu-nuit);font-size:20px;margin:0 0 4px}
+.lot .desc{color:var(--gris);font-size:14px;margin:0 0 18px;max-width:90ch;line-height:1.5}
+.frames{display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start}
+.item{width:360px}
+.item .state{font-size:12px;font-weight:600;color:var(--bleu-nuit);margin:0 0 8px 4px;text-transform:uppercase;letter-spacing:.06em}
+.item .cap{font-size:12px;color:var(--gris);margin:10px 4px 0;line-height:1.5}
+.item .cap b{color:var(--bleu-nuit);font-weight:600}
+
+/* ---- Cadre téléphone 360 × 800 ---- */
+.frame{position:relative;width:360px;height:800px;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 0 0 8px #0F172A,0 18px 40px rgba(11,42,111,.22);font-size:14px;line-height:1.35}
+.sb{position:absolute;top:0;left:0;right:0;height:28px;background:linear-gradient(#fff 40%,rgba(255,255,255,0));display:flex;justify-content:space-between;align-items:center;padding:0 16px;font-size:12px;font-weight:600;color:var(--encre);z-index:5}
+.sb .r{display:flex;gap:6px;align-items:center}
+.sb i{display:inline-block;width:14px;height:8px;background:currentColor;border-radius:1px;opacity:.85}
+.sb i.b{width:18px;border-radius:3px}
+.gesture{position:absolute;bottom:6px;left:50%;width:100px;height:4px;margin-left:-50px;border-radius:2px;background:rgba(30,41,59,.30);z-index:12}
+
+/* ---- Carte ---- */
+.map{position:absolute;top:0;left:0;width:360px;height:560px;display:block}
+.ov{position:absolute;top:0;left:0;width:360px;height:560px;pointer-events:none}
+.locpill{position:absolute;top:40px;left:16px;right:16px;z-index:4;background:#fff;border-radius:12px;box-shadow:var(--ombre-2);padding:10px 12px;display:flex;align-items:center;gap:10px;font-size:14px}
+.locpill small{display:block;color:var(--gris);font-size:11px}
+.locpill .edit{margin-left:auto;color:var(--bleu);font-weight:600;font-size:12px}
+.eta{position:absolute;background:var(--bleu-nuit);color:#fff;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:600;z-index:4;white-space:nowrap}
+.eta::after{content:"";position:absolute;left:14px;bottom:-5px;border:5px solid transparent;border-top-color:var(--bleu-nuit);border-bottom:0}
+.banner{position:absolute;top:34px;left:12px;right:12px;z-index:7;background:var(--attention-fond);color:var(--attention);border:1px solid #F5D9AD;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:500;line-height:1.35}
+.banner.ok{background:var(--ok-fond);color:var(--ok);border-color:#BFE8D0}
+.banner.bleu{background:var(--bleu-nuit);color:#fff;border-color:var(--bleu-nuit)}
+.topbar{position:absolute;top:28px;left:0;right:0;padding:8px 16px 10px;display:flex;gap:10px;align-items:center;background:#fff;z-index:4;border-bottom:1px solid var(--bordure)}
+.back{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--encre);flex:none}
+.back svg{width:22px;height:22px}
+
+/* ---- Feuille ---- */
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;box-shadow:0 -6px 20px rgba(11,42,111,.10);padding:8px 16px 26px;z-index:6}
+.sheet.full{top:28px;border-radius:0;box-shadow:none;padding-top:12px}
+.handle{width:36px;height:4px;border-radius:2px;background:var(--bordure);margin:4px auto 12px}
+.h{font-family:var(--font-display);font-weight:700;color:var(--bleu-nuit);font-size:20px;margin:0 0 4px;letter-spacing:-.01em}
+.h.big{font-size:24px}
+.sub{color:var(--gris);font-size:13px;margin:0 0 12px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--bleu);margin:0 0 4px}
+.prix{font-family:var(--font-display);font-weight:800;font-size:34px;color:var(--bleu);font-variant-numeric:tabular-nums;line-height:1;margin:4px 0 4px}
+.muted{color:var(--gris)}
+.small{font-size:12px}
+
+/* ---- Composants ---- */
+.btn{height:52px;border-radius:12px;font-weight:600;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:2px solid transparent;cursor:pointer;font-family:var(--font-body)}
+.btn-primaire{background:var(--bleu);color:#fff}
+.btn-secondaire{background:#fff;color:var(--bleu);border-color:var(--bleu)}
+.btn-tertiaire{background:transparent;color:var(--bleu)}
+.btn-danger{background:var(--sos);color:#fff}
+.btn-desactive{background:var(--surface);color:var(--gris-clair);border-color:var(--bordure)}
+.btn + .btn{margin-top:8px}
+.search{display:flex;align-items:center;gap:10px;height:52px;border:1.5px solid var(--bordure);border-radius:12px;padding:0 14px;background:#fff;color:var(--gris-clair);font-size:16px}
+.search.focus{border-color:var(--bleu);box-shadow:0 0 0 3px var(--bleu-ciel);color:var(--encre)}
+.search svg{width:22px;height:22px;color:var(--bleu);flex:none}
+.search .caret{width:2px;height:20px;background:var(--bleu);margin-left:-6px}
+.favs{display:flex;gap:8px;overflow:hidden;margin:12px 0 4px}
+.fav{display:flex;align-items:center;gap:6px;padding:8px 12px;border:1.5px solid var(--bordure);border-radius:999px;font-size:13px;font-weight:500;white-space:nowrap;color:var(--encre)}
+.fav svg{width:16px;height:16px;color:var(--bleu)}
+.fav.add{color:var(--bleu);border-style:dashed}
+.rowi{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bordure)}
+.rowi:last-child{border-bottom:0}
+.rowi .ic{width:36px;height:36px;border-radius:10px;background:var(--bleu-pale);display:flex;align-items:center;justify-content:center;flex:none;color:var(--bleu)}
+.rowi .ic svg{width:20px;height:20px}
+.rowi .ic.j{background:#FFF4D6;color:var(--bleu-nuit)}
+.rowi .t{flex:1;min-width:0}
+.rowi .t b{font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rowi .t small{display:block;color:var(--gris);font-size:12px}
+.rowi .d{font-size:12px;color:var(--gris);white-space:nowrap}
+.sect{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gris);margin:14px 0 2px}
+.tabs{display:flex;border-top:1px solid var(--bordure);margin:12px -16px -26px;padding:8px 8px 20px;background:#fff}
+.tab{flex:1;text-align:center;font-size:11px;color:var(--gris);font-weight:500}
+.tab.on{color:var(--bleu);font-weight:600}
+.tab svg{width:22px;height:22px;display:block;margin:0 auto 2px}
+.opt{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1.5px solid var(--bordure);border-radius:12px;margin-bottom:8px;background:#fff}
+.opt.on{border-color:var(--bleu);background:var(--bleu-ciel)}
+.opt.off{opacity:.55}
+.opt .ic{width:40px;height:40px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--bleu);flex:none;border:1px solid var(--bordure)}
+.opt .ic svg{width:24px;height:24px}
+.opt .t{flex:1}
+.opt .t b{font-weight:600;display:block}
+.opt .t small{display:block;color:var(--gris);font-size:12px}
+.opt .p{font-family:var(--font-display);font-weight:800;color:var(--bleu);font-size:18px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;font-size:11px;font-weight:600}
+.badge svg{width:12px;height:12px}
+.badge-verifie{background:var(--bleu-ciel);color:var(--bleu-nuit)}
+.badge-ok{background:var(--ok-fond);color:var(--ok)}
+.badge-repere{background:var(--jaune);color:var(--bleu-nuit)}
+.badge-attention{background:var(--attention-fond);color:var(--attention)}
+.lignes{font-size:13px;color:var(--gris);border-top:1px solid var(--bordure);margin-top:6px;padding-top:6px}
+.lignes div{display:flex;justify-content:space-between;padding:3px 0}
+.lignes div b{color:var(--encre);font-weight:600;font-variant-numeric:tabular-nums}
+.lignes div.tot b{color:var(--bleu)}
+.pay{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--bordure);border-bottom:1px solid var(--bordure);margin:8px 0 12px;font-size:14px}
+.pay svg{width:20px;height:20px;color:var(--bleu)}
+.pay .chg{margin-left:auto;color:var(--bleu);font-weight:600;font-size:13px}
+.trajet{display:grid;grid-template-columns:18px 1fr;gap:0 10px;font-size:14px;margin:6px 0}
+.trajet .pts{position:relative}
+.trajet .pts::before{content:"";position:absolute;left:8px;top:14px;bottom:14px;border-left:2px dashed var(--bordure)}
+.trajet .pt{width:18px;height:18px;border-radius:50%;background:#fff;border:4px solid var(--bleu);margin:2px 0 12px}
+.trajet .pt.fin{border-radius:4px;border-color:var(--bleu-nuit)}
+.trajet .l{padding:0 0 10px;font-weight:500}
+.trajet .l small{display:block;color:var(--gris);font-size:12px;font-weight:400}
+.drv{display:flex;align-items:center;gap:12px;margin:8px 0}
+.avatar{width:52px;height:52px;border-radius:50%;background:var(--bleu-ciel);color:var(--bleu-nuit);font-family:var(--font-display);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:17px;flex:none;position:relative}
+.avatar .v{position:absolute;right:-3px;bottom:-3px;width:20px;height:20px;border-radius:50%;background:#fff;color:var(--bleu);display:flex;align-items:center;justify-content:center}
+.avatar .v svg{width:14px;height:14px}
+.drv .t{flex:1;min-width:0}
+.drv .t b{font-weight:600;display:block}
+.drv .t small{display:block;color:var(--gris);font-size:12px}
+.plate{font-family:var(--font-display);font-weight:800;font-size:17px;letter-spacing:.08em;border:2px solid var(--bleu-nuit);border-radius:8px;padding:5px 8px;color:var(--bleu-nuit);white-space:nowrap;background:#fff}
+.code{display:flex;gap:8px;justify-content:center;margin:8px 0 4px}
+.code span{width:56px;height:62px;border-radius:12px;background:var(--bleu-nuit);color:#fff;font-family:var(--font-display);font-weight:800;font-size:30px;display:flex;align-items:center;justify-content:center}
+.acts{display:flex;gap:8px;margin:12px 0 4px}
+.act{flex:1;height:60px;padding:0 4px;text-align:center;line-height:1.15;border:1.5px solid var(--bordure);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:600;color:var(--bleu-nuit)}
+.act svg{width:22px;height:22px;color:var(--bleu)}
+.fab-sos{position:absolute;left:16px;z-index:7;width:60px;height:60px;border-radius:50%;background:var(--sos);color:#fff;font-family:var(--font-display);font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 6px rgba(217,45,32,.18),0 6px 14px rgba(217,45,32,.35)}
+.timer{font-family:var(--font-display);font-weight:800;font-size:44px;color:var(--bleu-nuit);font-variant-numeric:tabular-nums;text-align:center;line-height:1;margin:6px 0 4px}
+.dots{display:flex;gap:6px;justify-content:center;margin:10px 0 14px}
+.dots i{width:8px;height:8px;border-radius:50%;background:var(--bleu-ciel)}
+.dots i.on{background:var(--bleu)}
+.stars{display:flex;justify-content:center;gap:10px;margin:14px 0}
+.stars svg{width:40px;height:40px;color:var(--bordure)}
+.stars svg.on{color:var(--bleu)}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}
+.tag{padding:8px 12px;border:1.5px solid var(--bordure);border-radius:999px;font-size:13px;font-weight:500}
+.tag.on{border-color:var(--bleu);background:var(--bleu-ciel);color:var(--bleu-nuit);font-weight:600}
+.tag.warn{border-color:#F5D9AD;background:var(--attention-fond);color:var(--attention)}
+.radio{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--bordure);font-size:14px}
+.radio i{width:20px;height:20px;border-radius:50%;border:2px solid var(--gris-clair);flex:none}
+.radio i.on{border-color:var(--bleu);box-shadow:inset 0 0 0 5px var(--bleu)}
+.inline-err{background:var(--sos-fond);border:1px solid #F6BDB8;color:var(--sos);border-radius:12px;padding:10px 12px;font-size:13px;margin:0 0 12px;line-height:1.4}
+.inline-err b{display:block;margin-bottom:2px}
+.paycard{display:flex;align-items:center;gap:12px;padding:12px;border:1.5px solid var(--bordure);border-radius:12px;margin-bottom:8px}
+.paycard.on{border-color:var(--bleu);background:var(--bleu-ciel)}
+.paycard .ic{width:40px;height:40px;border-radius:10px;background:#fff;border:1px solid var(--bordure);display:flex;align-items:center;justify-content:center;color:var(--bleu);flex:none}
+.paycard .ic svg{width:22px;height:22px}
+.paycard .t b{display:block;font-weight:600}
+.paycard .t small{display:block;color:var(--gris);font-size:12px}
+.dim{position:absolute;inset:0;background:rgba(11,42,111,.45);z-index:8}
+.modal{position:absolute;left:0;right:0;bottom:0;z-index:9;background:#fff;border-radius:24px 24px 0 0;padding:8px 16px 26px}
+.x{position:absolute;right:14px;top:14px;width:36px;height:36px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--gris);font-size:18px;z-index:10}
+.pulse{animation:pulse 1.8s ease-out infinite;transform-origin:center;transform-box:fill-box}
+@keyframes pulse{0%{transform:scale(.6);opacity:.7}100%{transform:scale(1.6);opacity:0}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none;opacity:.3}}
+</style>
+</head>
+<body>
+
+<!-- ===== Sprite ===== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="vsym" viewBox="0 0 120 120"><path d="M26 24 L60 84 L94 24" fill="none" stroke="currentColor" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="86" r="16" fill="#FFC42E" stroke="var(--ring,#fff)" stroke-width="5"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-5v-6h-4v6H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="i-work" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6-5.2-6-10.5a6 6 0 0 1 12 0C18 15.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 8.5l2.5 4 2.5-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="2"/></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M4 13l1.5-5A2 2 0 0 1 7.4 6.5h9.2a2 2 0 0 1 1.9 1.5L20 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H4a1 1 0 0 1-1-1v-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="i-moto" viewBox="0 0 24 24"><circle cx="5.5" cy="16.5" r="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18.5" cy="16.5" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5.5 16.5L10 9h4l3 4.5h1.5M13 6h3l2 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-cash" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+<symbol id="i-momo" viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6l7-3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="i-msg" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="i-share" viewBox="0 0 24 24"><path d="M4 12h12M12 8l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="20" cy="12" r="2" fill="currentColor"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-list" viewBox="0 0 24 24"><path d="M5 7h14M5 12h14M5 17h9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.4l-5.7 3.1 1.2-6.4L2.8 9.7l6.4-.8z" fill="currentColor"/></symbol>
+<symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+
+<!-- Carte de base (Ngoa-Ekellé / Melen), 360 × 560 -->
+<symbol id="map" viewBox="0 0 360 560">
+  <rect width="360" height="560" fill="#F4F6FA"/>
+  <g fill="#EDF0F5">
+    <rect x="0" y="0" width="82" height="120" rx="6"/><rect x="132" y="0" width="118" height="70" rx="6"/><rect x="292" y="0" width="68" height="92" rx="6"/>
+    <rect x="0" y="182" width="62" height="140" rx="6"/><rect x="122" y="118" width="88" height="112" rx="6"/><rect x="252" y="142" width="108" height="78" rx="6"/>
+    <rect x="70" y="362" width="88" height="118" rx="6"/><rect x="204" y="300" width="76" height="92" rx="6"/><rect x="302" y="282" width="58" height="128" rx="6"/>
+    <rect x="0" y="472" width="60" height="88" rx="6"/><rect x="204" y="442" width="140" height="118" rx="6"/>
+  </g>
+  <rect x="20" y="132" width="90" height="42" rx="8" fill="#E6F2EA"/>
+  <rect x="300" y="470" width="60" height="90" rx="8" fill="#E6F2EA"/>
+  <g fill="none" stroke="#DDE3EE" stroke-width="16" stroke-linecap="round"><path d="M-10 440 L370 110"/><path d="M100 -10 L120 570"/><path d="M230 -10 L290 570"/><path d="M-10 250 L370 230"/><path d="M-10 400 L370 470"/></g>
+  <g fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"><path d="M-10 440 L370 110"/><path d="M100 -10 L120 570"/><path d="M230 -10 L290 570"/><path d="M-10 250 L370 230"/><path d="M-10 400 L370 470"/></g>
+  <g fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"><path d="M40 60 L60 250"/><path d="M180 70 L200 230"/><path d="M300 92 L330 232"/><path d="M160 300 L200 490"/><path d="M40 330 L120 340"/></g>
+  <g font-family="IBM Plex Sans, system-ui, sans-serif" font-size="11" fill="#5B6B84" font-weight="500">
+    <text x="14" y="372">Ngoa-Ekellé</text><text x="262" y="132">Melen</text><text x="214" y="530">Obili</text><text x="28" y="122">Cité U</text><text x="30" y="160" font-size="10">Jardin</text>
+  </g>
+</symbol>
+<!-- Marqueurs -->
+<symbol id="m-repere" viewBox="0 0 44 52"><path d="M22 48S6 34 6 20a16 16 0 0 1 32 0c0 14-16 28-16 28z" fill="#FFC42E" stroke="#fff" stroke-width="3"/><path d="M15 15l7 11 7-11" fill="none" stroke="#0B2A6F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="m-car" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="#1F5EFF" stroke="#fff" stroke-width="3"/><path d="M13 24l1.4-4.5a2 2 0 0 1 1.9-1.5h11.4a2 2 0 0 1 1.9 1.5L31 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/><rect x="12" y="24" width="20" height="5" rx="1.5" fill="#fff"/></symbol>
+<symbol id="m-me" viewBox="0 0 60 60"><circle cx="30" cy="30" r="26" fill="#1F5EFF" opacity=".15"/><circle cx="30" cy="30" r="8" fill="#1F5EFF" stroke="#fff" stroke-width="3"/></symbol>
+</defs></svg>
+
+<div class="board">
+<header class="head">
+  <p class="eyebrow">Maquettes · lot 1 · boucle passager · v0.1 · août 2026</p>
+  <h1>VORA — de « Où allez-vous ? » à « Course payée »</h1>
+  <p>Dix écrans, 360 × 800 dp, français, mode clair. Chaque écran est montré dans son état nominal puis dans les états qui comptent sur le terrain (hors ligne, aucun chauffeur, MoMo refusé…). Les boutons principaux sont cliquables et mènent à l'écran suivant : lire la planche de haut en bas, c'est vivre la course d'Aïcha, du campus de Ngoa-Ekellé à Biyem-Assi, un samedi à 21 h 41.</p>
+  <p>Tout vient de la charte : jetons, boutons, puces, badge Vérifié, marqueurs, voix. Aucun composant nouveau n'a été inventé pour ce lot.</p>
+  <div class="legend"><span>PA-08 Accueil</span><span>PA-09 Recherche</span><span>PA-11 Offre et prix</span><span>PA-12 Recherche de chauffeur</span><span>PA-13 Approche</span><span>PA-21 Annulation</span><span>PA-14 En course</span><span>PA-22 SOS</span><span>PA-15 Paiement</span><span>PA-16 Notation</span></div>
+</header>
+
+<!-- ======================================================= PA-08 ACCUEIL -->
+<section class="lot" id="pa08">
+  <h2>PA-08 · Accueil</h2>
+  <p class="desc">L'appli, c'est cet écran. La carte est centrée sur la position, corrigeable d'un tap ; le champ « Où allez-vous ? » est à portée de pouce ; les favoris et les repères proches évitent de taper. Le point jaune sur la carte est le seul jaune de l'écran : ce sont les repères.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal</p>
+      <div class="frame">
+        <div class="sb"><span>21:41</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map"><use href="#map"/></svg>
+        <svg class="ov" viewBox="0 0 360 560">
+          <g transform="translate(60 335)"><circle r="26" fill="#1F5EFF" opacity=".15" class="pulse"/><circle r="8" fill="#1F5EFF" stroke="#fff" stroke-width="3"/></g>
+          <g transform="translate(150 250) scale(.8)"><use href="#m-repere" width="44" height="52" x="-22" y="-48"/></g>
+          <text x="164" y="262" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="11" font-weight="600" fill="#0B2A6F">Carrefour Ngoa-Ekellé</text>
+          <g transform="translate(292 330) scale(.8)"><use href="#m-repere" width="44" height="52" x="-22" y="-48"/></g>
+          <text x="278" y="342" text-anchor="end" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="11" font-weight="600" fill="#0B2A6F">Pharmacie</text>
+          <g transform="translate(232 196) scale(.8)"><use href="#m-repere" width="44" height="52" x="-22" y="-48"/></g>
+          <text x="246" y="208" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="11" font-weight="600" fill="#0B2A6F">Entrée ENSP</text>
+        </svg>
+        <div class="locpill"><svg width="20" height="20" style="color:var(--bleu)"><use href="#i-pin"/></svg><div>Ngoa-Ekellé, près de l'ENSP<small>Votre position · précision 12 m</small></div><span class="edit">Ajuster</span></div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <p class="sub" style="margin:0 0 8px">Bonjour Aïcha</p>
+          <a class="search" href="#pa09"><svg><use href="#i-search"/></svg>Où allez-vous ?</a>
+          <div class="favs">
+            <a class="fav" href="#pa11"><svg><use href="#i-home"/></svg>Maison · Biyem-Assi</a>
+            <span class="fav add"><svg><use href="#i-plus"/></svg>Travail</span>
+          </div>
+          <p class="sect">Récents</p>
+          <div class="rowi"><div class="ic"><svg><use href="#i-clock"/></svg></div><div class="t"><b>Carrefour Bastos</b><small>Bastos · hier</small></div></div>
+          <p class="sect">Repères près de vous</p>
+          <div class="rowi"><div class="ic j"><svg><use href="#i-pin"/></svg></div><div class="t"><b>Carrefour Ngoa-Ekellé</b><small>Point de rendez-vous le plus utilisé ici</small></div><span class="d">150 m</span></div>
+          <div class="tabs">
+            <div class="tab on"><svg><use href="#i-map"/></svg>Accueil</div>
+            <div class="tab"><svg><use href="#i-list"/></svg>Mes courses</div>
+            <div class="tab"><svg><use href="#i-user"/></svg>Profil</div>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : pilule de position, marqueur Repère, champ de recherche, favoris, lignes de liste, onglets. Le favori « Maison » mène directement à l'offre et au prix (deux gestes).</p>
+    </div>
+
+    <div class="item">
+      <p class="state">État · hors ligne</p>
+      <div class="frame">
+        <div class="sb"><span>21:41</span><span class="r"><span style="font-size:10px;color:var(--attention)">Pas de réseau</span><i class="b"></i></span></div>
+        <svg class="map" style="filter:grayscale(.6);opacity:.8"><use href="#map"/></svg>
+        <div class="banner">Pas de réseau. Vos récents et favoris restent disponibles ; la commande partira dès le retour de la connexion.</div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <p class="sub" style="margin:0 0 8px">Bonjour Aïcha</p>
+          <div class="search"><svg><use href="#i-search"/></svg>Où allez-vous ?</div>
+          <div class="favs"><span class="fav"><svg><use href="#i-home"/></svg>Maison · Biyem-Assi</span><span class="fav add"><svg><use href="#i-plus"/></svg>Travail</span></div>
+          <p class="sect">Récents</p>
+          <div class="rowi"><div class="ic"><svg><use href="#i-clock"/></svg></div><div class="t"><b>Carrefour Bastos</b><small>Bastos · hier</small></div></div>
+          <p class="sect">Repères près de vous</p>
+          <div class="rowi"><div class="t"><small>Indisponibles hors ligne</small></div></div>
+          <div class="tabs"><div class="tab on"><svg><use href="#i-map"/></svg>Accueil</div><div class="tab"><svg><use href="#i-list"/></svg>Mes courses</div><div class="tab"><svg><use href="#i-user"/></svg>Profil</div></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : la carte se grise mais reste lisible, rien ne disparaît. Le bandeau orange dit ce qui marche encore et ce qui se passera.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= PA-09 RECHERCHE -->
+<section class="lot" id="pa09">
+  <h2>PA-09 · Recherche de destination</h2>
+  <p class="desc">On tape comme on parle : un quartier, un carrefour, un commerce. Les repères VORA arrivent d'abord (point jaune), la carte ensuite. Chaque résultat tient sur une ligne : nom usuel, puis quartier.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal · « biyem »</p>
+      <div class="frame">
+        <div class="sb"><span>21:41</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="topbar"><span class="back"><svg><use href="#i-back"/></svg></span><div class="search focus" style="flex:1"><svg><use href="#i-search"/></svg>biyem<span class="caret"></span></div></div>
+        <div class="sheet full" style="padding-top:100px">
+          <p class="sect" style="margin-top:0">Repères VORA</p>
+          <a class="rowi" href="#pa11"><div class="ic j"><svg><use href="#i-pin"/></svg></div><div class="t"><b>Carrefour Acacias</b><small>Biyem-Assi</small></div><span class="d">5,0 km</span></a>
+          <div class="rowi"><div class="ic j"><svg><use href="#i-pin"/></svg></div><div class="t"><b>Marché de Biyem-Assi</b><small>Biyem-Assi</small></div><span class="d">4,6 km</span></div>
+          <div class="rowi"><div class="ic j"><svg><use href="#i-pin"/></svg></div><div class="t"><b>Pharmacie Biyem-Assi</b><small>Biyem-Assi, en face du marché</small></div><span class="d">4,7 km</span></div>
+          <div class="rowi"><div class="ic j"><svg><use href="#i-pin"/></svg></div><div class="t"><b>Lycée de Biyem-Assi</b><small>Biyem-Assi</small></div><span class="d">5,4 km</span></div>
+          <p class="sect">Vos lieux</p>
+          <div class="rowi"><div class="ic"><svg><use href="#i-home"/></svg></div><div class="t"><b>Maison</b><small>Biyem-Assi, Carrefour Acacias</small></div><span class="d">5,0 km</span></div>
+          <p class="sect">Autre</p>
+          <div class="rowi"><div class="ic"><svg><use href="#i-map"/></svg></div><div class="t"><b>Choisir sur la carte</b><small>Placer l'aiguille vous-même</small></div><svg width="20" height="20" style="color:var(--gris-clair)"><use href="#i-chev"/></svg></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : barre de recherche en focus (halo Bleu ciel), lignes de résultat avec icône Repère sur fond jaune pâle, distance à droite.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">État · aucun résultat</p>
+      <div class="frame">
+        <div class="sb"><span>21:41</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="topbar"><span class="back"><svg><use href="#i-back"/></svg></span><div class="search focus" style="flex:1"><svg><use href="#i-search"/></svg>molibisson<span class="caret"></span></div></div>
+        <div class="sheet full" style="padding-top:100px">
+          <div style="padding:24px 8px 8px">
+            <p class="h" style="font-size:18px">Aucun repère pour « molibisson »</p>
+            <p class="sub">Essayez le nom du quartier ou du carrefour, ou placez l'aiguille sur la carte. Votre chauffeur verra exactement l'endroit.</p>
+          </div>
+          <div class="rowi"><div class="ic"><svg><use href="#i-map"/></svg></div><div class="t"><b>Choisir sur la carte</b><small>Placer l'aiguille vous-même</small></div><svg width="20" height="20" style="color:var(--gris-clair)"><use href="#i-chev"/></svg></div>
+          <p class="sect">Récents</p>
+          <div class="rowi"><div class="ic"><svg><use href="#i-clock"/></svg></div><div class="t"><b>Carrefour Bastos</b><small>Bastos · hier</small></div></div>
+          <div class="rowi"><div class="ic"><svg><use href="#i-clock"/></svg></div><div class="t"><b>Marché Mokolo</b><small>Mokolo · mardi</small></div></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : l'écran vide invite à agir. La carte est la sortie de secours universelle, et l'ops voit ces recherches sans résultat pour enrichir la base de repères.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= PA-11 OFFRE ET PRIX -->
+<section class="lot" id="pa11">
+  <h2>PA-11 · Offre et prix</h2>
+  <p class="desc">Le premier moment de vérité. Le prix ferme est le plus gros objet de l'écran, sa décomposition est juste dessous, et le bouton répète le montant. Moto n'apparaît que si le départ et l'arrivée sont en zone autorisée.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal</p>
+      <div class="frame">
+        <div class="sb"><span>21:42</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map" viewBox="0 88 360 230" preserveAspectRatio="xMidYMin meet"><use href="#map" width="360" height="560"/></svg>
+        <svg class="ov" viewBox="0 88 360 230" preserveAspectRatio="xMidYMin meet">
+          <path d="M60 310 L250 214 L246 120" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M60 310 L250 214 L246 120" fill="none" stroke="#1F5EFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="60" cy="310" r="8" fill="#fff" stroke="#1F5EFF" stroke-width="4"/>
+          <rect x="236" y="110" width="20" height="20" rx="5" fill="#0B2A6F" stroke="#fff" stroke-width="3"/>
+        </svg>
+        <div class="eta" style="left:150px;top:140px">5,0 km · 15 min</div>
+        <div class="topbar" style="background:transparent;border:0"><span class="back" style="background:#fff;box-shadow:var(--ombre-2)"><svg><use href="#i-back"/></svg></span></div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <div class="trajet"><div class="pts"><div class="pt"></div><div class="pt fin"></div></div><div><div class="l">Ngoa-Ekellé, près de l'ENSP<small>Point de rendez-vous : Carrefour Ngoa-Ekellé</small></div><div class="l" style="padding-bottom:4px">Carrefour Acacias, Biyem-Assi</div></div></div>
+          <div class="opt on"><div class="ic"><svg><use href="#i-car"/></svg></div><div class="t"><b>VORA Éco</b><small><span class="badge badge-repere">Prix ferme</span> · 4 min</small></div><div class="p">1 625 F</div></div>
+          <div class="lignes" style="margin:-2px 0 8px;border:0;padding:0 12px 4px"><div><span>Prise en charge</span><b>500 F</b></div><div><span>Distance 5,0 km</span><b>750 F</b></div><div><span>Temps 15 min</span><b>375 F</b></div><div><span>Majoration</span><b>0 F</b></div></div>
+          <div class="opt"><div class="ic"><svg><use href="#i-car"/></svg></div><div class="t"><b>VORA Confort</b><small>7 min · climatisée</small></div><div class="p">2 275 F</div></div>
+          <div class="opt"><div class="ic" style="border-color:var(--jaune)"><svg><use href="#i-moto"/></svg></div><div class="t"><b>VORA Moto</b><small>3 min · casque fourni</small></div><div class="p">380 F</div></div>
+          <div class="pay"><svg><use href="#i-cash"/></svg>Espèces<span class="chg">Changer</span></div>
+          <a class="btn btn-primaire" href="#pa12">Commander · 1 625 F</a>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : trajet à deux points, options d'offre (sélection Bleu ciel), badge Prix ferme, décomposition, ligne de paiement, bouton primaire avec montant.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">État · majoration nuit, moto hors zone</p>
+      <div class="frame">
+        <div class="sb"><span>23:12</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map" viewBox="0 88 360 230" preserveAspectRatio="xMidYMin meet"><use href="#map" width="360" height="560"/></svg>
+        <svg class="ov" viewBox="0 88 360 230" preserveAspectRatio="xMidYMin meet">
+          <path d="M60 310 L250 214 L246 120" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M60 310 L250 214 L246 120" fill="none" stroke="#1F5EFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="60" cy="310" r="8" fill="#fff" stroke="#1F5EFF" stroke-width="4"/>
+          <rect x="236" y="110" width="20" height="20" rx="5" fill="#0B2A6F" stroke="#fff" stroke-width="3"/>
+          <path d="M200 100 L360 92 L360 232 L228 222 Z" fill="#FDE3E1" opacity=".55"/><path d="M200 100 L360 92 L360 232 L228 222 Z" fill="none" stroke="#D92D20" stroke-width="1.5" stroke-dasharray="6 4"/>
+        </svg>
+        <div class="topbar" style="background:transparent;border:0"><span class="back" style="background:#fff;box-shadow:var(--ombre-2)"><svg><use href="#i-back"/></svg></span></div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <div class="trajet"><div class="pts"><div class="pt"></div><div class="pt fin"></div></div><div><div class="l">Ngoa-Ekellé, près de l'ENSP</div><div class="l" style="padding-bottom:4px">Carrefour Acacias, Biyem-Assi</div></div></div>
+          <div class="opt on"><div class="ic"><svg><use href="#i-car"/></svg></div><div class="t"><b>VORA Éco</b><small><span class="badge badge-repere">Prix ferme</span> · 6 min</small></div><div class="p">2 031 F</div></div>
+          <div class="lignes" style="margin:-2px 0 8px;border:0;padding:0 12px 4px"><div><span>Prise en charge</span><b>500 F</b></div><div><span>Distance 5,0 km</span><b>750 F</b></div><div><span>Temps 15 min</span><b>375 F</b></div><div><span style="color:var(--attention)">Majoration nuit + 25 %</span><b style="color:var(--attention)">406 F</b></div></div>
+          <div class="opt"><div class="ic"><svg><use href="#i-car"/></svg></div><div class="t"><b>VORA Confort</b><small>9 min · climatisée</small></div><div class="p">2 844 F</div></div>
+          <div class="opt off"><div class="ic"><svg><use href="#i-moto"/></svg></div><div class="t"><b>VORA Moto</b><small>Indisponible : l'arrivée est en zone interdite aux motos</small></div></div>
+          <div class="pay"><svg><use href="#i-cash"/></svg>Espèces<span class="chg">Changer</span></div>
+          <a class="btn btn-primaire" href="#pa12">Commander · 2 031 F</a>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : la majoration est une ligne à part, en orange, jamais fondue dans le total. L'option Moto reste visible mais grisée, avec la raison ; la zone interdite apparaît sur la carte.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= PA-12 RECHERCHE DE CHAUFFEUR -->
+<section class="lot" id="pa12">
+  <h2>PA-12 · Recherche de chauffeur</h2>
+  <p class="desc">Le moment d'incertitude. Un compteur qui avance, le nombre de chauffeurs contactés, et la promesse répétée : le prix ne changera pas. Si personne ne répond, l'appli le dit et propose deux sorties, sans frais.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal · 12 s</p>
+      <div class="frame">
+        <div class="sb"><span>21:42</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map"><use href="#map"/></svg>
+        <svg class="ov" viewBox="0 0 360 560">
+          <g transform="translate(60 335)"><circle r="90" fill="#1F5EFF" opacity=".08" class="pulse"/><circle r="60" fill="none" stroke="#1F5EFF" stroke-width="1.5" opacity=".35" stroke-dasharray="4 4"/><circle r="8" fill="#fff" stroke="#1F5EFF" stroke-width="4"/></g>
+          <g transform="translate(150 292)"><use href="#m-car" width="30" height="30" x="-15" y="-15"/></g>
+          <g transform="translate(118 250)"><use href="#m-car" width="30" height="30" x="-15" y="-15"/></g>
+          <g transform="translate(20 400)"><use href="#m-car" width="30" height="30" x="-15" y="-15"/></g>
+        </svg>
+        <div class="sheet">
+          <div class="handle"></div>
+          <a class="h" href="#pa13" style="display:block;text-align:center">Recherche d'un chauffeur…</a>
+          <div class="timer">0:12</div>
+          <div class="dots"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div>
+          <p class="sub" style="text-align:center">3 chauffeurs contactés autour de vous.<br>En général, moins d'une minute.</p>
+          <div class="lignes" style="margin:0 0 14px"><div class="tot"><span>Prix ferme, il ne changera pas</span><b>1 625 F</b></div><div><span>VORA Éco · Carrefour Acacias</span><b>Espèces</b></div></div>
+          <a class="btn btn-tertiaire" href="#pa08">Annuler la recherche</a>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : compteur en Sora 800 Bleu nuit, halo de recherche animé (respecte « réduire les animations »), marqueurs Voiture des chauffeurs contactés.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">État · aucun chauffeur</p>
+      <div class="frame">
+        <div class="sb"><span>21:44</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map" style="opacity:.7"><use href="#map"/></svg>
+        <svg class="ov" viewBox="0 0 360 560"><g transform="translate(60 335)"><circle r="8" fill="#fff" stroke="#1F5EFF" stroke-width="4"/></g></svg>
+        <div class="sheet">
+          <div class="handle"></div>
+          <p class="h">Aucun chauffeur disponible pour l'instant</p>
+          <p class="sub">Nous avons contacté 7 chauffeurs autour de Ngoa-Ekellé. Aucun frais ne vous est facturé.</p>
+          <div class="lignes" style="margin:0 0 14px"><div class="tot"><span>Votre prix reste garanti</span><b>1 625 F</b></div></div>
+          <a class="btn btn-primaire" href="#pa12">Attendre 2 min de plus</a>
+          <a class="btn btn-tertiaire" href="#pa08">Réessayer plus tard</a>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : jamais un spinner muet. L'échec dit ce qui a été tenté, ce que ça coûte (rien) et ce qu'on peut faire.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= PA-13 APPROCHE -->
+<section class="lot" id="pa13">
+  <h2>PA-13 · Chauffeur en approche</h2>
+  <p class="desc">Le deuxième moment de vérité se prépare ici. La plaque et le visage pour reconnaître, le code de montée pour être sûre que c'est lui, et le décompte de l'annulation gratuite en clair. Un SMS avec la plaque part en parallèle, au cas où la data lâche.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal · Boris arrive dans 4 min</p>
+      <div class="frame">
+        <div class="sb"><span>21:43</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map"><use href="#map"/></svg>
+        <svg class="ov" viewBox="0 0 360 560">
+          <path d="M60 335 L250 214" fill="none" stroke="#94A3B8" stroke-width="3" stroke-dasharray="1 8" stroke-linecap="round"/>
+          <circle cx="60" cy="335" r="8" fill="#fff" stroke="#1F5EFF" stroke-width="4"/>
+          <g transform="translate(212 238) rotate(-33)"><use href="#m-car" width="44" height="44" x="-22" y="-22"/></g>
+        </svg>
+        <div class="eta" style="left:228px;top:186px">4 min</div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <p class="h">Boris arrive dans 4 min</p>
+          <p class="sub">Toyota Corolla grise · rendez-vous au Carrefour Ngoa-Ekellé</p>
+          <div class="drv"><div class="avatar">B<span class="v"><svg><use href="#i-shield"/></svg></span></div><div class="t"><b>Boris N.</b><small>★ 4,8 · 1 240 courses</small><span class="badge badge-verifie" style="margin-top:4px"><svg><use href="#i-shield"/></svg>Chauffeur vérifié</span></div><span class="plate">CE 913 NR</span></div>
+          <p class="eyebrow" style="text-align:center;margin-top:10px">Code de montée · dites-le au chauffeur</p>
+          <div class="code"><span>4</span><span>8</span><span>2</span><span>1</span></div>
+          <div class="acts">
+            <div class="act"><svg><use href="#i-phone"/></svg>Appeler</div>
+            <div class="act"><svg><use href="#i-msg"/></svg>Message</div>
+            <div class="act"><svg><use href="#i-share"/></svg>Partager</div>
+          </div>
+          <a class="btn btn-tertiaire" href="#pa21" style="height:44px">Annuler · gratuit encore 1:20</a>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : carte chauffeur (avatar avec bouclier, badge Vérifié, plaque en Sora), code de montée sur cases Bleu nuit, trois actions, annulation en tertiaire avec le décompte dans le libellé.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">État · Boris est arrivé</p>
+      <div class="frame">
+        <div class="sb"><span>21:47</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map"><use href="#map"/></svg>
+        <svg class="ov" viewBox="0 0 360 560">
+          <g transform="translate(60 335)"><circle r="30" fill="#1F5EFF" opacity=".12"/><circle r="8" fill="#fff" stroke="#1F5EFF" stroke-width="4"/></g>
+          <g transform="translate(88 318)"><use href="#m-car" width="44" height="44" x="-22" y="-22"/></g>
+        </svg>
+        <div class="banner bleu">Boris est arrivé · Corolla grise · CE 913 NR. Il attend devant la boulangerie.</div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <p class="h">Boris est arrivé</p>
+          <p class="sub">Vérifiez la plaque, puis dites le code. Attente gratuite 3 min.</p>
+          <div class="drv"><div class="avatar">B<span class="v"><svg><use href="#i-shield"/></svg></span></div><div class="t"><b>Boris N.</b><small>★ 4,8 · 1 240 courses</small><span class="badge badge-verifie" style="margin-top:4px"><svg><use href="#i-shield"/></svg>Chauffeur vérifié</span></div><span class="plate">CE 913 NR</span></div>
+          <p class="eyebrow" style="text-align:center;margin-top:10px">Code de montée · dites-le au chauffeur</p>
+          <div class="code" style="transform:scale(1.08);margin:12px 0 10px"><span>4</span><span>8</span><span>2</span><span>1</span></div>
+          <div class="acts">
+            <div class="act"><svg><use href="#i-phone"/></svg>Appeler</div>
+            <div class="act"><svg><use href="#i-msg"/></svg>Message</div>
+            <div class="act"><svg><use href="#i-share"/></svg>Partager</div>
+          </div>
+          <a class="btn btn-tertiaire" href="#pa21" style="height:44px">Annuler · 300 F reversés à Boris</a>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : à l'arrivée, le code grossit et le libellé d'annulation change de nature : ce n'est plus gratuit, et on le dit avant le tap, pas après.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= PA-21 ANNULATION -->
+<section class="lot" id="pa21">
+  <h2>PA-21 · Annulation (feuille)</h2>
+  <p class="desc">Une feuille par-dessus l'approche. L'action sûre (garder la course) est le bouton bleu ; annuler est un bouton secondaire, jamais rouge. Le coût, s'il existe, est dit avant, avec sa raison : la compensation du chauffeur.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Gratuite · dans les 2 min</p>
+      <div class="frame">
+        <div class="sb"><span>21:43</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map"><use href="#map"/></svg>
+        <div class="sheet" style="height:420px"><div class="handle"></div><p class="h">Boris arrive dans 4 min</p></div>
+        <div class="dim"></div>
+        <div class="modal">
+          <div class="handle"></div>
+          <p class="h">Annuler la course ?</p>
+          <p class="sub">Annulation gratuite pendant encore <b style="color:var(--encre)">1:20</b>. Boris n'a pas encore commencé à venir.</p>
+          <div class="radio"><i class="on"></i>Le chauffeur n'avance pas</div>
+          <div class="radio"><i></i>J'ai trouvé un autre moyen</div>
+          <div class="radio"><i></i>Je me suis trompée de lieu</div>
+          <div class="radio" style="border:0"><i></i>Autre raison</div>
+          <a class="btn btn-primaire" href="#pa13" style="margin-top:12px">Garder ma course</a>
+          <a class="btn btn-secondaire" href="#pa08">Annuler la course</a>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : voile Bleu nuit à 45 %, feuille modale, boutons radio, primaire + secondaire.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">Tardive · frais reversés</p>
+      <div class="frame">
+        <div class="sb"><span>21:46</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map"><use href="#map"/></svg>
+        <div class="sheet" style="height:420px"><div class="handle"></div><p class="h">Boris arrive dans 1 min</p></div>
+        <div class="dim"></div>
+        <div class="modal">
+          <div class="handle"></div>
+          <p class="h">Annuler maintenant coûte 300 F</p>
+          <p class="sub">Boris a déjà parcouru 900 m pour venir vous chercher. Les 300 F lui sont reversés en compensation et seront ajoutés à votre prochaine course.</p>
+          <div class="radio"><i class="on"></i>Le chauffeur n'avance pas</div>
+          <div class="radio"><i></i>J'ai trouvé un autre moyen</div>
+          <div class="radio" style="border:0"><i></i>Autre raison</div>
+          <a class="btn btn-primaire" href="#pa13" style="margin-top:12px">Garder ma course</a>
+          <a class="btn btn-secondaire" href="#pa08">Annuler · 300 F</a>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : « Chaque trajet compte » vu du passager. On explique où va l'argent ; le montant est dans le bouton pour qu'il n'y ait pas de surprise.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= PA-14 EN COURSE -->
+<section class="lot" id="pa14">
+  <h2>PA-14 · En course</h2>
+  <p class="desc">La carte prend toute la place, la feuille se réduit à l'essentiel : où on va, quand on arrive, qui suit le trajet. Le SOS est le seul objet rouge et il ne bouge pas pendant toute la course.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal</p>
+      <div class="frame">
+        <div class="sb"><span>21:49</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map" style="height:620px" viewBox="0 0 360 620" preserveAspectRatio="xMidYMin slice"><use href="#map" width="360" height="560"/><rect y="560" width="360" height="60" fill="#F4F6FA"/></svg>
+        <svg class="ov" style="height:620px" viewBox="0 0 360 620">
+          <path d="M60 335 L250 214 L246 120" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M60 335 L170 265" fill="none" stroke="#94A3B8" stroke-width="5" stroke-linecap="round"/>
+          <path d="M170 265 L250 214 L246 120" fill="none" stroke="#1F5EFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="60" cy="335" r="6" fill="#fff" stroke="#94A3B8" stroke-width="3"/>
+          <rect x="236" y="110" width="20" height="20" rx="5" fill="#0B2A6F" stroke="#fff" stroke-width="3"/>
+          <g transform="translate(170 265) rotate(-33)"><use href="#m-car" width="44" height="44" x="-22" y="-22"/></g>
+        </svg>
+        <div class="eta" style="left:186px;top:214px">Arrivée 21:58</div>
+        <a class="fab-sos" href="#pa22" style="bottom:284px">SOS</a>
+        <div class="sheet">
+          <div class="handle"></div>
+          <p class="h">En route vers Carrefour Acacias</p>
+          <p class="sub">Arrivée 21:58 · 4,1 km restants · <span class="badge badge-ok">Marie suit votre trajet</span></p>
+          <div class="drv" style="margin:4px 0 10px"><div class="avatar" style="width:40px;height:40px;font-size:14px">B</div><div class="t"><b>Boris N. · CE 913 NR</b><small>Prix ferme 1 625 F · Espèces</small></div></div>
+          <div class="acts" style="margin:0">
+            <a class="act" href="#pa14b"><svg><use href="#i-plus"/></svg>Ajouter un arrêt</a>
+            <div class="act"><svg><use href="#i-share"/></svg>Partager</div>
+            <div class="act"><svg><use href="#i-phone"/></svg>Appeler</div>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : SOS flottant 60 px au-dessus de la feuille (prochain écran : PA-22), badge vert « suit votre trajet », itinéraire dont la partie parcourue passe en gris.</p>
+    </div>
+
+    <div class="item" id="pa14b">
+      <p class="state">État · arrêt ajouté</p>
+      <div class="frame">
+        <div class="sb"><span>21:52</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map" style="height:620px" viewBox="0 0 360 620" preserveAspectRatio="xMidYMin slice"><use href="#map" width="360" height="560"/><rect y="560" width="360" height="60" fill="#F4F6FA"/></svg>
+        <svg class="ov" style="height:620px" viewBox="0 0 360 620">
+          <path d="M60 335 L250 214 L300 200 L246 120" fill="none" stroke="#fff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M60 335 L210 240" fill="none" stroke="#94A3B8" stroke-width="5" stroke-linecap="round"/>
+          <path d="M210 240 L250 214 L300 200 L246 120" fill="none" stroke="#1F5EFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="236" y="110" width="20" height="20" rx="5" fill="#0B2A6F" stroke="#fff" stroke-width="3"/>
+          <g transform="translate(300 200) scale(.8)"><use href="#m-repere" width="44" height="52" x="-22" y="-48"/></g>
+          <g transform="translate(210 240) rotate(-33)"><use href="#m-car" width="44" height="44" x="-22" y="-22"/></g>
+        </svg>
+        <div class="banner ok">Arrêt ajouté : Pharmacie Melen. Nouveau prix ferme 1 925 F, accepté par vous et par Boris.</div>
+        <a class="fab-sos" href="#pa22" style="bottom:284px">SOS</a>
+        <div class="sheet">
+          <div class="handle"></div>
+          <p class="h">Arrêt à Pharmacie Melen, puis Carrefour Acacias</p>
+          <p class="sub">Arrivée 22:06 · <span class="badge badge-ok">Marie suit votre trajet</span></p>
+          <div class="drv" style="margin:4px 0 10px"><div class="avatar" style="width:40px;height:40px;font-size:14px">B</div><div class="t"><b>Boris N. · CE 913 NR</b><small>Prix ferme 1 925 F (+ 300 F pour l'arrêt) · Espèces</small></div></div>
+          <div class="acts" style="margin:0"><div class="act"><svg><use href="#i-plus"/></svg>Ajouter un arrêt</div><div class="act"><svg><use href="#i-share"/></svg>Partager</div><div class="act"><svg><use href="#i-phone"/></svg>Appeler</div></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : le seul cas où le prix ferme change, c'est quand le passager le demande ; le nouveau montant est affiché et accepté des deux côtés avant d'être appliqué.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= PA-22 SOS -->
+<section class="lot" id="pa22">
+  <h2>PA-22 · SOS (feuille)</h2>
+  <p class="desc">Deux gestes : le bouton, puis la confirmation. La feuille dit exactement qui recevra quoi. Le seul bouton rouge de l'appli est ici.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Confirmation</p>
+      <div class="frame">
+        <div class="sb"><span>21:51</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map" style="height:620px" viewBox="0 0 360 620" preserveAspectRatio="xMidYMin slice"><use href="#map" width="360" height="560"/><rect y="560" width="360" height="60" fill="#F4F6FA"/></svg>
+        <div class="dim"></div>
+        <div class="modal">
+          <div class="handle"></div>
+          <p class="h">Envoyer une alerte ?</p>
+          <p class="sub">Marie et l'équipe VORA recevront votre position en direct, la plaque CE 913 NR et le nom du chauffeur. Le chauffeur n'est pas prévenu.</p>
+          <a class="btn btn-danger" href="#pa22b">Envoyer l'alerte</a>
+          <a class="btn btn-secondaire" style="border-color:var(--bordure);color:var(--encre)">Appeler la police · 117</a>
+          <a class="btn btn-tertiaire" href="#pa14">Retour</a>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : bouton danger (unique usage), bouton d'appel neutre, retour en tertiaire. Pas d'illustration, pas de point d'exclamation.</p>
+    </div>
+
+    <div class="item" id="pa22b">
+      <p class="state">Envoyée</p>
+      <div class="frame">
+        <div class="sb"><span>21:51</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map" style="height:620px" viewBox="0 0 360 620" preserveAspectRatio="xMidYMin slice"><use href="#map" width="360" height="560"/><rect y="560" width="360" height="60" fill="#F4F6FA"/></svg>
+        <svg class="ov" style="height:620px" viewBox="0 0 360 620"><g transform="translate(170 265)"><circle r="40" fill="#D92D20" opacity=".15" class="pulse"/><circle r="10" fill="#D92D20" stroke="#fff" stroke-width="3"/></g></svg>
+        <div class="banner" style="background:var(--sos-fond);color:var(--sos);border-color:#F6BDB8">Alerte envoyée à Marie et à l'équipe VORA avec votre position. Position partagée en direct.</div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <p class="h">Alerte envoyée</p>
+          <p class="sub">21:51 · Marie a reçu un SMS avec le lien de suivi. L'équipe VORA vous rappelle dans la minute.</p>
+          <a class="btn btn-primaire">Appeler Marie</a>
+          <a class="btn btn-secondaire" style="border-color:var(--bordure);color:var(--encre)">Appeler la police · 117</a>
+          <a class="btn btn-tertiaire" href="#pa14">Fausse alerte, tout va bien</a>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : après l'envoi, on ne demande rien à la personne. Deux façons d'appeler, une façon d'annuler, et l'appli continue de partager la position tant qu'on ne dit pas que tout va bien.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= PA-15 PAIEMENT -->
+<section class="lot" id="pa15">
+  <h2>PA-15 · Fin de course et paiement</h2>
+  <p class="desc">Le montant est celui annoncé, mot pour mot. Espèces par défaut ; Mobile Money envoie une demande de paiement sur le téléphone. Si MoMo échoue, l'appli dit pourquoi et propose la sortie.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal · espèces</p>
+      <div class="frame">
+        <div class="sb"><span>21:58</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="sheet full">
+          <div style="text-align:center;padding:18px 0 6px"><svg width="56" height="56" style="color:var(--bleu)"><use href="#vsym"/></svg></div>
+          <p class="h big" style="text-align:center">Course terminée</p>
+          <p class="sub" style="text-align:center">Prix ferme, comme annoncé à 21:42</p>
+          <div class="prix" style="text-align:center;font-size:40px">1 625 F</div>
+          <p class="sub" style="text-align:center">Ngoa-Ekellé → Carrefour Acacias · 5,0 km · 16 min</p>
+          <p class="sect">Comment payez-vous ?</p>
+          <div class="paycard on"><div class="ic"><svg><use href="#i-cash"/></svg></div><div class="t"><b>Espèces</b><small>Remettez 1 625 F à Boris. Il confirme dans son appli.</small></div></div>
+          <div class="paycard"><div class="ic"><svg><use href="#i-momo"/></svg></div><div class="t"><b>MTN MoMo · 6•• ••• •21</b><small>Une demande de paiement arrive sur votre téléphone</small></div></div>
+          <div class="paycard"><div class="ic"><svg><use href="#i-momo"/></svg></div><div class="t"><b>Orange Money</b><small>Ajouter un numéro</small></div></div>
+          <div style="position:absolute;left:16px;right:16px;bottom:28px">
+            <p class="small muted" style="text-align:center;margin:0 0 10px">Reçu envoyé par SMS au +237 6•• ••• •21</p>
+            <a class="btn btn-primaire" href="#pa16">Confirmer · Espèces</a>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : symbole VORA en signe de fin, prix en Sora 800, cartes de paiement (sélection Bleu ciel), bouton primaire épinglé en bas.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">État · MoMo refusé</p>
+      <div class="frame">
+        <div class="sb"><span>21:59</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="sheet full">
+          <div style="text-align:center;padding:18px 0 6px"><svg width="56" height="56" style="color:var(--bleu)"><use href="#vsym"/></svg></div>
+          <p class="h big" style="text-align:center">Course terminée</p>
+          <p class="sub" style="text-align:center">Prix ferme, comme annoncé à 21:42</p>
+          <div class="prix" style="text-align:center;font-size:40px">1 625 F</div>
+          <p class="sect">Comment payez-vous ?</p>
+          <div class="inline-err"><b>Paiement MoMo refusé</b>Solde insuffisant sur le 6•• ••• •21. Réessayez après rechargement, ou payez en espèces.</div>
+          <div class="paycard"><div class="ic"><svg><use href="#i-cash"/></svg></div><div class="t"><b>Espèces</b><small>Remettez 1 625 F à Boris. Il confirme dans son appli.</small></div></div>
+          <div class="paycard on"><div class="ic"><svg><use href="#i-momo"/></svg></div><div class="t"><b>MTN MoMo · 6•• ••• •21</b><small>Refusé à 21:59</small></div></div>
+          <div style="position:absolute;left:16px;right:16px;bottom:28px">
+            <a class="btn btn-primaire">Réessayer MoMo</a>
+            <a class="btn btn-secondaire" href="#pa16">Payer en espèces</a>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : l'erreur dit ce qui s'est passé, pourquoi, et quoi faire. Elle ne s'excuse pas, ne culpabilise pas, et laisse le montant visible : rien n'a changé.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= PA-16 NOTATION -->
+<section class="lot" id="pa16">
+  <h2>PA-16 · Notation et signalement</h2>
+  <p class="desc">Cinq secondes, fermable d'un geste. Les tags valent plus que les étoiles : « On m'a demandé plus que le prix » est un tag comme les autres, mais il ouvre un litige et déclenche la vérification.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal</p>
+      <div class="frame">
+        <div class="sb"><span>21:59</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="sheet full">
+          <a class="x" href="#pa08">×</a>
+          <div style="text-align:center;padding:36px 0 0"><div class="avatar" style="width:72px;height:72px;font-size:24px;margin:0 auto">B<span class="v" style="width:26px;height:26px"><svg style="width:18px;height:18px"><use href="#i-shield"/></svg></span></div></div>
+          <p class="h big" style="text-align:center;margin-top:14px">Comment s'est passée la course avec Boris ?</p>
+          <p class="sub" style="text-align:center">Course payée · 1 625 F · reçu envoyé par SMS</p>
+          <div class="stars"><svg class="on"><use href="#i-star"/></svg><svg class="on"><use href="#i-star"/></svg><svg class="on"><use href="#i-star"/></svg><svg class="on"><use href="#i-star"/></svg><svg><use href="#i-star"/></svg></div>
+          <div class="tags" style="justify-content:center">
+            <span class="tag on">Ponctuel</span><span class="tag on">Conduite prudente</span><span class="tag">Véhicule propre</span><span class="tag">Sympathique</span><span class="tag">Bien trouvé le lieu</span>
+            <span class="tag warn">On m'a demandé plus que le prix</span>
+          </div>
+          <p class="small muted" style="text-align:center;margin:8px 0 0">Boris ne voit pas les tags négatifs. L'équipe VORA vérifie chaque signalement de prix.</p>
+          <div style="position:absolute;left:16px;right:16px;bottom:28px">
+            <a class="btn btn-primaire" href="#pa08">Envoyer</a>
+            <a class="btn btn-tertiaire" href="#pa08">Plus tard</a>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : étoiles en Bleu VORA (le jaune reste réservé aux repères), tags en pilule, tag d'alerte en orange attention, fermeture en haut à droite. Boucle terminée : retour à l'accueil.</p>
+    </div>
+
+  </div>
+</section>
+
+<footer style="color:var(--gris);font-size:13px;max-width:90ch;line-height:1.6">
+  <p><b style="color:var(--bleu-nuit)">Ce que ce lot ne montre pas encore</b> : PA-10 (point de rendez-vous), l'onboarding (lot 3), Mes courses et le profil (lot 4), la variante anglaise (lot 6). Les écrans affichent Sora et IBM Plex Sans lorsque la connexion permet de charger les polices ; hors ligne, la police système prend le relais sans changer les dimensions.</p>
+</footer>
+
+</div>
+</body>
+</html>

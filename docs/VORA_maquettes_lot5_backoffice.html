@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VORA — Maquettes lot 5 · back-office ops</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blanc:#FFFFFF;--bleu:#1F5EFF;--bleu-presse:#174BD1;--bleu-nuit:#0B2A6F;--bleu-ciel:#E8F0FF;--bleu-pale:#F4F7FF;
+  --jaune:#FFC42E;--encre:#1E293B;--gris:#5B6B84;--gris-clair:#94A3B8;--bordure:#DDE3EE;--surface:#F4F6FA;
+  --ok:#0F7A47;--ok-fond:#DDF5E7;--attention:#B25E00;--attention-fond:#FFF1DD;--sos:#D92D20;--sos-fond:#FDE3E1;
+  --nuit-700:#12388F;--bleu-sur-nuit:#6D9BFF;
+  --font-display:'Sora','Trebuchet MS',system-ui,sans-serif;--font-body:'IBM Plex Sans','Segoe UI',Roboto,system-ui,sans-serif;
+  --ombre-1:0 1px 2px rgba(11,42,111,.06),0 1px 3px rgba(11,42,111,.08);--ombre-2:0 4px 12px rgba(11,42,111,.10),0 2px 4px rgba(11,42,111,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;background:#EAEEF5;font-family:var(--font-body);color:var(--encre);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.board{max-width:1560px;margin:0 auto;padding:32px 32px 80px}
+.head{margin:0 0 36px;max-width:90ch}
+.head .eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--bleu);margin:0 0 6px}
+.head h1{font-family:var(--font-display);font-weight:800;color:var(--bleu-nuit);font-size:30px;margin:0 0 8px;letter-spacing:-.01em}
+.head p{margin:0 0 6px;color:var(--gris);font-size:15px;line-height:1.5}
+.head .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.head .legend span{background:#fff;border:1px solid var(--bordure);border-radius:999px;padding:5px 11px;font-size:12px;color:var(--gris)}
+.lot{margin:0 0 56px;scroll-margin-top:24px}
+.lot h2{font-family:var(--font-display);font-weight:700;color:var(--bleu-nuit);font-size:20px;margin:0 0 4px}
+.lot .desc{color:var(--gris);font-size:14px;margin:0 0 16px;max-width:100ch;line-height:1.5}
+.lot .cap{font-size:12px;color:var(--gris);margin:10px 4px 0;line-height:1.5;max-width:110ch}
+.lot .cap b{color:var(--bleu-nuit);font-weight:600}
+.wrap{width:100%;overflow:hidden}
+.web{width:1440px;height:900px;grid-template-rows:900px;background:var(--surface);border-radius:14px;overflow:hidden;box-shadow:0 0 0 1px var(--bordure),0 18px 40px rgba(11,42,111,.14);display:grid;grid-template-columns:224px 1fr;font-size:13px;line-height:1.4;transform-origin:top left}
+
+/* ---- sidebar ---- */
+.side{background:var(--bleu-nuit);color:#fff;display:flex;flex-direction:column;padding:18px 14px}
+.side .brand{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:800;letter-spacing:.06em;font-size:16px;padding:4px 8px 18px}
+.side .brand svg{width:28px;height:28px;color:#fff;--ring:#0B2A6F}
+.side .brand small{display:block;font-family:var(--font-body);font-weight:500;letter-spacing:0;font-size:11px;color:#B7C4E2}
+.nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;color:#B7C4E2;font-weight:500;margin:0 0 2px}
+.nav a svg{width:18px;height:18px}
+.nav a.on{background:var(--nuit-700);color:#fff;font-weight:600}
+.nav a .n{margin-left:auto;background:var(--jaune);color:var(--bleu-nuit);border-radius:999px;font-size:11px;font-weight:700;padding:1px 7px}
+.nav a .n.sos{background:var(--sos);color:#fff}
+.side .me{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px;border-top:1px solid var(--nuit-700)}
+.side .me .av{width:32px;height:32px;border-radius:50%;background:var(--nuit-700);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:13px}
+.side .me small{display:block;color:#B7C4E2;font-size:11px}
+
+/* ---- main ---- */
+.main{display:flex;flex-direction:column;min-width:0}
+.topbar{height:60px;background:#fff;border-bottom:1px solid var(--bordure);display:flex;align-items:center;gap:14px;padding:0 24px}
+.topbar h1{font-family:var(--font-display);font-weight:700;color:var(--bleu-nuit);font-size:18px;margin:0;white-space:nowrap}
+.topbar .sub{color:var(--gris);font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar .search{margin-left:auto;width:300px;height:36px;border:1.5px solid var(--bordure);border-radius:10px;display:flex;align-items:center;gap:8px;padding:0 12px;color:var(--gris-clair)}
+.topbar .search svg{width:16px;height:16px;color:var(--bleu)}
+.pill{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 12px;border-radius:10px;border:1.5px solid var(--bordure);background:#fff;font-weight:500}
+.pill .sw{width:34px;height:20px;border-radius:10px;background:var(--gris-clair);position:relative}
+.pill .sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff}
+.pill .sw.on{background:var(--ok)}.pill .sw.on::after{left:auto;right:2px}
+.content{padding:20px 24px;flex:1;min-height:0;display:grid;gap:16px}
+.card{background:#fff;border:1px solid var(--bordure);border-radius:14px;padding:16px}
+.card h3{font-family:var(--font-display);font-weight:600;color:var(--bleu-nuit);font-size:14px;margin:0 0 10px}
+.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.kpi{background:#fff;border:1px solid var(--bordure);border-radius:14px;padding:12px 14px}
+.kpi small{display:block;color:var(--gris);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.kpi b{display:block;font-family:var(--font-display);font-weight:800;font-size:24px;color:var(--bleu-nuit);font-variant-numeric:tabular-nums;margin:4px 0 2px}
+.kpi span{font-size:12px;color:var(--gris)}
+.kpi span.up{color:var(--ok)}.kpi span.dn{color:var(--sos)}
+.btn{height:36px;border-radius:10px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 14px;border:1.5px solid transparent;white-space:nowrap;cursor:pointer}
+.btn svg{width:16px;height:16px}
+.btn-primaire{background:var(--bleu);color:#fff}
+.btn-secondaire{background:#fff;color:var(--bleu);border-color:var(--bleu)}
+.btn-tertiaire{background:transparent;color:var(--bleu)}
+.btn-danger{background:var(--sos);color:#fff}
+.btn-ok{background:var(--ok);color:#fff}
+.btn-desactive{background:var(--surface);color:var(--gris-clair);border-color:var(--bordure)}
+.btn.sm{height:30px;padding:0 10px;font-size:12px}
+.badge{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge svg{width:12px;height:12px}
+.badge-verifie{background:var(--bleu-ciel);color:var(--bleu-nuit)}
+.badge-ok{background:var(--ok-fond);color:var(--ok)}
+.badge-attention{background:var(--attention-fond);color:var(--attention)}
+.badge-sos{background:var(--sos-fond);color:var(--sos)}
+.badge-neutre{background:var(--surface);color:var(--gris)}
+.badge-repere{background:var(--jaune);color:var(--bleu-nuit)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gris);padding:8px 10px;border-bottom:1px solid var(--bordure)}
+td{padding:10px;border-bottom:1px solid var(--bordure);vertical-align:middle}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.sel td{background:var(--bleu-pale)}
+tr.late td:first-child{box-shadow:inset 3px 0 0 var(--attention)}
+.who{display:flex;align-items:center;gap:10px}
+.who .av{width:32px;height:32px;border-radius:50%;background:var(--bleu-ciel);color:var(--bleu-nuit);font-family:var(--font-display);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;flex:none}
+.who b{display:block;font-weight:600}
+.who small{display:block;color:var(--gris);font-size:11px}
+.sosbar{background:var(--sos-fond);border:1.5px solid #F6BDB8;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:16px}
+.sosbar .tag{background:var(--sos);color:#fff;font-family:var(--font-display);font-weight:800;border-radius:8px;padding:6px 10px;font-size:14px}
+.sosbar b{color:var(--sos)}
+.sosbar .r{margin-left:auto;display:flex;gap:8px}
+.seg{display:inline-flex;background:var(--surface);border-radius:10px;padding:3px}
+.seg span{padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;color:var(--gris)}
+.seg span.on{background:#fff;color:var(--bleu-nuit);box-shadow:var(--ombre-1)}
+.mapbox{position:relative;flex:1;min-height:0;border-radius:10px;overflow:hidden}
+.mapbox .map{position:absolute;inset:0;width:100%;height:100%;display:block}
+.map{width:100%;height:100%;display:block;border-radius:10px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--gris);margin-top:8px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-2px}
+.list{display:flex;flex-direction:column}
+.li{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bordure)}
+.li:last-child{border-bottom:0}
+.li .t{flex:1;min-width:0}.li .t b{display:block;font-weight:600}.li .t small{display:block;color:var(--gris);font-size:11px}
+.li .d{font-family:var(--font-display);font-weight:700;color:var(--bleu-nuit);font-variant-numeric:tabular-nums}
+.bars{display:flex;align-items:flex-end;gap:5px;height:90px}
+.bars i{flex:1;background:var(--bleu-ciel);border-radius:3px 3px 0 0}
+.bars i.on{background:var(--bleu)}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.tile{border:1px solid var(--bordure);border-radius:10px;height:128px;background:linear-gradient(135deg,#DCE3EF,#F4F6FA);position:relative;overflow:hidden}
+.tile .lab{position:absolute;left:8px;top:8px;background:#fff;border-radius:6px;padding:3px 7px;font-size:11px;font-weight:600;color:var(--bleu-nuit)}
+.tile .zoom{position:absolute;right:8px;bottom:8px;background:#fff;border-radius:6px;padding:3px 7px;font-size:11px;color:var(--bleu);font-weight:600}
+.tile.face{background:radial-gradient(circle at 50% 42%,#C9D6EA 0 28px,#EDF0F5 30px)}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:11px;font-weight:600;color:var(--gris);text-transform:uppercase;letter-spacing:.05em}
+.field .v{font-weight:600}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+.piece{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--bordure)}
+.piece:last-child{border-bottom:0}
+.piece b{display:block;font-weight:600}.piece small{display:block;color:var(--gris);font-size:11px}
+.piece .acts{display:flex;gap:6px}
+.panel{background:var(--sos-fond);border:1px solid #F6BDB8;border-radius:12px;padding:12px;margin:8px 0 0;grid-column:1 / -1}
+.panel h4{margin:0 0 8px;font-size:13px;color:var(--sos)}
+.radios{display:flex;flex-wrap:wrap;gap:8px}
+.radios span{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1.5px solid var(--bordure);background:#fff;font-size:12px;font-weight:500}
+.radios span i{width:14px;height:14px;border-radius:50%;border:2px solid var(--gris-clair)}
+.radios span.on{border-color:var(--sos);color:var(--sos);font-weight:600}
+.radios span.on i{border-color:var(--sos);box-shadow:inset 0 0 0 3px var(--sos)}
+.preview{background:#fff;border:1px solid var(--bordure);border-radius:10px;padding:10px;font-size:12px;margin:10px 0}
+.preview small{display:block;color:var(--gris);font-size:11px;margin-bottom:4px}
+.tl{display:flex;gap:10px;padding:0 0 12px;position:relative;font-size:12px}
+.tl::before{content:"";position:absolute;left:7px;top:18px;bottom:-2px;border-left:2px solid var(--bordure)}
+.tl:last-child::before{display:none}
+.tl i{width:16px;height:16px;border-radius:50%;background:var(--bleu);flex:none;z-index:1;border:3px solid #fff;box-shadow:0 0 0 1px var(--bordure)}
+.tl i.warn{background:var(--attention)}.tl i.sos{background:var(--sos)}
+.tl b{display:block;font-weight:600}.tl small{color:var(--gris)}
+.bub{max-width:90%;padding:7px 10px;border-radius:12px;font-size:12px;margin:4px 0}
+.bub.p{background:var(--bleu);color:#fff;border-bottom-right-radius:3px;margin-left:auto}
+.bub.c{background:var(--surface);border-bottom-left-radius:3px}
+.lignes{font-size:12px;color:var(--gris)}
+.lignes div{display:flex;justify-content:space-between;padding:3px 0}
+.lignes div b{color:var(--encre);font-weight:600;font-variant-numeric:tabular-nums}
+.lignes div.tot b{color:var(--bleu)}
+.check{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px}
+.check i{width:18px;height:18px;border-radius:5px;border:2px solid var(--gris-clair);flex:none}
+.check i.on{background:var(--bleu);border-color:var(--bleu)}
+.check i.r{border-radius:50%}
+.check i.r.on{background:#fff;box-shadow:inset 0 0 0 4px var(--bleu)}
+.input{height:36px;border:1.5px solid var(--bordure);border-radius:10px;padding:0 10px;display:flex;align-items:center;background:#fff;font-weight:500;font-variant-numeric:tabular-nums}
+.input.sm{height:32px}
+.zone{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--bordure)}
+.zone:last-child{border-bottom:0}
+.zone i.sw{width:34px;height:20px;border-radius:10px;background:var(--gris-clair);position:relative;flex:none}
+.zone i.sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff}
+.zone i.sw.on{background:var(--ok)}.zone i.sw.on::after{left:auto;right:2px}
+.zone .col{width:14px;height:14px;border-radius:4px;flex:none}
+.zone b{display:block;font-weight:600}.zone small{display:block;color:var(--gris);font-size:11px}
+.grid-tarif td .input{width:110px}
+.note{background:var(--bleu-pale);border-left:3px solid var(--bleu);padding:8px 10px;border-radius:0 10px 10px 0;font-size:12px;margin:8px 0 0}
+.note.warn{background:var(--attention-fond);border-color:var(--attention);color:var(--attention)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="vsym" viewBox="0 0 120 120"><path d="M26 24 L60 84 L94 24" fill="none" stroke="currentColor" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="86" r="16" fill="#FFC42E" stroke="var(--ring,#fff)" stroke-width="5"/></symbol>
+<symbol id="i-dash" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="13" y="3" width="8" height="5" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="13" y="10" width="8" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><rect x="3" y="13" width="8" height="8" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+<symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 3v4h4M9 12h6M9 16h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-users" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 20a6 6 0 0 1 12 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M18 8v6M15 11h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M4 13l1.5-5A2 2 0 0 1 7.4 6.5h9.2a2 2 0 0 1 1.9 1.5L20 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H4a1 1 0 0 1-1-1v-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="2"/></symbol>
+<symbol id="i-tag" viewBox="0 0 24 24"><path d="M3 12V4h8l10 10-8 8z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="7.5" cy="8.5" r="1.5" fill="currentColor"/></symbol>
+<symbol id="i-dl" viewBox="0 0 24 24"><path d="M12 4v11M7 10l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-team" viewBox="0 0 24 24"><circle cx="8" cy="9" r="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="9" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M2 20a6 6 0 0 1 12 0M10 20a6 6 0 0 1 12 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6l7-3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-moto" viewBox="0 0 24 24"><circle cx="5.5" cy="16.5" r="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18.5" cy="16.5" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5.5 16.5L10 9h4l3 4.5h1.5M13 6h3l2 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-rain" viewBox="0 0 24 24"><path d="M7 15a4 4 0 0 1-.5-8A6 6 0 0 1 18 8a3.5 3.5 0 0 1-.5 7z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 18l-1 3M12 18l-1 3M16 18l-1 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-pen" viewBox="0 0 24 24"><path d="M4 20l4-1 11-11-3-3L5 16z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+
+<!-- Carte de Yaoundé stylisée, 900 × 560 -->
+<symbol id="city" viewBox="0 0 900 560">
+  <rect width="900" height="560" fill="#F4F6FA"/>
+  <g fill="#EDF0F5">
+    <rect x="30" y="40" width="150" height="110" rx="10"/><rect x="220" y="30" width="180" height="120" rx="10"/><rect x="440" y="50" width="140" height="90" rx="10"/><rect x="620" y="40" width="240" height="120" rx="10"/>
+    <rect x="40" y="190" width="120" height="140" rx="10"/><rect x="200" y="190" width="220" height="130" rx="10"/><rect x="460" y="180" width="160" height="150" rx="10"/><rect x="660" y="200" width="200" height="120" rx="10"/>
+    <rect x="30" y="370" width="170" height="150" rx="10"/><rect x="240" y="360" width="180" height="160" rx="10"/><rect x="460" y="370" width="180" height="150" rx="10"/><rect x="680" y="360" width="180" height="160" rx="10"/>
+  </g>
+  <rect x="470" y="200" width="120" height="70" rx="12" fill="#E6F2EA"/><rect x="60" y="400" width="90" height="60" rx="12" fill="#E6F2EA"/>
+  <g fill="none" stroke="#DDE3EE" stroke-width="18" stroke-linecap="round"><path d="M-10 330 L910 210"/><path d="M190 -10 L210 570"/><path d="M430 -10 L440 570"/><path d="M640 -10 L660 570"/><path d="M-10 170 L910 160"/><path d="M-10 350 L910 350"/></g>
+  <g fill="none" stroke="#FFFFFF" stroke-width="13" stroke-linecap="round"><path d="M-10 330 L910 210"/><path d="M190 -10 L210 570"/><path d="M430 -10 L440 570"/><path d="M640 -10 L660 570"/><path d="M-10 170 L910 160"/><path d="M-10 350 L910 350"/></g>
+  <g fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"><path d="M100 40 L120 330"/><path d="M320 30 L330 350"/><path d="M540 50 L560 560"/><path d="M760 40 L780 560"/><path d="M40 450 L900 470"/><path d="M40 250 L900 260"/></g>
+  <g font-family="IBM Plex Sans, system-ui, sans-serif" font-size="13" font-weight="600" fill="#5B6B84">
+    <text x="60" y="80">Etoudi</text><text x="270" y="70">Emana</text><text x="470" y="90">Nkolbisson</text><text x="690" y="85">Bastos</text>
+    <text x="60" y="230">Mokolo</text><text x="240" y="240">Centre-ville</text><text x="470" y="320">Ngoa-Ekellé</text><text x="690" y="245">Essos</text>
+    <text x="60" y="510">Biyem-Assi</text><text x="270" y="400">Mvog-Ada</text><text x="480" y="420">Obili</text><text x="700" y="420">Mvan</text>
+  </g>
+</symbol>
+<symbol id="m-car" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="#1F5EFF" stroke="#fff" stroke-width="3"/><path d="M13 24l1.4-4.5a2 2 0 0 1 1.9-1.5h11.4a2 2 0 0 1 1.9 1.5L31 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/><rect x="12" y="24" width="20" height="5" rx="1.5" fill="#fff"/></symbol>
+<symbol id="m-moto" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="#1F5EFF" stroke="#FFC42E" stroke-width="3"/><circle cx="15.5" cy="27" r="3" fill="none" stroke="#fff" stroke-width="2"/><circle cx="28.5" cy="27" r="3" fill="none" stroke="#fff" stroke-width="2"/><path d="M15.5 27L20 19h4l3 4.5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
+
+<div class="board">
+<header class="head">
+  <p class="eyebrow">Maquettes · lot 5 · back-office ops · v0.1 · août 2026</p>
+  <h1>VORA Ops — voir le service vivre, et trancher vite</h1>
+  <p>Six écrans web en 1440 px pour une équipe de deux ou trois personnes. Le tableau de bord met le SOS avant tout le reste ; la file des dossiers se traite dans l'ordre d'arrivée avec un objectif de 48 h ; la fiche chauffeur permet de refuser une pièce avec un motif type et une consigne ; le litige montre les deux traces GPS et propose une décision pré-remplie ; les zones et les tarifs sont les deux leviers qui font vivre le géorepérage moto et le prix ferme. La connexion (OP-01) et les exports (OP-08) sont des écrans standards, non dessinés.</p>
+  <p>Même charte, densité de bureau : texte 13 px, boutons 36 px, tableaux. Sur un écran étroit, les cadres ci-dessous se réduisent automatiquement.</p>
+  <div class="legend"><span>OP-02 Tableau de bord</span><span>OP-03 File des dossiers</span><span>OP-04 Fiche chauffeur</span><span>OP-07 Litige</span><span>OP-05 Zones</span><span>OP-06 Tarifs et majorations</span></div>
+</header>
+
+<!-- ======================================================= OP-02 -->
+<section class="lot" id="op02">
+  <h2>OP-02 · Tableau de bord</h2>
+  <p class="desc">Ce que l'ops regarde toute la journée. Une alerte SOS s'affiche en tête, en rouge, avec les deux appels en un clic. Dessous : six compteurs du jour, la carte en direct, et les files qui attendent une action.</p>
+  <div class="wrap"><div class="web">
+    <aside class="side">
+      <div class="brand"><svg><use href="#vsym"/></svg><div>VORA<small>Ops · Yaoundé</small></div></div>
+      <nav class="nav">
+        <a class="on"><svg><use href="#i-dash"/></svg>Tableau de bord<span class="n sos">1</span></a>
+        <a><svg><use href="#i-doc"/></svg>Dossiers<span class="n">12</span></a>
+        <a><svg><use href="#i-users"/></svg>Chauffeurs</a>
+        <a><svg><use href="#i-car"/></svg>Courses et litiges<span class="n">3</span></a>
+        <a><svg><use href="#i-map"/></svg>Zones</a>
+        <a><svg><use href="#i-tag"/></svg>Tarifs</a>
+        <a><svg><use href="#i-dl"/></svg>Exports</a>
+        <a><svg><use href="#i-team"/></svg>Équipe</a>
+      </nav>
+      <div class="me"><div class="av">N</div><div>Nadège K.<small>Ops · admin</small></div></div>
+    </aside>
+    <div class="main">
+      <div class="topbar"><h1>Tableau de bord</h1><span class="sub">Dimanche 30 août · 17:42 · mis à jour il y a 4 s</span><div class="search"><svg><use href="#i-search"/></svg>ID VORA, plaque, nom, n° de course…</div><span class="pill"><svg width="16" height="16" style="color:var(--bleu)"><use href="#i-rain"/></svg>Majoration pluie<span class="sw"></span></span></div>
+      <div class="content" style="grid-template-rows:auto auto 1fr;">
+        <div class="sosbar"><span class="tag">SOS</span><div><b>Aïcha · ID 4821 7730</b> · course C-260830-4471 avec <b style="color:var(--encre)">Boris N. · CE 913 NR</b> · déclenché il y a <b>40 s</b> · position en direct, Mvog-Ada · contact de confiance Marie prévenue par SMS</div><div class="r"><a class="btn btn-danger"><svg><use href="#i-phone"/></svg>Appeler Aïcha (VORA)</a><a class="btn btn-secondaire" style="border-color:var(--sos);color:var(--sos)"><svg><use href="#i-phone"/></svg>Appeler Boris</a><a class="btn btn-secondaire"><svg><use href="#i-map"/></svg>Suivre sur la carte</a></div></div>
+        <div class="kpis">
+          <div class="kpi"><small>Courses aujourd'hui</small><b>412</b><span class="up">+ 9 % vs dimanche dernier</span></div>
+          <div class="kpi"><small>Demandes</small><b>468</b><span>56 sans chauffeur</span></div>
+          <div class="kpi"><small>Acceptation</small><b>88 %</b><span class="up">objectif 85 %</span></div>
+          <div class="kpi"><small>Annulations</small><b>6,2 %</b><span class="up">objectif &lt; 8 %</span></div>
+          <div class="kpi"><small>Attente médiane</small><b>6:40</b><span class="dn">objectif &lt; 8 min · pic 21 h : 11:10</span></div>
+          <div class="kpi"><small>Chauffeurs en ligne</small><b>214</b><span>168 voitures · 46 motos</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 340px;gap:16px;min-height:0">
+          <div class="card" style="display:flex;flex-direction:column;padding:12px">
+            <div style="display:flex;align-items:center;gap:10px;margin:0 0 8px"><h3 style="margin:0">Carte en direct</h3><span class="seg"><span class="on">Chauffeurs</span><span>Demandes</span><span>Courses</span></span><span class="badge badge-sos" style="margin-left:auto">1 SOS actif</span></div>
+            <div class="mapbox">
+              <svg class="map" viewBox="0 0 900 470" preserveAspectRatio="xMidYMid slice"><use href="#city" width="900" height="560" y="-40"/>
+                <g><use href="#m-car" width="26" height="26" x="120" y="140"/><use href="#m-car" width="26" height="26" x="300" y="200"/><use href="#m-car" width="26" height="26" x="360" y="110"/><use href="#m-car" width="26" height="26" x="520" y="250"/><use href="#m-car" width="26" height="26" x="700" y="130"/><use href="#m-car" width="26" height="26" x="640" y="300"/><use href="#m-car" width="26" height="26" x="250" y="330"/><use href="#m-car" width="26" height="26" x="450" y="180"/><use href="#m-car" width="26" height="26" x="780" y="260"/><use href="#m-car" width="26" height="26" x="560" y="390"/><use href="#m-car" width="26" height="26" x="200" y="120"/><use href="#m-car" width="26" height="26" x="820" y="360"/>
+                <use href="#m-moto" width="26" height="26" x="80" y="60"/><use href="#m-moto" width="26" height="26" x="300" y="50"/><use href="#m-moto" width="26" height="26" x="500" y="40"/><use href="#m-moto" width="26" height="26" x="150" y="30"/><use href="#m-moto" width="26" height="26" x="60" y="420"/><use href="#m-moto" width="26" height="26" x="740" y="40"/></g>
+                <g transform="translate(330 380)"><circle r="34" fill="#D92D20" opacity=".15"/><circle r="14" fill="#D92D20" stroke="#fff" stroke-width="3"/><text x="0" y="5" text-anchor="middle" font-family="Sora, system-ui, sans-serif" font-weight="800" font-size="11" fill="#fff">SOS</text></g>
+                <text x="352" y="386" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="12" font-weight="600" fill="#D92D20">Aïcha · Boris N. · 12 km/h</text>
+                <path d="M200 60 L420 30 L440 150 L200 170 Z" fill="none" stroke="#1F5EFF" stroke-width="1.5" stroke-dasharray="6 4"/><text x="212" y="110" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="11" font-weight="600" fill="#0B2A6F">Bonus Emana +200 F</text>
+              </svg>
+            </div>
+            <div class="legend"><span><i style="background:#1F5EFF"></i>Voiture en ligne</span><span><i style="background:#1F5EFF;box-shadow:0 0 0 2px #FFC42E"></i>Moto en ligne</span><span><i style="background:#D92D20"></i>SOS</span><span><i style="border:1.5px dashed #1F5EFF;background:#fff"></i>Bonus de zone</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:16px;min-height:0">
+            <div class="card"><h3>À traiter</h3><div class="list">
+              <div class="li"><div class="t"><b>Dossiers en attente</b><small>Le plus ancien : 31 h · objectif 48 h</small></div><span class="d">12</span></div>
+              <div class="li"><div class="t"><b>Litiges ouverts</b><small>1 réponse due dans 9 h</small></div><span class="d">3</span></div>
+              <div class="li"><div class="t"><b>Signalements « supplément » 24 h</b><small>2 chauffeurs distincts</small></div><span class="d">2</span></div>
+              <div class="li"><div class="t"><b>Pièces expirant sous 7 jours</b><small>Rappels J-7 envoyés</small></div><span class="d">9</span></div>
+              <div class="li"><div class="t"><b>Retraits MoMo en attente &gt; 10 min</b><small>Aucun</small></div><span class="d">0</span></div>
+            </div></div>
+            <div class="card" style="flex:1"><h3>Demandes sans chauffeur · par zone</h3><div class="list">
+              <div class="li"><div class="t"><b>Nkolbisson</b><small>19 demandes · 4 motos en ligne</small></div><a class="btn btn-secondaire sm">Activer un bonus</a></div>
+              <div class="li"><div class="t"><b>Mvan</b><small>14 demandes · 6 voitures en ligne</small></div><a class="btn btn-secondaire sm">Activer un bonus</a></div>
+              <div class="li"><div class="t"><b>Emana</b><small>9 demandes · bonus actif jusqu'à 19:00</small></div><span class="badge badge-ok">Bonus actif</span></div>
+            </div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+  <p class="cap"><b>Composants</b> : barre SOS (le seul objet rouge de l'écran, avec les deux appels VORA), six compteurs avec leur objectif, carte en direct avec marqueurs voiture / moto et zone de bonus, files « À traiter » chiffrées, demandes sans chauffeur avec le bouton qui active un bonus. L'interrupteur pluie est dans la barre du haut, à un clic.</p>
+</section>
+
+<!-- ======================================================= OP-03 -->
+<section class="lot" id="op03">
+  <h2>OP-03 · File des dossiers</h2>
+  <p class="desc">Les dossiers complets, dans l'ordre d'arrivée. Un liseré orange marque ceux qui dépassent 24 h ; l'objectif est une réponse sous 48 h ouvrées. Les dossiers incomplets restent chez le chauffeur, en brouillon, et n'encombrent pas la file.</p>
+  <div class="wrap"><div class="web">
+    <aside class="side">
+      <div class="brand"><svg><use href="#vsym"/></svg><div>VORA<small>Ops · Yaoundé</small></div></div>
+      <nav class="nav">
+        <a><svg><use href="#i-dash"/></svg>Tableau de bord</a>
+        <a class="on"><svg><use href="#i-doc"/></svg>Dossiers<span class="n">12</span></a>
+        <a><svg><use href="#i-users"/></svg>Chauffeurs</a>
+        <a><svg><use href="#i-car"/></svg>Courses et litiges<span class="n">3</span></a>
+        <a><svg><use href="#i-map"/></svg>Zones</a>
+        <a><svg><use href="#i-tag"/></svg>Tarifs</a>
+        <a><svg><use href="#i-dl"/></svg>Exports</a>
+        <a><svg><use href="#i-team"/></svg>Équipe</a>
+      </nav>
+      <div class="me"><div class="av">N</div><div>Nadège K.<small>Ops · admin</small></div></div>
+    </aside>
+    <div class="main">
+      <div class="topbar"><h1>Dossiers</h1><span class="sub">12 en attente · 2 au-delà de 24 h · temps de traitement médian cette semaine : 19 h</span><div class="search"><svg><use href="#i-search"/></svg>Nom, plaque, ID VORA…</div></div>
+      <div class="content" style="grid-template-rows:auto 1fr">
+        <div style="display:flex;align-items:center;gap:12px"><span class="seg"><span class="on">À traiter · 12</span><span>Pièce renvoyée · 4</span><span>Validés 7 j · 38</span><span>Refusés 7 j · 6</span></span><span class="seg" style="margin-left:auto"><span class="on">Tous</span><span>Voitures</span><span>Motos</span></span><span class="pill">Trier : plus anciens d'abord</span></div>
+        <div class="card" style="padding:0 16px;overflow:hidden">
+          <table>
+            <tr><th>Chauffeur</th><th>Véhicule</th><th>Déposé</th><th class="num">Attente</th><th>Pièces</th><th>Contrôles auto</th><th>Statut</th><th></th></tr>
+            <tr class="late"><td><div class="who"><span class="av">B</span><div><b>Boris N.</b><small>ID 3390 1182 · +237 6 99 •• •• 56</small></div></div></td><td><svg width="16" height="16" style="color:var(--bleu);vertical-align:-3px"><use href="#i-car"/></svg> Toyota Corolla grise · CE 913 NR</td><td>29 août, 08:40</td><td class="num"><b style="color:var(--attention)">31 h</b></td><td>7 / 7</td><td><span class="badge badge-ok">Netteté OK</span> <span class="badge badge-attention">Assurance expire 30/01</span></td><td><span class="badge badge-attention">En revue</span></td><td class="num"><a class="btn btn-primaire sm" href="#op04">Ouvrir</a></td></tr>
+            <tr class="late"><td><div class="who"><span class="av">S</span><div><b>Serge M.</b><small>ID 3390 1190</small></div></div></td><td><svg width="16" height="16" style="color:var(--bleu);vertical-align:-3px"><use href="#i-car"/></svg> Hyundai Accent blanche · CE 402 KJ</td><td>29 août, 10:05</td><td class="num"><b style="color:var(--attention)">29 h</b></td><td>7 / 7</td><td><span class="badge badge-ok">Netteté OK</span></td><td><span class="badge badge-attention">En revue</span></td><td class="num"><a class="btn btn-secondaire sm">Ouvrir</a></td></tr>
+            <tr><td><div class="who"><span class="av">I</span><div><b>Ismaël T.</b><small>ID 3390 1204 · moto</small></div></div></td><td><svg width="16" height="16" style="color:var(--bleu);vertical-align:-3px"><use href="#i-moto"/></svg> Moto bleue · CE 2214 M · Emana, Etoudi</td><td>29 août, 16:20</td><td class="num">19 h</td><td>7 / 7 <span class="badge badge-repere">+ casques</span></td><td><span class="badge badge-ok">Netteté OK</span></td><td><span class="badge badge-attention">En revue</span></td><td class="num"><a class="btn btn-secondaire sm">Ouvrir</a></td></tr>
+            <tr><td><div class="who"><span class="av">P</span><div><b>Patrick E.</b><small>ID 3390 1211</small></div></div></td><td><svg width="16" height="16" style="color:var(--bleu);vertical-align:-3px"><use href="#i-car"/></svg> Toyota Yaris jaune (taxi) · LT 118 BK</td><td>29 août, 18:41</td><td class="num">17 h</td><td>7 / 7</td><td><span class="badge badge-ok">Netteté OK</span> <span class="badge badge-ok">Licence taxi</span></td><td><span class="badge badge-attention">En revue</span></td><td class="num"><a class="btn btn-secondaire sm">Ouvrir</a></td></tr>
+            <tr><td><div class="who"><span class="av">C</span><div><b>Clarisse B.</b><small>ID 3390 1217</small></div></div></td><td><svg width="16" height="16" style="color:var(--bleu);vertical-align:-3px"><use href="#i-car"/></svg> Kia Rio grise · CE 771 AM</td><td>30 août, 07:12</td><td class="num">10 h</td><td>7 / 7</td><td><span class="badge badge-sos">CNI verso floue</span></td><td><span class="badge badge-attention">En revue</span></td><td class="num"><a class="btn btn-secondaire sm">Ouvrir</a></td></tr>
+            <tr><td><div class="who"><span class="av">F</span><div><b>Fabrice N.</b><small>ID 3390 1222 · moto</small></div></div></td><td><svg width="16" height="16" style="color:var(--bleu);vertical-align:-3px"><use href="#i-moto"/></svg> Moto rouge · CE 3308 M · Nkolbisson</td><td>30 août, 09:30</td><td class="num">8 h</td><td>7 / 7 <span class="badge badge-repere">+ casques</span></td><td><span class="badge badge-ok">Netteté OK</span></td><td><span class="badge badge-attention">En revue</span></td><td class="num"><a class="btn btn-secondaire sm">Ouvrir</a></td></tr>
+            <tr><td><div class="who"><span class="av">A</span><div><b>Armand D.</b><small>ID 3390 1230</small></div></div></td><td><svg width="16" height="16" style="color:var(--bleu);vertical-align:-3px"><use href="#i-car"/></svg> Toyota Corolla noire · CE 990 LP</td><td>30 août, 11:55</td><td class="num">6 h</td><td>7 / 7</td><td><span class="badge badge-ok">Netteté OK</span></td><td><span class="badge badge-attention">En revue</span></td><td class="num"><a class="btn btn-secondaire sm">Ouvrir</a></td></tr>
+            <tr><td><div class="who"><span class="av">J</span><div><b>Joseph K.</b><small>ID 3390 1236</small></div></div></td><td><svg width="16" height="16" style="color:var(--bleu);vertical-align:-3px"><use href="#i-car"/></svg> Toyota Yaris jaune (taxi) · LT 340 CA</td><td>30 août, 14:02</td><td class="num">4 h</td><td>7 / 7</td><td><span class="badge badge-ok">Netteté OK</span> <span class="badge badge-ok">Licence taxi</span></td><td><span class="badge badge-attention">En revue</span></td><td class="num"><a class="btn btn-secondaire sm">Ouvrir</a></td></tr>
+          </table>
+          <p style="font-size:12px;color:var(--gris);margin:10px 0">8 sur 12 · <a style="color:var(--bleu);font-weight:600">Voir les 4 suivants</a> · Les contrôles automatiques (netteté, dates, cohérence de plaque) sont indicatifs : la décision reste humaine.</p>
+        </div>
+      </div>
+    </div>
+  </div></div>
+  <p class="cap"><b>Composants</b> : sélecteurs d'onglets avec compteurs, filtre voiture / moto, tableau trié par ancienneté avec liseré orange au-delà de 24 h, badges de contrôle automatique (netteté, dates, licence taxi), bouton Ouvrir. Les taxis jaunes sont reconnaissables à leur plaque et à la licence : c'est le vivier de départ de VORA.</p>
+</section>
+
+<!-- ======================================================= OP-04 -->
+<section class="lot" id="op04">
+  <h2>OP-04 · Fiche chauffeur, vérification d'un dossier</h2>
+  <p class="desc">Les pièces côte à côte avec les données saisies, pour comparer sans ouvrir dix fenêtres. Chaque pièce se valide ou se refuse séparément ; le refus a un motif type et une consigne, envoyés tels quels au chauffeur. Le dossier n'est validé que quand les sept pièces le sont.</p>
+  <div class="wrap"><div class="web">
+    <aside class="side">
+      <div class="brand"><svg><use href="#vsym"/></svg><div>VORA<small>Ops · Yaoundé</small></div></div>
+      <nav class="nav">
+        <a><svg><use href="#i-dash"/></svg>Tableau de bord</a>
+        <a class="on"><svg><use href="#i-doc"/></svg>Dossiers<span class="n">12</span></a>
+        <a><svg><use href="#i-users"/></svg>Chauffeurs</a>
+        <a><svg><use href="#i-car"/></svg>Courses et litiges<span class="n">3</span></a>
+        <a><svg><use href="#i-map"/></svg>Zones</a>
+        <a><svg><use href="#i-tag"/></svg>Tarifs</a>
+        <a><svg><use href="#i-dl"/></svg>Exports</a>
+        <a><svg><use href="#i-team"/></svg>Équipe</a>
+      </nav>
+      <div class="me"><div class="av">N</div><div>Nadège K.<small>Ops · admin</small></div></div>
+    </aside>
+    <div class="main">
+      <div class="topbar"><a class="btn btn-tertiaire" href="#op03" style="padding:0 6px;margin-left:-8px">← Dossiers</a><h1>Boris N.</h1><span class="sub">ID VORA 3390 1182 · +237 6 99 •• •• 56 (ops uniquement) · Toyota Corolla grise · CE 913 NR · déposé le 29 août, 08:40 · <b style="color:var(--attention)">en revue depuis 31 h</b></span><span class="badge badge-attention" style="margin-left:auto">En revue</span></div>
+      <div class="content" style="grid-template-columns:1fr 480px;grid-template-rows:1fr auto">
+        <div class="card" style="overflow:hidden">
+          <div style="display:flex;align-items:center;gap:10px;margin:0 0 10px"><h3 style="margin:0">Pièces envoyées</h3><span class="seg"><span class="on">Identité</span><span>Permis</span><span>Véhicule</span><span>Professionnel</span></span></div>
+          <div class="tiles"><div class="tile"><span class="lab">CNI recto</span><span class="zoom">Agrandir</span></div><div class="tile"><span class="lab">CNI verso</span><span class="zoom">Agrandir</span></div><div class="tile face"><span class="lab">Selfie</span><span class="zoom">Comparer</span></div></div>
+          <div class="grid2" style="margin:14px 0 0">
+            <div class="field"><label>Nom sur la CNI</label><span class="v">NGUEMA Boris Alain</span></div><div class="field"><label>N° CNI</label><span class="v">1234567890</span></div>
+            <div class="field"><label>Date de naissance</label><span class="v">14/06/1986 · 40 ans</span></div><div class="field"><label>Expire le</label><span class="v">02/06/2030</span></div>
+            <div class="field"><label>Prénom déclaré dans l'appli</label><span class="v">Boris <span class="badge badge-ok">cohérent</span></span></div><div class="field"><label>Selfie vs CNI</label><span class="v"><span class="badge badge-ok">Même personne · contrôle visuel</span></span></div>
+          </div>
+          <div class="tiles" style="margin-top:14px"><div class="tile"><span class="lab">Assurance · recto</span><span class="zoom">Agrandir</span></div><div class="tile"><span class="lab">Carte grise</span><span class="zoom">Agrandir</span></div><div class="tile"><span class="lab">Visite technique</span><span class="zoom">Agrandir</span></div></div>
+          <div class="grid2" style="margin:14px 0 0">
+            <div class="field"><label>Plaque saisie</label><span class="v">CE 913 NR <span class="badge badge-ok">= carte grise · = photos</span></span></div><div class="field"><label>Assurance · date de fin</label><span class="v">30/01/2027 · mention transport de personnes : <span class="badge badge-attention">à vérifier sur le scan</span></span></div>
+          </div>
+        </div>
+        <div class="card" style="overflow:hidden;display:flex;flex-direction:column">
+          <h3>Décision pièce par pièce</h3>
+          <div style="flex:1;overflow:hidden">
+            <div class="piece"><div><b>Pièce d'identité</b><small>CNI · expire le 02/06/2030</small></div><span class="badge badge-ok"><svg><use href="#i-check"/></svg>Validée</span><div class="acts"><a class="btn btn-tertiaire sm">Annuler</a></div></div>
+            <div class="piece"><div><b>Permis de conduire · B</b><small>Depuis 2014 · expire le 14/03/2029</small></div><span class="badge badge-ok"><svg><use href="#i-check"/></svg>Validée</span><div class="acts"><a class="btn btn-tertiaire sm">Annuler</a></div></div>
+            <div class="piece"><div><b>Carte grise</b><small>CE 913 NR · Toyota Corolla · 2016</small></div><span class="badge badge-ok"><svg><use href="#i-check"/></svg>Validée</span><div class="acts"><a class="btn btn-tertiaire sm">Annuler</a></div></div>
+            <div class="piece"><div><b>Assurance</b><small>Expire le 30/01/2027</small></div><span class="badge badge-sos"><svg><use href="#i-x"/></svg>Refus en cours</span><div class="acts"><a class="btn btn-ok sm"><svg><use href="#i-check"/></svg>Valider</a></div>
+              <div class="panel"><h4>Refuser l'assurance · motif</h4>
+                <div class="radios"><span><i></i>Expirée</span><span><i></i>Illisible</span><span><i></i>Mauvais document</span><span class="on"><i></i>Mention manquante</span><span><i></i>Autre</span></div>
+                <div class="preview"><small>Message envoyé au chauffeur (SMS + appli), modifiable</small>Assurance refusée : l'attestation ne porte pas la mention « transport de personnes ». Envoyez une attestation qui la mentionne, ou l'avenant de votre assureur. Le reste de votre dossier est validé.</div>
+                <div style="display:flex;gap:8px;justify-content:flex-end"><a class="btn btn-tertiaire sm">Annuler</a><a class="btn btn-danger sm">Refuser et envoyer</a></div>
+              </div>
+            </div>
+            <div class="piece"><div><b>Visite technique</b><small>Expire le 19/09/2026 · rappel J-30 programmé</small></div><span class="badge badge-attention">À décider</span><div class="acts"><a class="btn btn-ok sm"><svg><use href="#i-check"/></svg>Valider</a><a class="btn btn-secondaire sm" style="border-color:var(--sos);color:var(--sos)">Refuser</a></div></div>
+            <div class="piece"><div><b>Carte bleue</b><small>Expire le 31/12/2026</small></div><span class="badge badge-attention">À décider</span><div class="acts"><a class="btn btn-ok sm"><svg><use href="#i-check"/></svg>Valider</a><a class="btn btn-secondaire sm" style="border-color:var(--sos);color:var(--sos)">Refuser</a></div></div>
+            <div class="piece"><div><b>Certificat de capacité T</b><small>Expire le 31/12/2026</small></div><span class="badge badge-attention">À décider</span><div class="acts"><a class="btn btn-ok sm"><svg><use href="#i-check"/></svg>Valider</a><a class="btn btn-secondaire sm" style="border-color:var(--sos);color:var(--sos)">Refuser</a></div></div>
+          </div>
+        </div>
+        <div class="card" style="grid-column:1 / -1;display:flex;align-items:center;gap:12px;padding:12px 16px"><span style="color:var(--gris)">3 validées · 1 refus en cours · 3 à décider</span><span style="margin-left:auto;display:flex;gap:8px"><a class="btn btn-secondaire">Demander une pièce sans refuser</a><span class="btn btn-desactive">Valider le dossier · 3 pièces restantes</span></span></div>
+      </div>
+    </div>
+  </div></div>
+  <p class="cap"><b>Composants</b> : vignettes de pièces avec agrandissement, champs saisis avec contrôles de cohérence (plaque = carte grise = photos, selfie = CNI), liste de décision pièce par pièce, panneau de refus avec motifs types et message pré-rédigé, barre de validation globale désactivée tant qu'il reste des pièces à décider. Le téléphone du chauffeur est visible ici et nulle part ailleurs.</p>
+</section>
+
+<!-- ======================================================= OP-07 -->
+<section class="lot" id="op07">
+  <h2>OP-07 · Litige</h2>
+  <p class="desc">Un signalement « supplément demandé ». Les deux traces GPS, l'itinéraire calculé, la chronologie des statuts et la conversation (lisible uniquement parce qu'un litige est ouvert) sont sur le même écran. La décision est pré-remplie d'après la règle du brief ; l'ops confirme, corrige ou rejette.</p>
+  <div class="wrap"><div class="web">
+    <aside class="side">
+      <div class="brand"><svg><use href="#vsym"/></svg><div>VORA<small>Ops · Yaoundé</small></div></div>
+      <nav class="nav">
+        <a><svg><use href="#i-dash"/></svg>Tableau de bord</a>
+        <a><svg><use href="#i-doc"/></svg>Dossiers<span class="n">12</span></a>
+        <a><svg><use href="#i-users"/></svg>Chauffeurs</a>
+        <a class="on"><svg><use href="#i-car"/></svg>Courses et litiges<span class="n">3</span></a>
+        <a><svg><use href="#i-map"/></svg>Zones</a>
+        <a><svg><use href="#i-tag"/></svg>Tarifs</a>
+        <a><svg><use href="#i-dl"/></svg>Exports</a>
+        <a><svg><use href="#i-team"/></svg>Équipe</a>
+      </nav>
+      <div class="me"><div class="av">N</div><div>Nadège K.<small>Ops · admin</small></div></div>
+    </aside>
+    <div class="main">
+      <div class="topbar"><a class="btn btn-tertiaire" style="padding:0 6px;margin-left:-8px">← Litiges</a><h1>Litige L-2608-0412</h1><span class="sub">Course C-260825-2210 · mardi 25 août, 13:35 · Marché Mokolo → Ngoa-Ekellé · signalé par le passager à 13:58</span><span class="badge badge-attention" style="margin-left:auto">En vérification · réponse due dans 9 h</span></div>
+      <div class="content" style="grid-template-columns:1fr 330px 350px">
+        <div style="display:flex;flex-direction:column;gap:16px;min-height:0">
+          <div class="card" style="flex:1;display:flex;flex-direction:column;padding:12px;min-height:0">
+            <div style="display:flex;align-items:center;gap:10px;margin:0 0 8px"><h3 style="margin:0">Traces GPS</h3><span class="seg" style="margin-left:auto"><span class="on">Les deux</span><span>Passager</span><span>Chauffeur</span></span></div>
+            <div class="mapbox"><svg class="map" viewBox="60 40 540 260" preserveAspectRatio="xMidYMid meet" style="background:#F4F6FA"><use href="#city" width="900" height="560" y="-120"/>
+              <path d="M120 120 L330 160 L440 200 L540 240" fill="none" stroke="#fff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M120 120 L330 160 L440 200 L540 240" fill="none" stroke="#94A3B8" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="1 12"/>
+              <path d="M120 122 L332 164 L442 204 L540 244" fill="none" stroke="#1F5EFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M118 118 L328 158 L438 198 L538 238" fill="none" stroke="#0B2A6F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="8 6"/>
+              <circle cx="120" cy="120" r="8" fill="#fff" stroke="#1F5EFF" stroke-width="4"/><rect x="530" y="230" width="20" height="20" rx="5" fill="#0B2A6F" stroke="#fff" stroke-width="3"/>
+              <text x="132" y="108" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="12" font-weight="600" fill="#0B2A6F">Prise en charge 13:41</text><text x="556" y="248" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="12" font-weight="600" fill="#0B2A6F">Arrivée 13:58</text>
+            </svg></div>
+            <div class="legend"><span><i style="background:#1F5EFF"></i>Passager</span><span><i style="background:#0B2A6F"></i>Chauffeur</span><span><i style="background:#94A3B8"></i>Itinéraire calculé</span><span style="width:100%;color:var(--ok);font-weight:600">Écart maximal entre les deux téléphones : 40 m · aucun détour</span></div>
+          </div>
+          <div class="card"><h3>Prix</h3><div class="lignes"><div><span>Prix ferme affiché à 13:31</span><b>1 850 F</b></div><div><span>Recalcul sur la trace réelle (5,9 km · 17 min)</span><b>1 870 F</b></div><div><span>Montant déclaré payé par le passager</span><b>2 500 F</b></div><div class="tot"><span>Différence réclamée</span><b>650 F</b></div></div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px;min-height:0">
+          <div class="card"><h3>Chronologie</h3>
+            <div class="tl"><i></i><div><b>13:31 · Demandée</b><small>Aïcha · ID 4821 7730 · Éco · espèces</small></div></div>
+            <div class="tl"><i></i><div><b>13:32 · Acceptée</b><small>Samuel T. · ID 3390 0977 · CE 508 AB · 1ᵉ vague</small></div></div>
+            <div class="tl"><i></i><div><b>13:41 · Code de montée validé</b></div></div>
+            <div class="tl"><i></i><div><b>13:58 · Terminée · espèces confirmées</b><small>Le chauffeur a confirmé « Paiement reçu · 1 850 F »</small></div></div>
+            <div class="tl"><i class="sos"></i><div><b>13:58 · Signalement passager</b><small>Tag « On m'a demandé plus que le prix » · 2 500 F</small></div></div>
+            <div class="tl"><i class="warn"></i><div><b>14:10 · Chauffeur contacté</b><small>Message VORA de l'ops, sans réponse à ce jour</small></div></div>
+          </div>
+          <div class="card" style="flex:1;overflow:hidden"><h3>Conversation de la course <span class="badge badge-attention" style="margin-left:6px">lecture autorisée · litige ouvert</span></h3>
+            <div class="bub c">Je suis au marché, côté pharmacie.<small style="display:block;opacity:.7">13:36 · chauffeur</small></div>
+            <div class="bub p">J'arrive, en face de la pharmacie.<small style="display:block;opacity:.8">13:38 · passager</small></div>
+            <div class="bub c">Le trajet là c'est 2 500, la route est mauvaise.<small style="display:block;opacity:.7">13:57 · chauffeur</small></div>
+            <div class="bub p">L'appli dit 1 850.<small style="display:block;opacity:.8">13:57 · passager</small></div>
+          </div>
+        </div>
+        <div class="card" style="display:flex;flex-direction:column;overflow:hidden">
+          <h3>Décision proposée</h3>
+          <p style="font-size:12px;color:var(--gris);margin:0 0 8px">D'après la trace (pas de détour), le message du chauffeur et la règle « supplément réclamé » du brief.</p>
+          <div class="check"><i class="on"></i>Signalement confirmé</div>
+          <p class="sub" style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gris);margin:10px 0 2px">Passager</p>
+          <div class="check"><i class="on"></i>Rembourser la différence · 650 F sur MoMo ou en crédit</div>
+          <div class="check"><i></i>Crédit de course supplémentaire · 500 F</div>
+          <p class="sub" style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gris);margin:10px 0 2px">Chauffeur · Samuel T. · 1ᵉʳ signalement confirmé</p>
+          <div class="check"><i class="r on"></i>Avertissement (1ᵉʳ) et retenue de 650 F sur le solde</div>
+          <div class="check"><i class="r"></i>Suspension 7 jours (2ᵉ)</div>
+          <div class="check"><i class="r"></i>Exclusion (3ᵉ)</div>
+          <div class="preview"><small>Message au passager</small>Votre signalement est confirmé. VORA vous rembourse 650 F. Merci de nous avoir aidés à faire respecter le prix ferme.</div>
+          <div class="preview"><small>Message au chauffeur</small>Un supplément a été réclamé sur la course C-260825-2210. Avertissement : 650 F retenus sur votre solde. Un second signalement confirmé entraîne 7 jours de suspension.</div>
+          <div style="margin-top:auto;display:flex;gap:8px;flex-wrap:wrap"><a class="btn btn-primaire" style="flex:1">Appliquer la décision</a><a class="btn btn-secondaire">Rejeter le signalement</a><a class="btn btn-tertiaire">Demander un complément</a></div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+  <p class="cap"><b>Composants</b> : carte avec trois tracés (passager, chauffeur, itinéraire calculé) et l'écart maximal chiffré, tableau de prix avec recalcul sur la trace réelle, chronologie des statuts (les mêmes que dans les deux applis), conversation en lecture seule marquée comme telle, panneau de décision pré-rempli avec les messages sortants. L'échelle de sanction (avertissement, 7 jours, exclusion) est celle du brief.</p>
+</section>
+
+<!-- ======================================================= OP-05 -->
+<section class="lot" id="op05">
+  <h2>OP-05 · Zones</h2>
+  <p class="desc">Les polygones qui font tenir la promesse « en règle » : le centre urbain interdit aux motos (arrêté préfectoral), les zones autorisées, les corridors de lancement pour les voitures, et les bonus de zone avec leurs horaires. Chaque zone a un interrupteur et une couleur fixe.</p>
+  <div class="wrap"><div class="web">
+    <aside class="side">
+      <div class="brand"><svg><use href="#vsym"/></svg><div>VORA<small>Ops · Yaoundé</small></div></div>
+      <nav class="nav">
+        <a><svg><use href="#i-dash"/></svg>Tableau de bord</a>
+        <a><svg><use href="#i-doc"/></svg>Dossiers<span class="n">12</span></a>
+        <a><svg><use href="#i-users"/></svg>Chauffeurs</a>
+        <a><svg><use href="#i-car"/></svg>Courses et litiges<span class="n">3</span></a>
+        <a class="on"><svg><use href="#i-map"/></svg>Zones</a>
+        <a><svg><use href="#i-tag"/></svg>Tarifs</a>
+        <a><svg><use href="#i-dl"/></svg>Exports</a>
+        <a><svg><use href="#i-team"/></svg>Équipe</a>
+      </nav>
+      <div class="me"><div class="av">N</div><div>Nadège K.<small>Ops · admin</small></div></div>
+    </aside>
+    <div class="main">
+      <div class="topbar"><h1>Zones</h1><span class="sub">Dernière modification : 12 août par Nadège K. · 9 zones · 2 bonus programmés</span><span style="margin-left:auto;display:flex;gap:8px"><a class="btn btn-secondaire"><svg><use href="#i-pen"/></svg>Dessiner une zone</a><a class="btn btn-secondaire"><svg><use href="#i-dl"/></svg>Importer GeoJSON</a><a class="btn btn-primaire">Publier les modifications</a></span></div>
+      <div class="content" style="grid-template-columns:360px 1fr">
+        <div class="card" style="overflow:hidden">
+          <h3>Motos · arrêté préfectoral</h3>
+          <div class="zone"><span class="col" style="background:#FDE3E1;border:1.5px dashed #D92D20"></span><div style="flex:1"><b>Centre urbain · interdit aux motos</b><small>Périmètre de l'arrêté · aucune course moto ne peut y entrer</small></div><i class="sw on"></i></div>
+          <div class="zone"><span class="col" style="background:#E8F0FF;border:1.5px solid #1F5EFF"></span><div style="flex:1"><b>Emana · autorisée</b><small>18 motos actives · 41 courses hier</small></div><i class="sw on"></i></div>
+          <div class="zone"><span class="col" style="background:#E8F0FF;border:1.5px solid #1F5EFF"></span><div style="flex:1"><b>Etoudi · autorisée</b><small>11 motos actives</small></div><i class="sw on"></i></div>
+          <div class="zone"><span class="col" style="background:#E8F0FF;border:1.5px solid #1F5EFF"></span><div style="flex:1"><b>Nkolbisson · autorisée</b><small>4 motos actives · 19 demandes sans chauffeur hier</small></div><i class="sw on"></i></div>
+          <div class="zone"><span class="col" style="background:#E8F0FF;border:1.5px solid #1F5EFF"></span><div style="flex:1"><b>Biyem-Assi périphérie · autorisée</b><small>Brouillon · non publiée</small></div><i class="sw"></i></div>
+          <h3 style="margin-top:16px">Voitures · corridors de lancement</h3>
+          <div class="zone"><span class="col" style="background:#DDF5E7;border:1.5px solid #0F7A47"></span><div style="flex:1"><b>Corridor 1 · Ngoa-Ekellé ↔ Centre-ville ↔ Bastos</b><small>Priorité de dispatch, recrutement ciblé</small></div><i class="sw on"></i></div>
+          <div class="zone"><span class="col" style="background:#DDF5E7;border:1.5px solid #0F7A47"></span><div style="flex:1"><b>Corridor 2 · Mvan ↔ Mvog-Ada ↔ Centre-ville</b></div><i class="sw on"></i></div>
+          <h3 style="margin-top:16px">Bonus de zone</h3>
+          <div class="zone"><span class="col" style="background:#FFF4D6;border:1.5px dashed #B25E00"></span><div style="flex:1"><b>Emana · + 200 F par course</b><small>17:00 – 19:00 · lun–sam · payé par VORA · actif</small></div><i class="sw on"></i></div>
+          <div class="zone"><span class="col" style="background:#FFF4D6;border:1.5px dashed #B25E00"></span><div style="flex:1"><b>Nkolbisson · + 250 F par course</b><small>Proposé par le tableau de bord · à activer</small></div><i class="sw"></i></div>
+        </div>
+        <div class="card" style="padding:12px;display:flex;flex-direction:column">
+          <div class="mapbox"><svg class="map" viewBox="0 0 900 560" preserveAspectRatio="xMidYMid meet" style="background:#F4F6FA"><use href="#city"/>
+            <path d="M190 160 L440 150 L450 350 L200 350 Z" fill="#FDE3E1" opacity=".6"/><path d="M190 160 L440 150 L450 350 L200 350 Z" fill="none" stroke="#D92D20" stroke-width="2" stroke-dasharray="8 6"/><text x="300" y="300" text-anchor="middle" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="13" font-weight="700" fill="#D92D20">Interdit aux motos</text>
+            <path d="M200 20 L430 20 L430 140 L200 150 Z" fill="#E8F0FF" opacity=".8"/><path d="M200 20 L430 20 L430 140 L200 150 Z" fill="none" stroke="#1F5EFF" stroke-width="2"/><text x="250" y="130" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="12" font-weight="600" fill="#0B2A6F">Emana · motos</text>
+            <path d="M20 20 L190 20 L190 150 L20 160 Z" fill="#E8F0FF" opacity=".8"/><path d="M20 20 L190 20 L190 150 L20 160 Z" fill="none" stroke="#1F5EFF" stroke-width="2"/><text x="40" y="140" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="12" font-weight="600" fill="#0B2A6F">Etoudi · motos</text>
+            <path d="M440 20 L640 20 L640 150 L450 150 Z" fill="#E8F0FF" opacity=".8"/><path d="M440 20 L640 20 L640 150 L450 150 Z" fill="none" stroke="#1F5EFF" stroke-width="2"/><text x="470" y="140" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="12" font-weight="600" fill="#0B2A6F">Nkolbisson · motos</text>
+            <path d="M20 370 L200 370 L210 540 L20 540 Z" fill="#E8F0FF" opacity=".5"/><path d="M20 370 L200 370 L210 540 L20 540 Z" fill="none" stroke="#1F5EFF" stroke-width="2" stroke-dasharray="4 4"/><text x="40" y="530" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="12" font-weight="600" fill="#5B6B84">Biyem-Assi · brouillon</text>
+            <path d="M450 200 L870 140 L882 225 L482 335 Z" fill="#DDF5E7" opacity=".7"/><path d="M450 200 L870 140 L882 225 L482 335 Z" fill="none" stroke="#0F7A47" stroke-width="2"/><text x="660" y="215" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="12" font-weight="600" fill="#0F7A47">Corridor 1 · voitures</text>
+            <path d="M210 40 L420 30 L425 120 L215 130 Z" fill="none" stroke="#B25E00" stroke-width="2" stroke-dasharray="8 6"/><text x="300" y="75" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="12" font-weight="700" fill="#B25E00">Bonus +200 F · 17–19 h</text>
+          </svg></div>
+          <div class="legend"><span><i style="background:#FDE3E1;border:1.5px dashed #D92D20"></i>Interdit motos</span><span><i style="background:#E8F0FF;border:1.5px solid #1F5EFF"></i>Autorisé motos</span><span><i style="background:#DDF5E7;border:1.5px solid #0F7A47"></i>Corridor voitures</span><span><i style="border:1.5px dashed #B25E00;background:#fff"></i>Bonus de zone</span><span style="margin-left:auto">Une course moto est refusée en amont si départ, arrivée ou itinéraire touche la zone rouge.</span></div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+  <p class="cap"><b>Composants</b> : liste de zones par famille avec pastille de couleur et interrupteur, carte avec polygones (rouge hachuré = interdit, Bleu ciel = autorisé motos, vert = corridor voitures, orange pointillé = bonus), boutons Dessiner / Importer / Publier. Une modification n'est appliquée aux applis qu'à la publication, avec un journal.</p>
+</section>
+
+<!-- ======================================================= OP-06 -->
+<section class="lot" id="op06">
+  <h2>OP-06 · Tarifs et majorations</h2>
+  <p class="desc">La grille du brief, éditable, avec un simulateur qui montre ce que verra un passager avant de publier. La majoration pluie est un bouton avec une durée et un message aux chauffeurs ; la majoration nuit est un horaire. Le plafond global × 1,5 est verrouillé : le modifier demande un second administrateur.</p>
+  <div class="wrap"><div class="web">
+    <aside class="side">
+      <div class="brand"><svg><use href="#vsym"/></svg><div>VORA<small>Ops · Yaoundé</small></div></div>
+      <nav class="nav">
+        <a><svg><use href="#i-dash"/></svg>Tableau de bord</a>
+        <a><svg><use href="#i-doc"/></svg>Dossiers<span class="n">12</span></a>
+        <a><svg><use href="#i-users"/></svg>Chauffeurs</a>
+        <a><svg><use href="#i-car"/></svg>Courses et litiges<span class="n">3</span></a>
+        <a><svg><use href="#i-map"/></svg>Zones</a>
+        <a class="on"><svg><use href="#i-tag"/></svg>Tarifs</a>
+        <a><svg><use href="#i-dl"/></svg>Exports</a>
+        <a><svg><use href="#i-team"/></svg>Équipe</a>
+      </nav>
+      <div class="me"><div class="av">N</div><div>Nadège K.<small>Ops · admin</small></div></div>
+    </aside>
+    <div class="main">
+      <div class="topbar"><h1>Tarifs et majorations</h1><span class="sub">Grille v1 en vigueur depuis le 1ᵉʳ août · dernière modification : 12 août par Nadège K.</span><span style="margin-left:auto;display:flex;gap:8px"><a class="btn btn-secondaire">Historique</a><span class="btn btn-desactive">Publier · aucune modification</span></span></div>
+      <div class="content" style="grid-template-columns:1fr 420px;grid-template-rows:auto auto 1fr">
+        <div class="card" style="grid-row:span 3;overflow:hidden">
+          <h3>Grille par offre · prix = max(minimum, base + tarif/km × km + tarif/min × min)</h3>
+          <table class="grid-tarif">
+            <tr><th>Offre</th><th>Base</th><th>Par km</th><th>Par minute</th><th>Minimum</th><th>Part VORA</th><th>Retenue DGI</th></tr>
+            <tr><td><b>VORA Éco</b><br><small style="color:var(--gris)">voiture</small></td><td><span class="input sm">500 F</span></td><td><span class="input sm">150 F</span></td><td><span class="input sm">25 F</span></td><td><span class="input sm">1 000 F</span></td><td><span class="input sm">15 %</span></td><td>1 % du brut</td></tr>
+            <tr><td><b>VORA Confort</b><br><small style="color:var(--gris)">voiture climatisée récente</small></td><td colspan="4"><span style="font-size:12px;color:var(--gris)">= Éco × </span><span class="input sm" style="display:inline-flex;width:80px">1,40</span></td><td><span class="input sm">15 %</span></td><td>1 % du brut</td></tr>
+            <tr><td><b>VORA Moto</b> <span class="badge badge-repere">périphérie</span></td><td><span class="input sm">200 F</span></td><td><span class="input sm">60 F</span></td><td><span class="input sm">0 F</span></td><td><span class="input sm">300 F</span></td><td><span class="input sm">50 F fixe</span></td><td>1 % du brut</td></tr>
+          </table>
+          <h3 style="margin-top:18px">Attente et annulation</h3>
+          <table>
+            <tr><th>Règle</th><th>Voiture</th><th>Moto</th></tr>
+            <tr><td>Attente gratuite au départ, puis tarif</td><td>3 min · <span class="input sm" style="display:inline-flex;width:80px">25 F</span> / min</td><td>2 min · <span class="input sm" style="display:inline-flex;width:80px">10 F</span> / min</td></tr>
+            <tr><td>Attente gratuite avec option accessibilité</td><td>10 min</td><td>—</td></tr>
+            <tr><td>Annulation tardive du passager, reversée au chauffeur</td><td><span class="input sm" style="display:inline-flex;width:90px">300 F</span></td><td><span class="input sm" style="display:inline-flex;width:90px">100 F</span></td></tr>
+            <tr><td>Arrêt supplémentaire demandé par le passager</td><td><span class="input sm" style="display:inline-flex;width:90px">300 F</span> + recalcul</td><td><span class="input sm" style="display:inline-flex;width:90px">100 F</span> + recalcul</td></tr>
+            <tr><td>Plafond de dette de commission (blocage)</td><td>5 000 F</td><td>1 500 F</td></tr>
+          </table>
+          <div class="note warn" style="margin-top:14px"><b>Plafond global des majorations : × 1,5.</b> Verrouillé. Toute modification nécessite la validation d'un second administrateur et un délai de 24 h avant publication.</div>
+        </div>
+        <div class="card"><h3>Majoration pluie</h3>
+          <div style="display:flex;align-items:center;gap:10px;margin:0 0 10px"><span class="pill" style="border-color:var(--bleu)"><svg width="16" height="16" style="color:var(--bleu)"><use href="#i-rain"/></svg>Activer<span class="sw"></span></span><span class="input sm" style="width:80px">+ 30 %</span><span class="input sm" style="width:90px">60 min</span></div>
+          <div class="preview" style="margin:0"><small>Message aux chauffeurs en ligne à l'activation</small>Il pleut sur Yaoundé : majoration pluie + 30 % pendant 60 min. Roulez prudemment.</div>
+          <p style="font-size:12px;color:var(--gris);margin:8px 0 0">Affichée au passager comme une ligne « Majoration pluie » séparée, jamais fondue dans le total. Historique : activée 6 fois en août, durée moyenne 52 min.</p>
+        </div>
+        <div class="card"><h3>Majoration nuit</h3>
+          <div style="display:flex;align-items:center;gap:10px"><span class="pill" style="border-color:var(--ok)">Active<span class="sw on"></span></span><span class="input sm" style="width:80px">+ 25 %</span><span style="font-size:12px;color:var(--gris)">de</span><span class="input sm" style="width:80px">22:00</span><span style="font-size:12px;color:var(--gris)">à</span><span class="input sm" style="width:80px">05:00</span></div>
+        </div>
+        <div class="card"><h3>Simulateur · ce que verra le passager</h3>
+          <div style="display:flex;gap:10px;margin:0 0 10px"><span class="input sm" style="flex:1">5,0 km</span><span class="input sm" style="flex:1">15 min</span><span class="seg"><span class="on">Jour</span><span>Nuit</span><span>Pluie</span></span></div>
+          <div class="lignes"><div><span>VORA Éco</span><b>1 625 F</b></div><div><span>· dont prise en charge / distance / temps</span><b>500 + 750 + 375</b></div><div><span>· net chauffeur</span><b>1 365 F</b></div><div><span>VORA Confort</span><b>2 275 F</b></div><div><span>VORA Moto (3,0 km · 9 min)</span><b>380 F · net 326 F</b></div></div>
+          <p style="font-size:12px;color:var(--gris);margin:10px 0 0">Référence terrain : dépôt taxi ≈ 2 000 F, ramassage 350 F. Éco doit rester sous le dépôt.</p>
+        </div>
+      </div>
+    </div>
+  </div></div>
+  <p class="cap"><b>Composants</b> : grille éditable avec les valeurs du brief, règles d'attente et d'annulation, majoration pluie en un bouton avec durée et message, majoration nuit en horaire, simulateur avec le net chauffeur, note de verrouillage du plafond. Rien n'est appliqué sans « Publier », et l'historique garde qui a changé quoi.</p>
+</section>
+
+<footer style="color:var(--gris);font-size:13px;max-width:100ch;line-height:1.6">
+  <p><b style="color:var(--bleu-nuit)">Non dessinés</b> : OP-01 Connexion (e-mail, mot de passe, code à 6 chiffres, rôles admin / ops / lecture) et OP-08 Exports (période, type DGI / paiements / courses, CSV). <b style="color:var(--bleu-nuit)">Reste</b> : le site web public.</p>
+</footer>
+
+</div>
+<script>
+(function(){
+  function fit(){
+    document.querySelectorAll('.wrap').forEach(function(w){
+      var web=w.querySelector('.web'); if(!web) return;
+      var s=Math.min(1,(w.clientWidth)/1440);
+      web.style.transform='scale('+s+')';
+      w.style.height=(900*s)+'px';
+    });
+  }
+  window.addEventListener('resize',fit); window.addEventListener('load',fit); fit();
+})();
+</script>
+</body>
+</html>

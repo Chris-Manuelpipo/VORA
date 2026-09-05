@@ -29,6 +29,8 @@
     "@fastify/jwt": "^9.0.1",
     "@fastify/merge-json-schemas": "^0.2.1",
     "@fastify/rate-limit": "^10.1.1",
+    "@fastify/swagger": "^9.8.1",
+    "@fastify/swagger-ui": "^6.1.1",
     "@pinojs/redact": "^0.4.0",
     "@types/node": "^22.9.0",
     "@types/pg": "^8.11.10",

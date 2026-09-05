@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VORA — Maquettes lot 2 · boucle chauffeur</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blanc:#FFFFFF;--bleu:#1F5EFF;--bleu-presse:#174BD1;--bleu-nuit:#0B2A6F;--bleu-ciel:#E8F0FF;--bleu-pale:#F4F7FF;
+  --jaune:#FFC42E;--encre:#1E293B;--gris:#5B6B84;--gris-clair:#94A3B8;--bordure:#DDE3EE;--surface:#F4F6FA;
+  --ok:#0F7A47;--ok-fond:#DDF5E7;--attention:#B25E00;--attention-fond:#FFF1DD;--sos:#D92D20;--sos-fond:#FDE3E1;
+  --nuit-900:#06153A;--nuit-800:#0B2A6F;--nuit-700:#12388F;--bleu-sur-nuit:#6D9BFF;--texte-nuit:#F4F7FF;--texte-nuit-2:#B7C4E2;--ok-nuit:#7BE0A8;
+  --font-display:'Sora','Trebuchet MS',system-ui,sans-serif;--font-body:'IBM Plex Sans','Segoe UI',Roboto,system-ui,sans-serif;
+  --ombre-2:0 4px 12px rgba(11,42,111,.10),0 2px 4px rgba(11,42,111,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;background:#EAEEF5;font-family:var(--font-body);color:var(--encre);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.board{max-width:1640px;margin:0 auto;padding:32px 32px 80px}
+.head{margin:0 0 40px;max-width:90ch}
+.head .eyebrow{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--bleu);margin:0 0 6px}
+.head h1{font-family:var(--font-display);font-weight:800;color:var(--bleu-nuit);font-size:30px;margin:0 0 8px;letter-spacing:-.01em}
+.head p{margin:0 0 6px;color:var(--gris);font-size:15px;line-height:1.5}
+.head .legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.head .legend span{background:#fff;border:1px solid var(--bordure);border-radius:999px;padding:5px 11px;font-size:12px;color:var(--gris)}
+.lot{margin:0 0 60px;scroll-margin-top:24px}
+.lot h2{font-family:var(--font-display);font-weight:700;color:var(--bleu-nuit);font-size:20px;margin:0 0 4px}
+.lot .desc{color:var(--gris);font-size:14px;margin:0 0 18px;max-width:90ch;line-height:1.5}
+.frames{display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start}
+.item{width:360px}
+.item .state{font-size:12px;font-weight:600;color:var(--bleu-nuit);margin:0 0 8px 4px;text-transform:uppercase;letter-spacing:.06em}
+.item .cap{font-size:12px;color:var(--gris);margin:10px 4px 0;line-height:1.5}
+.item .cap b{color:var(--bleu-nuit);font-weight:600}
+
+/* ---- Cadre ---- */
+.frame{position:relative;width:360px;height:800px;background:#fff;border-radius:28px;overflow:hidden;box-shadow:0 0 0 8px #0F172A,0 18px 40px rgba(11,42,111,.22);font-size:14px;line-height:1.35;color:var(--encre)}
+.sb{position:absolute;top:0;left:0;right:0;height:28px;background:linear-gradient(#fff 40%,rgba(255,255,255,0));display:flex;justify-content:space-between;align-items:center;padding:0 16px;font-size:12px;font-weight:600;color:var(--encre);z-index:5}
+.sb .r{display:flex;gap:6px;align-items:center}
+.sb i{display:inline-block;width:14px;height:8px;background:currentColor;border-radius:1px;opacity:.85}
+.sb i.b{width:18px;border-radius:3px}
+.gesture{position:absolute;bottom:6px;left:50%;width:100px;height:4px;margin-left:-50px;border-radius:2px;background:rgba(30,41,59,.30);z-index:12}
+.map{position:absolute;top:0;left:0;width:360px;height:560px;display:block}
+.ov{position:absolute;top:0;left:0;width:360px;height:560px;pointer-events:none}
+.pill{position:absolute;top:40px;left:16px;right:16px;z-index:4;background:#fff;border-radius:12px;box-shadow:var(--ombre-2);padding:10px 12px;display:flex;align-items:center;gap:10px;font-size:14px}
+.pill small{display:block;color:var(--gris);font-size:11px}
+.pill .r{margin-left:auto;font-family:var(--font-display);font-weight:800;color:var(--bleu);font-size:18px;font-variant-numeric:tabular-nums}
+.eta{position:absolute;background:var(--bleu-nuit);color:#fff;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:600;z-index:4;white-space:nowrap}
+.eta::after{content:"";position:absolute;left:14px;bottom:-5px;border:5px solid transparent;border-top-color:var(--bleu-nuit);border-bottom:0}
+.banner{position:absolute;top:34px;left:12px;right:12px;z-index:7;background:var(--attention-fond);color:var(--attention);border:1px solid #F5D9AD;border-radius:12px;padding:10px 12px;font-size:13px;font-weight:500;line-height:1.35}
+.banner.ok{background:var(--ok-fond);color:var(--ok);border-color:#BFE8D0}
+.banner.bleu{background:var(--bleu-nuit);color:#fff;border-color:var(--bleu-nuit)}
+.banner.nav{background:var(--bleu);color:#fff;border-color:var(--bleu);display:flex;gap:10px;align-items:center;font-size:15px;font-weight:600;padding:12px 14px}
+.banner.nav svg{width:26px;height:26px;flex:none}
+.banner.nav small{display:block;font-weight:400;font-size:12px;opacity:.85}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:24px 24px 0 0;box-shadow:0 -6px 20px rgba(11,42,111,.10);padding:8px 16px 26px;z-index:6}
+.sheet.full{top:28px;border-radius:0;box-shadow:none;padding-top:12px}
+.handle{width:36px;height:4px;border-radius:2px;background:var(--bordure);margin:4px auto 12px}
+.h{font-family:var(--font-display);font-weight:700;color:var(--bleu-nuit);font-size:20px;margin:0 0 4px;letter-spacing:-.01em}
+.h.big{font-size:24px}
+.sub{color:var(--gris);font-size:13px;margin:0 0 12px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--bleu);margin:0 0 4px}
+.prix{font-family:var(--font-display);font-weight:800;font-size:34px;color:var(--bleu);font-variant-numeric:tabular-nums;line-height:1;margin:4px 0 4px}
+.muted{color:var(--gris)}.small{font-size:12px}
+.btn{height:52px;border-radius:12px;font-weight:600;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:2px solid transparent;font-family:var(--font-body)}
+.btn-primaire{background:var(--bleu);color:#fff}
+.btn-secondaire{background:#fff;color:var(--bleu);border-color:var(--bleu)}
+.btn-tertiaire{background:transparent;color:var(--bleu)}
+.btn-desactive{background:var(--surface);color:var(--gris-clair);border-color:var(--bordure)}
+.btn.tall{height:64px;font-size:18px}
+.btn + .btn{margin-top:8px}
+.rowi{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--bordure)}
+.rowi:last-child{border-bottom:0}
+.rowi .ic{width:36px;height:36px;border-radius:10px;background:var(--bleu-pale);display:flex;align-items:center;justify-content:center;flex:none;color:var(--bleu)}
+.rowi .ic svg{width:20px;height:20px}
+.rowi .t{flex:1;min-width:0}
+.rowi .t b{font-weight:600;display:block}
+.rowi .t small{display:block;color:var(--gris);font-size:12px}
+.rowi .d{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sect{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--gris);margin:14px 0 2px}
+.tabs{display:flex;border-top:1px solid var(--bordure);margin:12px -16px -26px;padding:8px 8px 20px;background:#fff}
+.tab{flex:1;text-align:center;font-size:11px;color:var(--gris);font-weight:500}
+.tab.on{color:var(--bleu);font-weight:600}
+.tab svg{width:22px;height:22px;display:block;margin:0 auto 2px}
+.badge{display:inline-flex;align-items:center;gap:5px;height:22px;padding:0 8px;border-radius:999px;font-size:11px;font-weight:600}
+.badge svg{width:12px;height:12px}
+.badge-ok{background:var(--ok-fond);color:var(--ok)}
+.badge-attention{background:var(--attention-fond);color:var(--attention)}
+.badge-sos{background:var(--sos-fond);color:var(--sos)}
+.badge-repere{background:var(--jaune);color:var(--bleu-nuit)}
+.badge-neutre{background:var(--surface);color:var(--gris)}
+.lignes{font-size:13px;color:var(--gris);border-top:1px solid var(--bordure);margin-top:6px;padding-top:6px}
+.lignes div{display:flex;justify-content:space-between;padding:3px 0}
+.lignes div b{color:var(--encre);font-weight:600;font-variant-numeric:tabular-nums}
+.lignes div.tot b{color:var(--bleu)}
+.trajet{display:grid;grid-template-columns:18px 1fr;gap:0 10px;font-size:14px;margin:6px 0}
+.trajet .pts{position:relative}
+.trajet .pts::before{content:"";position:absolute;left:8px;top:14px;bottom:14px;border-left:2px dashed var(--bordure)}
+.trajet .pt{width:18px;height:18px;border-radius:50%;background:#fff;border:4px solid var(--bleu);margin:2px 0 12px}
+.trajet .pt.fin{border-radius:4px;border-color:var(--bleu-nuit)}
+.trajet .l{padding:0 0 10px;font-weight:600}
+.trajet .l small{display:block;color:var(--gris);font-size:12px;font-weight:400}
+.drv{display:flex;align-items:center;gap:12px;margin:8px 0}
+.avatar{width:48px;height:48px;border-radius:50%;background:var(--bleu-ciel);color:var(--bleu-nuit);font-family:var(--font-display);font-weight:700;display:flex;align-items:center;justify-content:center;font-size:16px;flex:none}
+.drv .t{flex:1;min-width:0}.drv .t b{font-weight:600;display:block}.drv .t small{display:block;color:var(--gris);font-size:12px}
+.acts{display:flex;gap:8px;margin:12px 0 4px}
+.act{flex:1;height:60px;padding:0 4px;text-align:center;line-height:1.15;border:1.5px solid var(--bordure);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:12px;font-weight:600;color:var(--bleu-nuit)}
+.act svg{width:22px;height:22px;color:var(--bleu)}
+.fab-sos{position:absolute;left:16px;z-index:7;width:60px;height:60px;border-radius:50%;background:var(--sos);color:#fff;font-family:var(--font-display);font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 6px rgba(217,45,32,.18),0 6px 14px rgba(217,45,32,.35)}
+.ring{position:relative;width:56px;height:56px;flex:none}
+.ring svg{width:56px;height:56px;transform:rotate(-90deg)}
+.ring span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:800;font-size:18px;color:var(--bleu-nuit)}
+.toggle{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--bordure);margin:0 0 10px}
+.toggle .t{flex:1}.toggle .t b{display:block;font-weight:600;font-size:16px}.toggle .t small{display:block;color:var(--gris);font-size:12px}
+.sw{width:52px;height:30px;border-radius:15px;background:var(--gris-clair);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff}
+.sw.on{background:var(--ok)}.sw.on::after{left:auto;right:3px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 8px}
+.chip{display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:999px;border:1.5px solid var(--bordure);font-size:13px;font-weight:500}
+.chip.on{border-color:var(--bleu);background:var(--bleu-ciel);color:var(--bleu-nuit);font-weight:600}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:var(--bleu)}
+.chip .dot.j{background:var(--jaune)}
+.chip svg{width:14px;height:14px}
+.code{display:flex;gap:10px;justify-content:center;margin:8px 0 4px}
+.code span{width:58px;height:66px;border-radius:12px;background:var(--bleu-nuit);color:#fff;font-family:var(--font-display);font-weight:800;font-size:32px;display:flex;align-items:center;justify-content:center}
+.code span.empty{background:transparent;border:2px dashed var(--gris-clair)}
+.code span.err{background:var(--sos)}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 0}
+.key{height:58px;border-radius:12px;background:var(--surface);color:var(--encre);font-family:var(--font-display);font-weight:700;font-size:22px;display:flex;align-items:center;justify-content:center}
+.key.ghost{background:transparent}
+.photo{height:96px;border-radius:12px;background:linear-gradient(135deg,#DDE3EE,#F4F6FA);display:flex;align-items:center;justify-content:center;gap:8px;color:var(--gris);font-size:12px;font-weight:500;margin:8px 0}
+.photo svg{width:18px;height:18px;color:var(--jaune)}
+.wait{display:flex;align-items:center;gap:12px;margin:8px 0}
+.wait .big{font-family:var(--font-display);font-weight:800;font-size:34px;color:var(--bleu-nuit);font-variant-numeric:tabular-nums;line-height:1}
+.bar{height:8px;border-radius:4px;background:var(--bordure);overflow:hidden;flex:1}
+.bar i{display:block;height:100%;background:var(--bleu);border-radius:4px}
+.inline-err{background:var(--sos-fond);border:1px solid #F6BDB8;color:var(--sos);border-radius:12px;padding:10px 12px;font-size:13px;margin:0 0 12px;line-height:1.4}
+.inline-err b{display:block;margin-bottom:2px}
+.seg{display:flex;background:var(--surface);border-radius:12px;padding:4px;margin:0 0 12px}
+.seg span{flex:1;text-align:center;padding:8px 0;border-radius:9px;font-size:13px;font-weight:600;color:var(--gris)}
+.seg span.on{background:#fff;color:var(--bleu-nuit);box-shadow:var(--ombre-2)}
+.spark{display:flex;align-items:flex-end;gap:4px;height:56px;margin:10px 0 4px}
+.spark i{flex:1;background:var(--bleu-ciel);border-radius:3px 3px 0 0}
+.spark i.on{background:var(--bleu)}
+.spark i.b{background:var(--jaune)}
+.dim{position:absolute;inset:0;background:rgba(11,42,111,.45);z-index:8}
+.modal{position:absolute;left:0;right:0;bottom:0;z-index:9;background:#fff;border-radius:24px 24px 0 0;padding:8px 16px 26px}
+.pulse{animation:pulse 1.8s ease-out infinite;transform-origin:center;transform-box:fill-box}
+@keyframes pulse{0%{transform:scale(.6);opacity:.7}100%{transform:scale(1.6);opacity:0}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none;opacity:.3}}
+
+/* ---- Mode nuit chauffeur ---- */
+.nuit{background:var(--nuit-900);color:var(--texte-nuit)}
+.nuit .sb{color:var(--texte-nuit);background:linear-gradient(#06153A 40%,rgba(6,21,58,0))}
+.nuit .gesture{background:rgba(244,247,255,.35)}
+.nuit .sheet{background:var(--nuit-800);box-shadow:0 -6px 20px rgba(0,0,0,.35)}
+.nuit .sheet.full{background:var(--nuit-900)}
+.nuit .handle{background:var(--nuit-700)}
+.nuit .h{color:var(--texte-nuit)}
+.nuit .sub,.nuit .muted,.nuit .small{color:var(--texte-nuit-2)}
+.nuit .eyebrow{color:var(--bleu-sur-nuit)}
+.nuit .prix{color:var(--bleu-sur-nuit)}
+.nuit .lignes{border-color:var(--nuit-700);color:var(--texte-nuit-2)}
+.nuit .lignes div b{color:var(--texte-nuit)}
+.nuit .lignes div.tot b{color:var(--bleu-sur-nuit)}
+.nuit .btn-secondaire{background:transparent;color:var(--bleu-sur-nuit);border-color:var(--bleu-sur-nuit)}
+.nuit .btn-tertiaire{color:var(--bleu-sur-nuit)}
+.nuit .btn-desactive{background:var(--nuit-800);color:#5C6E99;border-color:var(--nuit-700)}
+.nuit .rowi{border-color:var(--nuit-700)}
+.nuit .rowi .ic{background:var(--nuit-700);color:var(--bleu-sur-nuit)}
+.nuit .rowi .t small{color:var(--texte-nuit-2)}
+.nuit .sect{color:var(--texte-nuit-2)}
+.nuit .tabs{background:var(--nuit-800);border-color:var(--nuit-700)}
+.nuit .tab{color:var(--texte-nuit-2)}.nuit .tab.on{color:var(--bleu-sur-nuit)}
+.nuit .trajet .pts::before{border-color:var(--nuit-700)}
+.nuit .trajet .pt{background:var(--nuit-800);border-color:var(--bleu-sur-nuit)}
+.nuit .trajet .pt.fin{border-color:var(--texte-nuit)}
+.nuit .trajet .l small{color:var(--texte-nuit-2)}
+.nuit .drv .t small{color:var(--texte-nuit-2)}
+.nuit .avatar{background:var(--nuit-700);color:var(--texte-nuit)}
+.nuit .act{border-color:var(--nuit-700);color:var(--texte-nuit)}
+.nuit .act svg{color:var(--bleu-sur-nuit)}
+.nuit .ring span{color:var(--texte-nuit)}
+.nuit .badge-ok{background:rgba(123,224,168,.15);color:var(--ok-nuit)}
+.nuit .badge-neutre{background:var(--nuit-700);color:var(--texte-nuit-2)}
+.nuit .code span{background:var(--bleu)}
+.nuit .code span.empty{background:transparent;border-color:var(--nuit-700)}
+.nuit .key{background:var(--nuit-800);color:var(--texte-nuit)}
+.nuit .key.ghost{background:transparent}
+.nuit .photo{background:linear-gradient(135deg,#12388F,#0B2A6F);color:var(--texte-nuit-2)}
+.nuit .wait .big{color:var(--texte-nuit)}
+.nuit .bar{background:var(--nuit-700)}
+.nuit .eta{background:var(--texte-nuit);color:var(--bleu-nuit)}
+.nuit .eta::after{border-top-color:var(--texte-nuit)}
+.nuit .toggle{border-color:var(--nuit-700)}
+.nuit .toggle .t small{color:var(--texte-nuit-2)}
+.nuit .chip{border-color:var(--nuit-700);color:var(--texte-nuit)}
+.nuit .chip.on{background:var(--nuit-700);border-color:var(--bleu-sur-nuit)}
+.nuit .pill{background:var(--nuit-800);color:var(--texte-nuit);box-shadow:0 4px 12px rgba(0,0,0,.35)}
+.nuit .pill small{color:var(--texte-nuit-2)}
+.nuit .pill .r{color:var(--bleu-sur-nuit)}
+.nuit .fab-sos{box-shadow:0 0 0 6px rgba(217,45,32,.28),0 6px 14px rgba(0,0,0,.4)}
+.nuit .modal{background:var(--nuit-800)}
+.nuit .dim{background:rgba(2,8,28,.6)}
+.nuit .seg{background:var(--nuit-800)}
+.nuit .seg span{color:var(--texte-nuit-2)}
+.nuit .seg span.on{background:var(--nuit-700);color:var(--texte-nuit);box-shadow:none}
+.nuit .spark i{background:var(--nuit-700)}.nuit .spark i.on{background:var(--bleu-sur-nuit)}
+.nuit .rowi .d{color:var(--texte-nuit)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="vsym" viewBox="0 0 120 120"><path d="M26 24 L60 84 L94 24" fill="none" stroke="currentColor" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="86" r="16" fill="#FFC42E" stroke="var(--ring,#fff)" stroke-width="5"/></symbol>
+<symbol id="i-car" viewBox="0 0 24 24"><path d="M4 13l1.5-5A2 2 0 0 1 7.4 6.5h9.2a2 2 0 0 1 1.9 1.5L20 13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 13h18v4a1 1 0 0 1-1 1h-1a2 2 0 1 1-4 0H9a2 2 0 1 1-4 0H4a1 1 0 0 1-1-1v-4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="i-moto" viewBox="0 0 24 24"><circle cx="5.5" cy="16.5" r="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="18.5" cy="16.5" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M5.5 16.5L10 9h4l3 4.5h1.5M13 6h3l2 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-cash" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+<symbol id="i-momo" viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="10" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.4-7 10-4-1.6-7-5.5-7-10V6l7-3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 12l2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-phone" viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="i-msg" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></symbol>
+<symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-6-5.2-6-10.5a6 6 0 0 1 12 0C18 15.8 12 21 12 21z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9.5 8.5l2.5 4 2.5-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-map" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M9 4v14M15 6v14" stroke="currentColor" stroke-width="2"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 12h5v3h-5a1.5 1.5 0 0 1 0-3z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 9h18" stroke="currentColor" stroke-width="2"/></symbol>
+<symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3h8l4 4v14H6z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M14 3v4h4M9 12h6M9 16h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 21a8 8 0 0 1 16 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-turn" viewBox="0 0 24 24"><path d="M6 20V9a3 3 0 0 1 3-3h8" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2l4 4-4 4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l4 4 10-10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+<symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+<symbol id="i-cam" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+
+<!-- Carte jour -->
+<symbol id="map" viewBox="0 0 360 560">
+  <rect width="360" height="560" fill="#F4F6FA"/>
+  <g fill="#EDF0F5"><rect x="0" y="0" width="82" height="120" rx="6"/><rect x="132" y="0" width="118" height="70" rx="6"/><rect x="292" y="0" width="68" height="92" rx="6"/><rect x="0" y="182" width="62" height="140" rx="6"/><rect x="122" y="118" width="88" height="112" rx="6"/><rect x="252" y="142" width="108" height="78" rx="6"/><rect x="70" y="362" width="88" height="118" rx="6"/><rect x="204" y="300" width="76" height="92" rx="6"/><rect x="302" y="282" width="58" height="128" rx="6"/><rect x="0" y="472" width="60" height="88" rx="6"/><rect x="204" y="442" width="140" height="118" rx="6"/></g>
+  <rect x="20" y="132" width="90" height="42" rx="8" fill="#E6F2EA"/><rect x="300" y="470" width="60" height="90" rx="8" fill="#E6F2EA"/>
+  <g fill="none" stroke="#DDE3EE" stroke-width="16" stroke-linecap="round"><path d="M-10 440 L370 110"/><path d="M100 -10 L120 570"/><path d="M230 -10 L290 570"/><path d="M-10 250 L370 230"/><path d="M-10 400 L370 470"/></g>
+  <g fill="none" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round"><path d="M-10 440 L370 110"/><path d="M100 -10 L120 570"/><path d="M230 -10 L290 570"/><path d="M-10 250 L370 230"/><path d="M-10 400 L370 470"/></g>
+  <g fill="none" stroke="#FFFFFF" stroke-width="6" stroke-linecap="round"><path d="M40 60 L60 250"/><path d="M180 70 L200 230"/><path d="M300 92 L330 232"/><path d="M160 300 L200 490"/><path d="M40 330 L120 340"/></g>
+  <g font-family="IBM Plex Sans, system-ui, sans-serif" font-size="11" fill="#5B6B84" font-weight="500"><text x="14" y="372">Ngoa-Ekellé</text><text x="262" y="132">Melen</text><text x="214" y="530">Obili</text><text x="28" y="122">Cité U</text><text x="30" y="160" font-size="10">Jardin</text></g>
+</symbol>
+<!-- Carte nuit -->
+<symbol id="map-nuit" viewBox="0 0 360 560">
+  <rect width="360" height="560" fill="#0A1B45"/>
+  <g fill="#10275C"><rect x="0" y="0" width="82" height="120" rx="6"/><rect x="132" y="0" width="118" height="70" rx="6"/><rect x="292" y="0" width="68" height="92" rx="6"/><rect x="0" y="182" width="62" height="140" rx="6"/><rect x="122" y="118" width="88" height="112" rx="6"/><rect x="252" y="142" width="108" height="78" rx="6"/><rect x="70" y="362" width="88" height="118" rx="6"/><rect x="204" y="300" width="76" height="92" rx="6"/><rect x="302" y="282" width="58" height="128" rx="6"/><rect x="0" y="472" width="60" height="88" rx="6"/><rect x="204" y="442" width="140" height="118" rx="6"/></g>
+  <rect x="20" y="132" width="90" height="42" rx="8" fill="#0F3352"/><rect x="300" y="470" width="60" height="90" rx="8" fill="#0F3352"/>
+  <g fill="none" stroke="#1B3A80" stroke-width="16" stroke-linecap="round"><path d="M-10 440 L370 110"/><path d="M100 -10 L120 570"/><path d="M230 -10 L290 570"/><path d="M-10 250 L370 230"/><path d="M-10 400 L370 470"/></g>
+  <g fill="none" stroke="#24488F" stroke-width="12" stroke-linecap="round"><path d="M-10 440 L370 110"/><path d="M100 -10 L120 570"/><path d="M230 -10 L290 570"/><path d="M-10 250 L370 230"/><path d="M-10 400 L370 470"/></g>
+  <g fill="none" stroke="#24488F" stroke-width="6" stroke-linecap="round"><path d="M40 60 L60 250"/><path d="M180 70 L200 230"/><path d="M300 92 L330 232"/><path d="M160 300 L200 490"/><path d="M40 330 L120 340"/></g>
+  <g font-family="IBM Plex Sans, system-ui, sans-serif" font-size="11" fill="#8FA3CC" font-weight="500"><text x="14" y="372">Ngoa-Ekellé</text><text x="262" y="132">Melen</text><text x="214" y="530">Obili</text><text x="28" y="122">Cité U</text></g>
+</symbol>
+<symbol id="m-car" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="#1F5EFF" stroke="#fff" stroke-width="3"/><path d="M13 24l1.4-4.5a2 2 0 0 1 1.9-1.5h11.4a2 2 0 0 1 1.9 1.5L31 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"/><rect x="12" y="24" width="20" height="5" rx="1.5" fill="#fff"/></symbol>
+<symbol id="m-moto" viewBox="0 0 44 44"><circle cx="22" cy="22" r="18" fill="#1F5EFF" stroke="#FFC42E" stroke-width="3"/><circle cx="15.5" cy="27" r="3" fill="none" stroke="#fff" stroke-width="2"/><circle cx="28.5" cy="27" r="3" fill="none" stroke="#fff" stroke-width="2"/><path d="M15.5 27L20 19h4l3 4.5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+<symbol id="m-repere" viewBox="0 0 44 52"><path d="M22 48S6 34 6 20a16 16 0 0 1 32 0c0 14-16 28-16 28z" fill="#FFC42E" stroke="#fff" stroke-width="3"/><path d="M15 15l7 11 7-11" fill="none" stroke="#0B2A6F" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</defs></svg>
+
+<div class="board">
+<header class="head">
+  <p class="eyebrow">Maquettes · lot 2 · boucle chauffeur · v0.1 · août 2026</p>
+  <h1>VORA Chauffeur — de « Passer en ligne » à « Net gagné »</h1>
+  <p>Sept écrans, 360 × 800 dp, français. Boris (taxi, Éco/Confort) travaille de 17 h à minuit : ses écrans passent en mode nuit à 19 h. Ismaël (moto, périphérie) apparaît sur la demande de course pour montrer ce qui change avec le forfait. Chaque écran est montré en nominal puis dans les états qui comptent : hors ligne, compte bloqué, demande annulée, attente dépassée, passager qui annule, code faux, réseau faible, MoMo en attente, première journée.</p>
+  <p>Le mode nuit introduit un style de carte sombre (fond Nuit 900, routes Nuit 700, itinéraire Bleu sur nuit) qui sera reporté dans la charte au prochain point de version.</p>
+  <div class="legend"><span>CH-09 En ligne</span><span>CH-10 Demande de course</span><span>CH-11 Approche</span><span>CH-12 Code de montée</span><span>CH-13 En course</span><span>CH-14 Encaissement</span><span>CH-16 Gains</span></div>
+</header>
+
+<!-- ======================================================= CH-09 EN LIGNE -->
+<section class="lot" id="ch09">
+  <h2>CH-09 · En ligne</h2>
+  <p class="desc">L'écran de travail. Un seul interrupteur, les gains du jour toujours visibles, le bonus de zone dessiné sur la carte. Quand quelque chose bloque (dette, pièce expirée), l'écran le dit en plein et donne le bouton qui débloque.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal · en ligne, 17:30</p>
+      <div class="frame">
+        <div class="sb"><span>17:30</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map"><use href="#map"/></svg>
+        <svg class="ov" viewBox="0 0 360 560">
+          <path d="M250 60 L360 40 L360 200 L262 190 Z" fill="#1F5EFF" opacity=".10"/><path d="M250 60 L360 40 L360 200 L262 190 Z" fill="none" stroke="#1F5EFF" stroke-width="1.5" stroke-dasharray="6 4"/>
+          <text x="268" y="178" font-family="IBM Plex Sans, system-ui, sans-serif" font-size="11" font-weight="600" fill="#0B2A6F">Bonus +200 F</text>
+          <g transform="translate(150 292)"><circle r="30" fill="#1F5EFF" opacity=".12" class="pulse"/></g>
+          <g transform="translate(150 292) rotate(-33)"><use href="#m-car" width="48" height="48" x="-24" y="-24"/></g>
+        </svg>
+        <div class="pill"><div>Aujourd'hui<small>9 courses · 5 h 10 en ligne</small></div><span class="r">12 450 F</span></div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <div class="toggle"><div class="t"><b>En ligne <span class="badge badge-ok" style="margin-left:6px">Vous recevez des courses</span></b><small>Depuis 12:20 · Ngoa-Ekellé</small></div><span class="sw on"></span></div>
+          <p class="sect">Offres actives</p>
+          <div class="chips"><span class="chip on"><span class="dot"></span>Éco</span><span class="chip on"><span class="dot"></span>Confort</span></div>
+          <div class="rowi"><div class="ic" style="background:#FFF4D6;color:var(--bleu-nuit)"><svg><use href="#i-pin"/></svg></div><div class="t"><b>Bonus de zone · Emana</b><small>+ 200 F par course prise là-bas, jusqu'à 19:00</small></div><span class="d" style="color:var(--bleu);font-size:12px">Voir</span></div>
+          <div class="rowi"><div class="ic"><svg><use href="#i-shield"/></svg></div><div class="t"><b>Pièces à jour</b><small>Visite technique : expire dans 21 jours</small></div></div>
+          <div class="tabs"><div class="tab on"><svg><use href="#i-map"/></svg>En ligne</div><div class="tab"><svg><use href="#i-wallet"/></svg>Gains</div><div class="tab"><svg><use href="#i-doc"/></svg>Pièces</div><div class="tab"><svg><use href="#i-user"/></svg>Profil</div></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : pilule de gains, interrupteur En ligne (vert = actif), puces d'offre, zone de bonus hachurée en bleu sur la carte, ligne Pièces avec l'échéance la plus proche.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">État · hors ligne, 07:55</p>
+      <div class="frame">
+        <div class="sb"><span>07:55</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map" style="opacity:.75"><use href="#map"/></svg>
+        <svg class="ov" viewBox="0 0 360 560"><g transform="translate(150 292)"><use href="#m-car" width="40" height="40" x="-20" y="-20" style="opacity:.6"/></g></svg>
+        <div class="pill"><div>Aujourd'hui<small>Pas encore de course</small></div><span class="r">0 F</span></div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <p class="h">Vous êtes hors ligne</p>
+          <p class="sub">Passez en ligne pour recevoir des courses. Hier : 14 courses, 18 450 F net.</p>
+          <a class="btn btn-primaire tall" href="#ch10">Passer en ligne</a>
+          <p class="sect">Offres actives</p>
+          <div class="chips"><span class="chip on"><span class="dot"></span>Éco</span><span class="chip on"><span class="dot"></span>Confort</span></div>
+          <div class="rowi"><div class="ic"><svg><use href="#i-wallet"/></svg></div><div class="t"><b>Solde : 0 F à régler</b><small>Rien à recharger</small></div></div>
+          <div class="tabs"><div class="tab on"><svg><use href="#i-map"/></svg>En ligne</div><div class="tab"><svg><use href="#i-wallet"/></svg>Gains</div><div class="tab"><svg><use href="#i-doc"/></svg>Pièces</div><div class="tab"><svg><use href="#i-user"/></svg>Profil</div></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : hors ligne, un seul bouton, 64 px, avec le rappel de la veille comme motivation. La carte reste mais s'efface.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">État · compte bloqué (dette au plafond)</p>
+      <div class="frame">
+        <div class="sb"><span>07:55</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="sheet full">
+          <div style="text-align:center;padding:40px 0 8px"><div class="avatar" style="width:72px;height:72px;margin:0 auto;background:var(--attention-fond);color:var(--attention)"><svg width="32" height="32"><use href="#i-lock"/></svg></div></div>
+          <p class="h big" style="text-align:center">Solde à régler : 5 200 F</p>
+          <p class="sub" style="text-align:center">Vos courses en espèces ont dépassé le plafond de 5 000 F de commission. Rechargez pour repasser en ligne : c'est immédiat.</p>
+          <div class="lignes" style="margin:12px 0 18px"><div><span>Commission sur 34 courses en espèces</span><b>5 100 F</b></div><div><span>Retenue DGI</span><b>340 F</b></div><div><span>Déjà réglé</span><b>− 240 F</b></div><div class="tot"><span>À régler</span><b>5 200 F</b></div></div>
+          <a class="btn btn-primaire tall">Recharger 5 200 F par MoMo</a>
+          <a class="btn btn-tertiaire">Voir le détail des courses</a>
+          <p class="small muted" style="text-align:center;margin-top:14px">Vous pouvez aussi recharger une partie : le compte se débloque dès que le solde repasse sous 5 000 F.</p>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : l'écran bloqué explique le calcul ligne par ligne et met le montant exact dans le bouton. Pas de ton punitif : « c'est immédiat ».</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= CH-10 DEMANDE -->
+<section class="lot" id="ch10">
+  <h2>CH-10 · Demande de course</h2>
+  <p class="desc">Quinze secondes, une main sur le volant, souvent la nuit. Tout ce qui décide est là : d'où, vers où, combien d'approche, et surtout le net. Rien n'est masqué. Accepter est gros, Passer est petit.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal · nuit, Boris, 21:42</p>
+      <div class="frame nuit">
+        <div class="sb"><span>21:42</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="sheet full">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0 14px">
+            <div><p class="eyebrow" style="margin:0">Nouvelle course · VORA Éco</p><p class="h" style="margin:0">Aïcha · ★ 4,9</p></div>
+            <div class="ring"><svg viewBox="0 0 56 56"><circle cx="28" cy="28" r="24" fill="none" stroke="#12388F" stroke-width="4"/><circle cx="28" cy="28" r="24" fill="none" stroke="#6D9BFF" stroke-width="4" stroke-dasharray="151" stroke-dashoffset="40" stroke-linecap="round"/></svg><span>11</span></div>
+          </div>
+          <div class="trajet">
+            <div class="pts"><div class="pt"></div><div class="pt fin"></div></div>
+            <div><div class="l">Carrefour Ngoa-Ekellé<small>Devant la boulangerie · 1,2 km d'approche · 4 min</small></div><div class="l">Carrefour Acacias, Biyem-Assi<small>5,0 km · 15 min</small></div></div>
+          </div>
+          <div style="text-align:center;margin:16px 0 4px"><p class="eyebrow">Net pour vous</p><div class="prix" style="font-size:48px">1 365 F</div></div>
+          <div class="lignes" style="margin:10px 0 0"><div><span>Prix passager (ferme)</span><b>1 625 F</b></div><div><span>Commission VORA 15 %</span><b>− 244 F</b></div><div><span>Retenue DGI 1 %</span><b>− 16 F</b></div><div><span>Paiement</span><b>Espèces</b></div></div>
+          <div style="position:absolute;left:16px;right:16px;bottom:28px;display:flex;gap:10px">
+            <a class="btn btn-tertiaire" href="#ch09" style="width:110px">Passer</a>
+            <a class="btn btn-primaire tall" href="#ch11" style="flex:1">Accepter</a>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : anneau de 15 s en Bleu sur nuit, trajet à deux points, net en Sora 800 (48 px, le plus gros objet), décomposition en lignes, Accepter 64 px.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">Variante moto · jour, Ismaël, 17:50</p>
+      <div class="frame">
+        <div class="sb"><span>17:50</span><span class="r"><i></i><span style="font-size:10px">3G</span><i class="b"></i></span></div>
+        <div class="sheet full">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:8px 0 14px">
+            <div><p class="eyebrow" style="margin:0">Nouvelle course · <span class="badge badge-repere">VORA Moto</span></p><p class="h" style="margin:0">Franck · ★ 4,6</p></div>
+            <div class="ring"><svg viewBox="0 0 56 56"><circle cx="28" cy="28" r="24" fill="none" stroke="#DDE3EE" stroke-width="4"/><circle cx="28" cy="28" r="24" fill="none" stroke="#1F5EFF" stroke-width="4" stroke-dasharray="151" stroke-dashoffset="70" stroke-linecap="round"/></svg><span>8</span></div>
+          </div>
+          <div class="trajet">
+            <div class="pts"><div class="pt"></div><div class="pt fin"></div></div>
+            <div><div class="l">Carrefour Emana<small>Près de la station · 400 m d'approche · 2 min</small></div><div class="l">Marché d'Etoudi<small>3,1 km · 9 min · zone autorisée</small></div></div>
+          </div>
+          <div style="text-align:center;margin:16px 0 4px"><p class="eyebrow">Net pour vous</p><div class="prix" style="font-size:48px">326 F</div></div>
+          <div class="lignes" style="margin:10px 0 0"><div><span>Prix passager (ferme)</span><b>380 F</b></div><div><span>Forfait VORA</span><b>− 50 F</b></div><div><span>Retenue DGI 1 %</span><b>− 4 F</b></div><div><span>Paiement</span><b>Espèces</b></div></div>
+          <p class="small muted" style="margin-top:14px;text-align:center">Casque passager obligatoire. L'itinéraire reste hors du centre urbain.</p>
+          <div style="position:absolute;left:16px;right:16px;bottom:28px;display:flex;gap:10px">
+            <span class="btn btn-tertiaire" style="width:110px">Passer</span>
+            <span class="btn btn-primaire tall" style="flex:1">Accepter</span>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : pour la moto, le forfait remplace le pourcentage et le badge jaune signale l'offre. La demande n'existe que si tout l'itinéraire est en zone autorisée : Ismaël ne voit jamais une course qu'il ne pourrait pas faire.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">État · demande annulée avant réponse</p>
+      <div class="frame nuit">
+        <div class="sb"><span>21:42</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map"><use href="#map-nuit"/></svg>
+        <svg class="ov" viewBox="0 0 360 560"><g transform="translate(150 292) rotate(-33)"><use href="#m-car" width="48" height="48" x="-24" y="-24"/></g></svg>
+        <div class="banner" style="top:40px">La demande a été annulée par le passager avant votre réponse. Vous restez en ligne, rien ne change pour vous.</div>
+        <div class="pill" style="top:146px"><div>Aujourd'hui<small>9 courses · 5 h 10 en ligne</small></div><span class="r">12 450 F</span></div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <div class="toggle"><div class="t"><b>En ligne <span class="badge badge-ok" style="margin-left:6px">Vous recevez des courses</span></b><small>Depuis 12:20 · Ngoa-Ekellé</small></div><span class="sw on"></span></div>
+          <p class="sect">Offres actives</p>
+          <div class="chips"><span class="chip on"><span class="dot"></span>Éco</span><span class="chip on"><span class="dot"></span>Confort</span></div>
+          <div class="rowi"><div class="ic"><svg><use href="#i-shield"/></svg></div><div class="t"><b>Pièces à jour</b><small>Visite technique : expire dans 21 jours</small></div></div>
+          <div class="tabs"><div class="tab on"><svg><use href="#i-map"/></svg>En ligne</div><div class="tab"><svg><use href="#i-wallet"/></svg>Gains</div><div class="tab"><svg><use href="#i-doc"/></svg>Pièces</div><div class="tab"><svg><use href="#i-user"/></svg>Profil</div></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : la demande disparaît d'elle-même, un bandeau explique, et l'écran En ligne revient. C'est aussi la première vue du mode nuit sur la carte.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= CH-11 APPROCHE -->
+<section class="lot" id="ch11">
+  <h2>CH-11 · Approche</h2>
+  <p class="desc">Trouver la personne, pas un point GPS : la note et la photo du rendez-vous sont au-dessus de tout. « Je suis arrivé » lance le chronomètre d'attente, et le chauffeur sait à l'avance ce qui se passe si le passager ne vient pas.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal · vers le passager, 21:43</p>
+      <div class="frame nuit">
+        <div class="sb"><span>21:43</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map"><use href="#map-nuit"/></svg>
+        <svg class="ov" viewBox="0 0 360 560">
+          <path d="M212 238 L60 335" fill="none" stroke="#06153A" stroke-width="10" stroke-linecap="round"/><path d="M212 238 L60 335" fill="none" stroke="#6D9BFF" stroke-width="5" stroke-linecap="round"/>
+          <g transform="translate(60 335)"><circle r="26" fill="#6D9BFF" opacity=".18"/><circle r="8" fill="#fff" stroke="#6D9BFF" stroke-width="4"/></g>
+          <g transform="translate(212 238) rotate(-33)"><use href="#m-car" width="48" height="48" x="-24" y="-24"/></g>
+        </svg>
+        <div class="banner nav"><svg><use href="#i-turn"/></svg><div>Dans 300 m, à droite<small>puis tout droit jusqu'au carrefour · 1,2 km · 4 min</small></div></div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <p class="h">Vers Carrefour Ngoa-Ekellé</p>
+          <p class="sub">Aïcha vous attend <b style="color:var(--texte-nuit)">devant la boulangerie</b> · arrivée 21:47</p>
+          <div class="photo"><svg><use href="#i-cam"/></svg>Photo du point de rendez-vous envoyée par Aïcha</div>
+          <div class="acts"><div class="act"><svg><use href="#i-phone"/></svg>Appeler</div><div class="act"><svg><use href="#i-msg"/></svg>« J'arrive »</div><div class="act"><svg><use href="#i-msg"/></svg>« Où êtes‑vous ? »</div></div>
+          <a class="btn btn-primaire tall" href="#ch11b">Je suis arrivé</a>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : bandeau de navigation Bleu VORA avec la prochaine instruction, photo du rendez-vous, messages prédéfinis (pas de chat libre en v1), bouton d'arrivée 64 px.</p>
+    </div>
+
+    <div class="item" id="ch11b">
+      <p class="state">État · arrivé, attente dépassée, 21:52</p>
+      <div class="frame nuit">
+        <div class="sb"><span>21:52</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map"><use href="#map-nuit"/></svg>
+        <svg class="ov" viewBox="0 0 360 560"><g transform="translate(60 335)"><circle r="30" fill="#6D9BFF" opacity=".18"/><circle r="8" fill="#fff" stroke="#6D9BFF" stroke-width="4"/></g><g transform="translate(88 318)"><use href="#m-car" width="44" height="44" x="-22" y="-22"/></g></svg>
+        <div class="sheet">
+          <div class="handle"></div>
+          <p class="h">Vous attendez Aïcha</p>
+          <p class="sub">Arrivé à 21:47 · elle a été prévenue par SMS et notification</p>
+          <div class="wait"><div class="big">5:12</div><div style="flex:1"><div class="bar"><i style="width:100%"></i></div><p class="small muted" style="margin:6px 0 0">Attente gratuite de 5 min dépassée</p></div></div>
+          <div class="acts"><div class="act"><svg><use href="#i-phone"/></svg>Appeler</div><div class="act"><svg><use href="#i-msg"/></svg>« Je suis devant »</div><div class="act"><svg><use href="#i-msg"/></svg>« Où êtes‑vous ? »</div></div>
+          <a class="btn btn-primaire" href="#ch12">Aïcha est là · saisir le code</a>
+          <a class="btn btn-secondaire" href="#ch09">Passager absent · 300 F reversés</a>
+          <p class="small muted" style="text-align:center;margin:10px 0 0">Votre position est enregistrée comme preuve d'arrivée.</p>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : « Passager absent » n'apparaît qu'après les 5 min, en secondaire, avec la compensation dans le libellé. La preuve GPS est annoncée : c'est ce qui rend la décision incontestable.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">État · le passager a annulé, 21:46</p>
+      <div class="frame nuit">
+        <div class="sb"><span>21:46</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map" style="opacity:.6"><use href="#map-nuit"/></svg>
+        <div class="dim"></div>
+        <div class="modal">
+          <div class="handle"></div>
+          <p class="h">Aïcha a annulé la course</p>
+          <p class="sub">Vous aviez déjà parcouru 900 m. La compensation est ajoutée tout de suite à vos gains.</p>
+          <div style="text-align:center;margin:8px 0"><p class="eyebrow">Compensation d'annulation</p><div class="prix">+ 300 F</div></div>
+          <div class="lignes"><div><span>Gains du jour</span><b>12 750 F</b></div><div><span>Priorité de dispatch</span><b style="color:var(--ok-nuit)">Conservée</b></div></div>
+          <a class="btn btn-primaire" href="#ch09" style="margin-top:14px">OK, je continue</a>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : « Chaque trajet compte » vu du chauffeur. L'annulation n'est jamais une perte sèche, et l'appli le dit avec le montant avant même qu'il pose la question.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= CH-12 CODE -->
+<section class="lot" id="ch12">
+  <h2>CH-12 · Code de montée</h2>
+  <p class="desc">Quatre chiffres que le passager dicte. Pavé large, cases énormes, et une erreur qui dit exactement quoi faire. La course ne démarre qu'à code valide : c'est la protection des deux côtés.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal · saisie, 21:48</p>
+      <div class="frame nuit">
+        <div class="sb"><span>21:48</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="sheet full">
+          <div style="display:flex;align-items:center;gap:10px;margin:8px 0 20px"><a class="back" href="#ch11b" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22"><use href="#i-back"/></svg></a><div><p class="eyebrow" style="margin:0">Aïcha · Carrefour Ngoa-Ekellé</p><p class="h" style="margin:0">Demandez le code à Aïcha</p></div></div>
+          <div class="code" style="margin-top:20px"><span>4</span><span>8</span><span>2</span><span class="empty"></span></div>
+          <p class="sub" style="text-align:center;margin-top:8px">Le code est sur son écran. La course démarre dès qu'il est validé.</p>
+          <div class="keys"><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span><span class="key">8</span><span class="key">9</span><span class="key ghost"></span><span class="key">0</span><span class="key ghost">⌫</span></div>
+          <div style="position:absolute;left:16px;right:16px;bottom:28px"><a class="btn btn-tertiaire" href="#ch11b">Le passager n'a pas de code (appli fermée)</a></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : cases de code (Bleu VORA sur nuit, la vide en pointillé), pavé numérique de 58 px, sortie de secours en tertiaire pour le cas où l'appli du passager est fermée (vérification par appel de l'ops).</p>
+    </div>
+
+    <div class="item">
+      <p class="state">État · code faux</p>
+      <div class="frame nuit">
+        <div class="sb"><span>21:48</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="sheet full">
+          <div style="display:flex;align-items:center;gap:10px;margin:8px 0 20px"><span class="back" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22"><use href="#i-back"/></svg></span><div><p class="eyebrow" style="margin:0">Aïcha · Carrefour Ngoa-Ekellé</p><p class="h" style="margin:0">Demandez le code à Aïcha</p></div></div>
+          <div class="code" style="margin-top:20px"><span class="err">4</span><span class="err">8</span><span class="err">1</span><span class="err">2</span></div>
+          <div class="inline-err" style="margin-top:12px"><b>Ce n'est pas le bon code</b>Demandez-le à nouveau au passager. Vérifiez aussi que c'est bien Aïcha : le code est sur son écran, avec votre plaque.</div>
+          <div class="keys"><span class="key">1</span><span class="key">2</span><span class="key">3</span><span class="key">4</span><span class="key">5</span><span class="key">6</span><span class="key">7</span><span class="key">8</span><span class="key">9</span><span class="key ghost"></span><span class="key">0</span><span class="key ghost">⌫</span></div>
+          <div style="position:absolute;left:16px;right:16px;bottom:28px"><a class="btn btn-secondaire" href="#ch12">Réessayer</a></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : les cases passent en Rouge SOS, le message dit quoi faire et rappelle la vérification croisée (plaque côté passager). Trois codes faux de suite alertent l'ops.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= CH-13 EN COURSE -->
+<section class="lot" id="ch13">
+  <h2>CH-13 · En course</h2>
+  <p class="desc">Il conduit, il ne lit pas. La navigation prend tout l'écran, la prochaine instruction est en haut en gros, la feuille ne garde que la destination et l'heure d'arrivée. Le SOS chauffeur est là, comme côté passager.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal · nuit, 21:50</p>
+      <div class="frame nuit">
+        <div class="sb"><span>21:50</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <svg class="map" style="height:640px" viewBox="0 0 360 640" preserveAspectRatio="xMidYMin slice"><use href="#map-nuit" width="360" height="560"/><rect y="560" width="360" height="80" fill="#0A1B45"/></svg>
+        <svg class="ov" style="height:640px" viewBox="0 0 360 640">
+          <path d="M60 335 L250 214 L246 120" fill="none" stroke="#06153A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M60 335 L170 265" fill="none" stroke="#5C6E99" stroke-width="5" stroke-linecap="round"/>
+          <path d="M170 265 L250 214 L246 120" fill="none" stroke="#6D9BFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="236" y="110" width="20" height="20" rx="5" fill="#F4F7FF" stroke="#06153A" stroke-width="3"/>
+          <g transform="translate(170 265) rotate(-33)"><use href="#m-car" width="52" height="52" x="-26" y="-26"/></g>
+        </svg>
+        <div class="banner nav" style="top:40px"><svg><use href="#i-turn"/></svg><div>Dans 300 m, à droite au Carrefour Melen<small>puis 3,8 km tout droit</small></div></div>
+        <div class="fab-sos" style="bottom:190px">SOS</div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <p class="h">Vers Carrefour Acacias</p>
+          <p class="sub">Arrivée 21:58 · 4,1 km restants</p>
+          <div class="drv" style="margin:0"><div class="avatar" style="width:40px;height:40px;font-size:14px">A</div><div class="t"><b>Aïcha</b><small>Prix ferme 1 625 F · Espèces · net 1 365 F</small></div><a class="btn btn-tertiaire" href="#ch14" style="width:auto;height:40px;padding:0 10px">Terminer</a></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : bandeau de navigation, SOS chauffeur flottant, itinéraire dont la partie parcourue passe en gris nuit, feuille minimale. « Terminer » n'est actif qu'à moins de 100 m de la destination.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">État · réseau faible</p>
+      <div class="frame nuit">
+        <div class="sb"><span>21:53</span><span class="r"><span style="font-size:10px;color:#F5A524">Réseau faible</span><i class="b"></i></span></div>
+        <svg class="map" style="height:640px" viewBox="0 0 360 640" preserveAspectRatio="xMidYMin slice"><use href="#map-nuit" width="360" height="560"/><rect y="560" width="360" height="80" fill="#0A1B45"/></svg>
+        <svg class="ov" style="height:640px" viewBox="0 0 360 640">
+          <path d="M60 335 L250 214 L246 120" fill="none" stroke="#06153A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M60 335 L230 226" fill="none" stroke="#5C6E99" stroke-width="5" stroke-linecap="round"/>
+          <path d="M230 226 L250 214 L246 120" fill="none" stroke="#6D9BFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="236" y="110" width="20" height="20" rx="5" fill="#F4F7FF" stroke="#06153A" stroke-width="3"/>
+          <g transform="translate(230 226) rotate(-33)"><use href="#m-car" width="52" height="52" x="-26" y="-26"/></g>
+        </svg>
+        <div class="banner nav" style="top:40px"><svg><use href="#i-turn"/></svg><div>Tout droit 3,2 km<small>Navigation locale · itinéraire chargé</small></div></div>
+        <div class="banner" style="top:112px">Réseau faible. La navigation continue hors ligne ; votre position sera envoyée au passager dès que possible.</div>
+        <div class="fab-sos" style="bottom:190px">SOS</div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <p class="h">Vers Carrefour Acacias</p>
+          <p class="sub">Arrivée 21:58 · 3,2 km restants</p>
+          <div class="drv" style="margin:0"><div class="avatar" style="width:40px;height:40px;font-size:14px">A</div><div class="t"><b>Aïcha</b><small>Prix ferme 1 625 F · Espèces · net 1 365 F</small></div><span class="btn btn-desactive" style="width:auto;height:40px;padding:0 10px;font-size:14px">Terminer</span></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : la carte et l'itinéraire sont déjà sur le téléphone ; le réseau ne sert qu'à envoyer la position. On le dit, on continue. Le SOS reste actif par SMS.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= CH-14 ENCAISSEMENT -->
+<section class="lot" id="ch14">
+  <h2>CH-14 · Encaissement et net gagné</h2>
+  <p class="desc">Le troisième moment de vérité. D'abord le montant à encaisser, sans ambiguïté sur le mode ; puis, une fois confirmé, le net gagné en gros, avec la commission et la retenue en petit. C'est cet écran qui décide si Boris reste.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal · espèces à confirmer, 21:58</p>
+      <div class="frame nuit">
+        <div class="sb"><span>21:58</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="sheet full">
+          <div style="text-align:center;padding:28px 0 4px"><svg width="52" height="52" style="color:#fff;--ring:#06153A"><use href="#vsym"/></svg></div>
+          <p class="h big" style="text-align:center">Course terminée</p>
+          <p class="sub" style="text-align:center">Carrefour Acacias · 5,0 km · 16 min</p>
+          <div style="text-align:center;margin:14px 0 6px"><p class="eyebrow">À encaisser · Espèces</p><div class="prix" style="font-size:48px">1 625 F</div></div>
+          <div class="rowi" style="border:0"><div class="ic"><svg><use href="#i-cash"/></svg></div><div class="t"><b>Aïcha paie en espèces</b><small>Confirmez quand vous avez reçu 1 625 F. C'est ce qui ferme la course et déclenche son reçu.</small></div></div>
+          <div style="position:absolute;left:16px;right:16px;bottom:28px">
+            <a class="btn btn-primaire tall" href="#ch14b">Paiement reçu · 1 625 F</a>
+            <a class="btn btn-tertiaire">Problème de paiement</a>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : symbole VORA blanc sur nuit, montant en Sora 800 (48 px), ligne d'explication, bouton de confirmation avec le montant. « Problème de paiement » ouvre un litige avec la trace GPS.</p>
+    </div>
+
+    <div class="item" id="ch14b">
+      <p class="state">État · net gagné</p>
+      <div class="frame nuit">
+        <div class="sb"><span>21:59</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="sheet full">
+          <div style="text-align:center;padding:28px 0 4px"><div class="avatar" style="width:64px;height:64px;margin:0 auto;background:rgba(123,224,168,.15);color:var(--ok-nuit)"><svg width="30" height="30"><use href="#i-check"/></svg></div></div>
+          <p class="h big" style="text-align:center">Net gagné</p>
+          <div class="prix" style="text-align:center;font-size:56px;color:var(--bleu-sur-nuit)">1 365 F</div>
+          <p class="sub" style="text-align:center">Ajouté à vos gains du jour : <b style="color:var(--texte-nuit)">13 815 F</b> · 10 courses</p>
+          <div class="lignes" style="margin:14px 0 0"><div><span>Prix passager</span><b>1 625 F</b></div><div><span>Commission VORA 15 %</span><b>− 244 F</b></div><div><span>Retenue DGI 1 % (reversée pour vous)</span><b>− 16 F</b></div><div class="tot"><span>Net</span><b>1 365 F</b></div><div><span>Solde commission à régler</span><b>2 100 F / 5 000 F</b></div></div>
+          <div style="position:absolute;left:16px;right:16px;bottom:28px">
+            <a class="btn btn-primaire" href="#ch09">Continuer</a>
+            <a class="btn btn-tertiaire">Noter Aïcha</a>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : le net est le plus gros chiffre que le chauffeur verra de la journée. La retenue DGI porte la mention « reversée pour vous » : VORA collecte, l'État reçoit, le chauffeur n'a rien à déclarer.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">État · MoMo en attente</p>
+      <div class="frame nuit">
+        <div class="sb"><span>21:58</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="sheet full">
+          <div style="text-align:center;padding:28px 0 4px"><svg width="52" height="52" style="color:#fff;--ring:#06153A"><use href="#vsym"/></svg></div>
+          <p class="h big" style="text-align:center">Course terminée</p>
+          <p class="sub" style="text-align:center">Carrefour Acacias · 5,0 km · 16 min</p>
+          <div style="text-align:center;margin:14px 0 6px"><p class="eyebrow">À encaisser · MTN MoMo</p><div class="prix" style="font-size:48px">1 625 F</div></div>
+          <div style="display:flex;align-items:center;gap:14px;justify-content:center;margin:10px 0"><div class="ring"><svg viewBox="0 0 56 56"><circle cx="28" cy="28" r="24" fill="none" stroke="#12388F" stroke-width="4"/><circle cx="28" cy="28" r="24" fill="none" stroke="#6D9BFF" stroke-width="4" stroke-dasharray="151" stroke-dashoffset="100" stroke-linecap="round"/></svg><span>0:20</span></div><div class="small muted" style="max-width:200px">Aïcha confirme le paiement sur son téléphone. Le net s'affichera dès réception.</div></div>
+          <div style="position:absolute;left:16px;right:16px;bottom:28px">
+            <span class="btn btn-desactive tall">En attente du paiement…</span>
+            <a class="btn btn-tertiaire">Aïcha préfère payer en espèces</a>
+          </div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : le chauffeur ne peut pas confirmer un paiement MoMo lui-même ; il attend le retour de l'opérateur. La sortie « en espèces » existe pour ne jamais laisser les deux personnes bloquées dans la voiture.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- ======================================================= CH-16 GAINS -->
+<section class="lot" id="ch16">
+  <h2>CH-16 · Gains</h2>
+  <p class="desc">Fin de journée, il compte. Jour, semaine, mois ; la courbe des heures ; le détail par course avec le net ; le solde de commission avec le plafond ; et les compensations d'annulation à part, parce qu'elles sont la preuve que chaque trajet compte.</p>
+  <div class="frames">
+
+    <div class="item">
+      <p class="state">Nominal · fin de journée, 23:40</p>
+      <div class="frame nuit">
+        <div class="sb"><span>23:40</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="sheet full" style="padding-bottom:70px">
+          <div class="seg"><span class="on">Aujourd'hui</span><span>Semaine</span><span>Mois</span></div>
+          <p class="eyebrow" style="margin:0">Samedi 29 août · net</p>
+          <div class="prix" style="font-size:44px">18 450 F</div>
+          <p class="sub">14 courses · 6 h 20 en ligne · 1 annulation compensée</p>
+          <div class="spark"><i style="height:20%"></i><i style="height:35%"></i><i style="height:30%"></i><i style="height:55%"></i><i style="height:40%"></i><i style="height:70%"></i><i style="height:60%"></i><i class="on" style="height:90%"></i><i class="on" style="height:100%"></i><i class="on" style="height:75%"></i><i style="height:45%"></i></div>
+          <p class="small muted" style="margin:0 0 6px;display:flex;justify-content:space-between"><span>12 h</span><span>17 h</span><span>21 h</span><span>minuit</span></p>
+          <div class="lignes"><div><span>Brut passagers</span><b>21 900 F</b></div><div><span>Commission VORA 15 %</span><b>− 3 285 F</b></div><div><span>Retenue DGI 1 %</span><b>− 219 F</b></div><div><span>Compensation d'annulation</span><b style="color:var(--ok-nuit)">+ 300 F</b></div></div>
+          <div class="rowi" style="margin-top:8px"><div class="ic"><svg><use href="#i-wallet"/></svg></div><div class="t"><b>Solde commission : 2 100 F à régler</b><small>Plafond 5 000 F · 6 200 F encaissés dans l'appli à retirer</small></div><span class="d" style="color:var(--bleu-sur-nuit);font-size:12px">Gérer</span></div>
+          <p class="sect">Dernières courses</p>
+          <div class="rowi"><div class="t"><b>23:12 · Mvan → Nsam</b><small>Éco · espèces</small></div><span class="d">1 110 F</span></div>
+          <div class="rowi"><div class="t"><b>22:31 · Obili → Mvog-Ada</b><small>Confort · MoMo</small></div><span class="d">1 940 F</span></div>
+          <div class="rowi"><div class="t"><b>21:47 · Ngoa-Ekellé → Biyem-Assi</b><small>Éco · espèces · Aïcha</small></div><span class="d">1 365 F</span></div>
+          <div class="tabs" style="position:absolute;left:0;right:0;bottom:0;margin:0"><div class="tab"><svg><use href="#i-map"/></svg>En ligne</div><div class="tab on"><svg><use href="#i-wallet"/></svg>Gains</div><div class="tab"><svg><use href="#i-doc"/></svg>Pièces</div><div class="tab"><svg><use href="#i-user"/></svg>Profil</div></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Composants</b> : sélecteur Jour / Semaine / Mois, net en Sora 800, barres par heure (les heures en cours en Bleu sur nuit), décomposition, ligne de solde vers CH-17, liste des dernières courses avec le net.</p>
+    </div>
+
+    <div class="item">
+      <p class="state">État · première journée, vide, 07:58</p>
+      <div class="frame">
+        <div class="sb"><span>07:58</span><span class="r"><i></i><span style="font-size:10px">4G</span><i class="b"></i></span></div>
+        <div class="sheet full" style="padding-bottom:70px">
+          <div class="seg"><span class="on">Aujourd'hui</span><span>Semaine</span><span>Mois</span></div>
+          <p class="eyebrow" style="margin:0">Lundi 31 août · net</p>
+          <div class="prix" style="font-size:44px;color:var(--gris-clair)">0 F</div>
+          <p class="sub">Aucune course pour l'instant.</p>
+          <div style="padding:26px 12px 18px;text-align:center;border:1px dashed var(--bordure);border-radius:16px;margin:8px 0 16px">
+            <svg width="44" height="44" style="color:var(--bleu)"><use href="#vsym"/></svg>
+            <p class="h" style="font-size:17px;margin:10px 0 6px">Restez en ligne près d'un carrefour</p>
+            <p class="sub" style="margin:0">C'est là que les demandes arrivent. Vos gains s'affichent ici course par course, avec le net.</p>
+          </div>
+          <a class="btn btn-primaire" href="#ch09">Passer en ligne</a>
+          <div class="rowi" style="margin-top:12px"><div class="ic"><svg><use href="#i-doc"/></svg></div><div class="t"><b>Comment sont calculés vos gains</b><small>Commission 15 %, retenue DGI 1 %, compensations</small></div></div>
+          <div class="tabs" style="position:absolute;left:0;right:0;bottom:0;margin:0"><div class="tab"><svg><use href="#i-map"/></svg>En ligne</div><div class="tab on"><svg><use href="#i-wallet"/></svg>Gains</div><div class="tab"><svg><use href="#i-doc"/></svg>Pièces</div><div class="tab"><svg><use href="#i-user"/></svg>Profil</div></div>
+        </div>
+        <div class="gesture"></div>
+      </div>
+      <p class="cap"><b>Règle</b> : l'écran vide invite à agir et explique le calcul avant la première course, pour qu'aucun chauffeur ne découvre la commission après coup.</p>
+    </div>
+
+  </div>
+</section>
+
+<footer style="color:var(--gris);font-size:13px;max-width:90ch;line-height:1.6">
+  <p><b style="color:var(--bleu-nuit)">Ce que ce lot ne montre pas encore</b> : CH-15 (notation du passager), CH-17 (solde et MoMo), CH-18 (pièces) et CH-20 (SOS chauffeur, identique au SOS passager en mode nuit) arrivent au lot 4 ; l'onboarding et le dossier KYC au lot 3. À reporter dans la charte : le style de carte nuit et le bandeau de navigation.</p>
+</footer>
+
+</div>
+</body>
+</html>
