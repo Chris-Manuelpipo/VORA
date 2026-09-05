@@ -1,0 +1,33 @@
+{
+  "name": "vora",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VORA — VTC et motos-taxis à Yaoundé. Monorepo hackathon 48 h.",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=20"
+  },
+  "workspaces": [
+    "services/*"
+  ],
+  "scripts": {
+    "db:setup": "node scripts/db-setup.mjs",
+    "db:reset": "node scripts/db-setup.mjs --reset",
+    "db:psql": "node scripts/db-shell.mjs",
+    "dev": "npm run dev --workspace services/api",
+    "build": "npm run build --workspace services/api",
+    "start": "npm run start --workspace services/api",
+    "db:generate": "npm run db:generate --workspace services/api",
+    "db:migrate": "npm run db:migrate --workspace services/api",
+    "seed": "npm run seed --workspace services/api",
+    "demo": "npm run demo --workspace services/api",
+    "test": "npm run test --workspace services/api",
+    "test:unit": "npm run test:unit --workspace services/api",
+    "lint": "npm run lint --workspace services/api",
+    "format": "prettier --write \"**/*.{ts,tsx,js,mjs,json,md,yml,yaml}\"",
+    "docker:prod": "docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d --build"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
+  }
+}

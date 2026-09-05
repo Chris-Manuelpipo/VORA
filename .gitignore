@@ -1,0 +1,46 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Node
+node_modules/
+dist/
+build/
+*.log
+npm-debug.log*
+.npm/
+coverage/
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+*.iml
+**/android/local.properties
+**/android/.gradle/
+**/android/key.properties
+**/ios/Pods/
+**/ios/.symlinks/
+*.jks
+*.keystore
+
+# Outils
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# Données locales
+/tmp/
+pgdata/
+*.sqlite
+*.db
+
+# Captures et livrables générés
+captures/
+CLAUDE.md
+docs/
