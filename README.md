@@ -55,7 +55,7 @@ Sur téléphone réel, remplacer `localhost` par l'IP de la machine sur le rése
 
 ```
 services/api/    API Fastify + Socket.IO + Drizzle (modules : identity, geo, pricing, rides,
-                 dispatch, payments, ops ; simulateur isolé dans src/demo/)
+                 dispatch, payments, ops, support ; simulateur isolé dans src/demo/)
 apps/passager    Flutter — commander, suivre, payer
 apps/chauffeur   Flutter — se mettre en ligne, accepter, encaisser
 apps/admin       React + Vite — une page ops : carte live, compteurs, validation, majoration pluie
@@ -66,6 +66,68 @@ infra/docker/    déploiement cible (Dockerfile, compose) — pas utilisé penda
 scripts/         outillage base de données (setup, reset, psql, base de test)
 docs/            brief produit, vision UX, conception, charte, maquettes — source de vérité
 ```
+
+## Assistant de support
+
+`POST /v1/support/ask` répond à une question d'un passager ou d'un chauffeur, en deux à quatre
+phrases. **Il explique, il ne décide rien.**
+
+> **La phrase à dire au jury** — « l'assistant ne décide rien, il explique ; les prix, les statuts
+> et les règles viennent du serveur, jamais du modèle. »
+
+**Quel fournisseur.** Aucun en particulier : l'adaptateur parle à n'importe quelle API **compatible
+OpenAI** (`POST {LLM_BASE_URL}/chat/completions`), derrière l'interface `LlmProvider`. Trois
+variables suffisent à en changer : `LLM_BASE_URL`, `LLM_MODEL`, `LLM_API_KEY`. Des offres gratuites
+conviennent — **OpenRouter** (`https://openrouter.ai/api/v1`, modèles suffixés `:free`), **Groq**
+(`https://api.groq.com/openai/v1`, palier gratuit), ou un `llama.cpp` / Ollama posé sur un portable
+de l'équipe.
+
+**Pourquoi ce choix.** Le modèle ne fait que mettre en phrases un contexte que le serveur a déjà
+écrit : un petit modèle gratuit suffit, et personne n'est enfermé chez un fournisseur. Le second
+adaptateur, `StubLlmProvider`, répond **à partir de la FAQ seule, sans réseau** — c'est le mode par
+défaut (`LLM_ENABLED=false`), et c'est lui qui répondra si la salle du hackathon n'a pas d'internet.
+Le repli est **automatique** : clé absente, service en panne, 4 secondes dépassées ou JSON illisible,
+la FAQ prend le relais et l'utilisateur ne voit jamais « service indisponible ».
+
+**Ce qu'il sait, et rien d'autre.** Le contexte est construit **côté serveur** — jamais transmis par
+le client — et passe par un schéma zod `.strict()` avant de partir : la FAQ de
+`services/api/src/modules/support/knowledge.ts`, plus les faits de la course en cours (statut, prix,
+décomposition, offre, distance, plaque). **Ni numéro, ni e-mail, ni position brute, ni identifiant
+d'un autre utilisateur** ; `src/tests/support.test.ts` le vérifie sur une vraie course.
+
+**Ses limites, assumées.**
+
+- Il n'agit pas : ni annulation, ni remboursement, ni prix modifié. Il dit quel bouton le fait.
+- Il n'invente pas : quand la réponse n'est pas dans le contexte, il répond qu'un humain reprend et
+  renvoie `escalate: true`. Une réponse qui cite un **montant absent du contexte** est jetée et
+  remplacée par ce repli — les francs viennent du serveur, au franc près.
+- **Coût** : une seule tentative, délai de garde de 4 s, **10 questions par heure et par personne**,
+  réponses mises en cache 24 h. La clé de cache inclut l'empreinte du contexte : la course d'un
+  passager n'est jamais resservie à un autre.
+- **Le module ne doit JAMAIS être appelé automatiquement** — pas de pré-chargement à l'ouverture d'un
+  écran, pas de suggestion en arrière-plan, pas de reformulation d'une erreur d'API. Uniquement quand
+  quelqu'un appuie sur « Poser ma question ».
+- Rien du chemin critique n'en dépend : commander, dispatcher et encaisser fonctionnent à l'identique
+  s'il tombe. Un test d'architecture interdit à tout module métier d'importer `support/`.
+- Chaque appel est journalisé (question nettoyée, fournisseur, latence, escalade) — jamais une donnée
+  personnelle : les numéros et e-mails tapés dans une question sont masqués avant l'écriture.
+
+## Messages pendant la course
+
+`GET` et `POST /v1/rides/{id}/messages` : **six codes prédéfinis**, aucun texte libre, aucun vocal,
+aucun appel (périmètre de [CLAUDE.md § 8.3](CLAUDE.md)).
+
+| Passager | Chauffeur |
+|---|---|
+| `IM_HERE` « Je suis là » | `ARRIVING` « J'arrive » |
+| `WHERE_ARE_YOU` « Où êtes-vous ? » | `IM_OUTSIDE` « Je suis devant » |
+| `WAIT_2MIN` « 2 minutes svp » | `CANT_FIND` « Je ne vous trouve pas » |
+
+Le serveur ne transporte **que le code** — libellé résolu par l'application, donc traduisible sans
+toucher au serveur. Ouvert aux deux parties de la course seulement (403 sinon, l'ops compris), de
+l'acceptation à 30 min après la fin, 10 messages par course et par personne. L'événement temps réel
+`message.new` part dans la salle de la course. La table `ride_messages` n'a **pas de colonne de
+texte** : rien à modérer, et aucun moyen d'échanger un numéro en contournant la règle du § 5.6.
 
 ## Règles que le code ne peut pas violer
 
