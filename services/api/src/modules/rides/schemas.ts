@@ -1,6 +1,12 @@
 // VORA — schémas zod du module rides.
 
 import { z } from 'zod';
+import {
+  DRIVER_MESSAGE_CODES,
+  MESSAGE_CODES,
+  MESSAGE_LABELS_FR,
+  PASSENGER_MESSAGE_CODES,
+} from '../../domain/messages.js';
 import { RIDE_STATUSES } from '../../domain/states.js';
 import { publicUserSchema } from '../identity/schemas.js';
 
@@ -252,6 +258,49 @@ export const driverEarningsSchema = z.object({
     }),
   ),
 });
+
+
+// ─── Messages prédéfinis ─────────────────────────────────────────────────────
+
+/**
+ * Le corps d'un message : UN CODE, et rien d'autre. Pas de champ texte — c'est tout le
+ * périmètre retenu (CLAUDE.md § 8.3). `.strict()` refuse un `body` qu'on tenterait
+ * d'ajouter par la bande.
+ *
+ * L'expéditeur n'est PAS dans le corps : il est déduit du jeton. Le catalogue est
+ * apparié au rôle, et le serveur revérifie l'appariement (`messages.ts`).
+ */
+export const sendMessageBodySchema = z
+  .object({
+    code: z.enum(MESSAGE_CODES).describe(
+      'Passager : ' +
+        PASSENGER_MESSAGE_CODES.map((code) => `${code} (« ${MESSAGE_LABELS_FR[code]} »)`).join(', ') +
+        '. Chauffeur : ' +
+        DRIVER_MESSAGE_CODES.map((code) => `${code} (« ${MESSAGE_LABELS_FR[code]} »)`).join(', ') +
+        ". Le serveur ne transporte que le code : le libellé français est résolu par l'application.",
+    ),
+  })
+  .strict();
+
+export const rideMessageSchema = z.object({
+  id: z.string().uuid(),
+  sender: z.enum(['passenger', 'driver']),
+  code: z.enum(MESSAGE_CODES),
+  created_at: z.string(),
+});
+
+export const rideMessagesSchema = z.object({
+  messages: z.array(rideMessageSchema),
+  /** L'état du canal : de quoi griser le bouton et dire pourquoi. */
+  window: z.object({
+    open: z.boolean(),
+    reason: z.enum(['before_accept', 'after_end']).nullable(),
+    closes_at: z.string().nullable(),
+  }),
+});
+
+export type SendMessageBody = z.infer<typeof sendMessageBodySchema>;
+export type RideMessageDto = z.infer<typeof rideMessageSchema>;
 
 export type RideDto = z.infer<typeof rideSchema>;
 export type ListRidesQuery = z.infer<typeof listRidesQuerySchema>;

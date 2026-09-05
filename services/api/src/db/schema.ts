@@ -32,6 +32,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+import type { MessageCode, MessageSender } from '../domain/messages.js';
 import type { Offer, VehicleKind } from '../domain/rules.js';
 import type { Actor, RideEventType, RideStatus } from '../domain/states.js';
 import { geographyLineString, geographyPoint, geographyPolygon } from './geography.js';
@@ -517,6 +518,33 @@ export const ratings = pgTable(
   }),
 );
 
+// ─── Messages prédéfinis ─────────────────────────────────────────────────────
+
+/**
+ * Messages liés à une course. SIX CODES, aucun texte libre (`domain/messages.ts`).
+ *
+ * Il n'y a pas de colonne `body`, et c'est le fond du sujet : sans champ de texte, il
+ * n'y a rien à modérer, rien à chiffrer, et aucun moyen d'échanger un numéro de
+ * téléphone en contournant la règle du § 5.6. La contrainte CHECK de la migration
+ * interdit même à un `INSERT` en psql d'écrire autre chose que ces six valeurs.
+ */
+export const rideMessages = pgTable(
+  'ride_messages',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    rideId: uuid('ride_id')
+      .notNull()
+      .references(() => rides.id, { onDelete: 'cascade' }),
+    /** Qui parle, déduit du jeton — jamais du corps de la requête. */
+    sender: text('sender').$type<MessageSender>().notNull(),
+    code: text('code').$type<MessageCode>().notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => ({
+    rideIdx: index('ride_messages_ride_idx').on(table.rideId, table.createdAt),
+  }),
+);
+
 // ─── Idempotence ─────────────────────────────────────────────────────────────
 
 /**
@@ -661,3 +689,4 @@ export type DispatchOffer = typeof dispatchOffers.$inferSelect;
 export type DriverEarning = typeof driverEarnings.$inferSelect;
 export type PaymentIntent = typeof paymentIntents.$inferSelect;
 export type Rating = typeof ratings.$inferSelect;
+export type RideMessage = typeof rideMessages.$inferSelect;

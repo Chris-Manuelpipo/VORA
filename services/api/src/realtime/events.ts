@@ -42,6 +42,18 @@ export const RIDE_DRIVER_POSITION = 'ride.driver_position';
 /** `ride.eta` — minutes restantes avant l'arrivée du chauffeur. */
 export const RIDE_ETA = 'ride.eta';
 
+// ─── Serveur → les deux parties de la course ─────────────────────────────────
+
+/**
+ * `message.new` — un message prédéfini vient d'être envoyé sur cette course.
+ *
+ * La charge utile ne porte QUE le code (`IM_HERE`, `ARRIVING`…), l'expéditeur et
+ * l'horodatage. Le libellé français se résout sur le téléphone : un code se traduit en
+ * anglais sans toucher au serveur, et il ne peut pas transporter autre chose que ce que
+ * `domain/messages.ts` autorise.
+ */
+export const RIDE_MESSAGE = 'message.new';
+
 // ─── Serveur → ops ───────────────────────────────────────────────────────────
 
 /** `ops.alert` — 3 codes de montée ratés, SOS, course expirée sans chauffeur. */

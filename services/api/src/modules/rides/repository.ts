@@ -11,6 +11,7 @@ import {
   idempotencyKeys,
   ratings,
   rideEvents,
+  rideMessages,
   rides,
   users,
   vehicles,
@@ -19,11 +20,13 @@ import {
   type PaymentMethod,
   type Ride,
   type RideEvent,
+  type RideMessage,
   type User,
   type Vehicle,
   type DriverProfile,
 } from '../../db/schema.js';
 import { AppError } from '../../lib/errors.js';
+import type { MessageCode, MessageSender } from '../../domain/messages.js';
 import { CITY_TIMEZONE } from '../../domain/rules.js';
 import type { Actor, RideEventType, RideStatus } from '../../domain/states.js';
 
@@ -409,4 +412,35 @@ export async function appendEvent(input: {
     actorId: input.actorId ?? null,
     payload: input.payload ?? {},
   });
+}
+
+// ─── Messages prédéfinis ─────────────────────────────────────────────────────
+
+/** Les messages d'une course, dans l'ordre où ils ont été envoyés. */
+export async function listRideMessages(rideId: string): Promise<RideMessage[]> {
+  return db
+    .select()
+    .from(rideMessages)
+    .where(eq(rideMessages.rideId, rideId))
+    .orderBy(rideMessages.createdAt);
+}
+
+/** Combien de messages cette partie a déjà envoyés sur cette course (quota de 10). */
+export async function countRideMessages(rideId: string, sender: MessageSender): Promise<number> {
+  const [row] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(rideMessages)
+    .where(and(eq(rideMessages.rideId, rideId), eq(rideMessages.sender, sender)));
+
+  return row?.total ?? 0;
+}
+
+export async function insertRideMessage(input: {
+  rideId: string;
+  sender: MessageSender;
+  code: MessageCode;
+}): Promise<RideMessage> {
+  const [row] = await db.insert(rideMessages).values(input).returning();
+  if (!row) throw new AppError('INTERNAL_ERROR', "Ce message n'a pas pu être envoyé. Réessayez.");
+  return row;
 }

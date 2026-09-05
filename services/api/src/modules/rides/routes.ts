@@ -9,6 +9,8 @@
 //   POST /v1/rides/:id/start          code de montée à 4 chiffres (chauffeur)
 //   POST /v1/rides/:id/complete       arrivée à destination      (chauffeur)
 //   POST /v1/rides/:id/no-show        passager absent            (chauffeur)
+//   GET  /v1/rides/:id/messages       fil des messages prédéfinis (les deux parties)
+//   POST /v1/rides/:id/messages       envoyer un des six codes    (les deux parties)
 //
 // Les routes ne contiennent aucune règle : elles valident, appellent le service,
 // renvoient. Tout ce qui décide d'un statut est dans `service.ts`.
@@ -30,9 +32,12 @@ import {
   rateRideBodySchema,
   rateRideResponseSchema,
   rideEventsSchema,
+  rideMessageSchema,
+  rideMessagesSchema,
   rideParamsSchema,
   rideSchema,
   ridesListSchema,
+  sendMessageBodySchema,
   shareParamsSchema,
   sharedRideSchema,
   shareResponseSchema,
@@ -40,6 +45,7 @@ import {
   sosResponseSchema,
   startRideBodySchema,
 } from './schemas.js';
+import * as messages_ from './messages.js';
 import * as repository from './repository.js';
 import * as service from './service.js';
 
@@ -352,6 +358,67 @@ export const ridesRoutes: FastifyPluginAsyncZod = async (app) => {
       config: { rateLimit: { max: 60, timeWindow: '1 minute' } },
     },
     async (request) => service.readSharedRide(request.params.token),
+  );
+
+  // ─── Messages prédéfinis ───────────────────────────────────────────────────
+  //
+  // Six codes, pas de texte libre, pas de vocal, pas d'appel (CLAUDE.md § 8.3). Ouvert
+  // aux deux parties de la course seulement, de l'acceptation à 30 min après la fin.
+
+  app.get(
+    '/rides/:id/messages',
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        tags: ['rides'],
+        summary: 'Le fil de messages prédéfinis de la course',
+        description:
+          "Le serveur ne transporte que le CODE : le libellé français est résolu par l'application. " +
+          "La lecture reste possible après la fermeture du canal — c'est l'envoi qui se ferme.",
+        params: rideParamsSchema,
+        response: { 200: rideMessagesSchema },
+      },
+    },
+    async (request) => {
+      const { messages, window } = await messages_.listMessages(request.params.id, {
+        id: request.user.sub,
+        role: request.user.role,
+      });
+
+      return {
+        messages,
+        window: { open: window.open, reason: window.reason, closes_at: window.closesAt },
+      };
+    },
+  );
+
+  app.post(
+    '/rides/:id/messages',
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        tags: ['rides'],
+        summary: 'Envoyer un message prédéfini',
+        description:
+          "L'expéditeur est déduit du jeton, jamais du corps : un passager ne peut pas " +
+          'envoyer « J’arrive » à la place de son chauffeur. 10 messages par course et par personne.',
+        params: rideParamsSchema,
+        body: sendMessageBodySchema,
+        response: { 201: rideMessageSchema },
+      },
+      // Un appui répété sur « J'arrive » ne doit pas remplir le fil : la limite de débit
+      // arrête la rafale, le quota de 10 arrête l'insistance.
+      config: { rateLimit: { max: 20, timeWindow: '1 minute' } },
+    },
+    async (request, reply) => {
+      const message = await messages_.sendMessage({
+        rideId: request.params.id,
+        viewer: { id: request.user.sub, role: request.user.role },
+        code: request.body.code,
+      });
+
+      return reply.status(201).send(message);
+    },
   );
 
   // ─── Gains du chauffeur ────────────────────────────────────────────────────
