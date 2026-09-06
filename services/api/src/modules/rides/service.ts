@@ -19,6 +19,7 @@ import { config } from '../../lib/config.js';
 import { AppError } from '../../lib/errors.js';
 import { haversineMeters } from '../../lib/geodesy.js';
 import { logger } from '../../lib/logger.js';
+import { publicUrl } from '../../lib/urls.js';
 import { DAY_MS, startOfCityDay } from '../../lib/time.js';
 import type { LatLng } from '../../db/geography.js';
 import type { PaymentMethod, Ride, UserRole } from '../../db/schema.js';
@@ -1061,7 +1062,7 @@ export async function shareRide(
   });
 
   return {
-    url: `${config.PUBLIC_BASE_URL}/v1/share/${token}`,
+    url: publicUrl(`/v1/share/${token}`),
     expiresAt: expiresAt.toISOString(),
   };
 }

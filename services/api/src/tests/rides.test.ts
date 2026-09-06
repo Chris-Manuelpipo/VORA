@@ -870,6 +870,14 @@ describe('note, SOS, partage de trajet et gains', () => {
     const { url, expiresAt } = share.json();
     expect(Date.parse(expiresAt)).toBeGreaterThan(Date.now());
 
+    // L'URL doit être JOIGNABLE, pas seulement bien formée. Une barre oblique finale sur
+    // PUBLIC_BASE_URL produisait `https://…io//v1/share/<token>`, qui répond 404 — et
+    // c'est un PROCHE qui l'ouvre, depuis un téléphone sans l'application, donc sans
+    // aucun moyen de nous signaler la panne. Vue en production ; corrigée dans
+    // `lib/urls.ts`, verrouillée ici.
+    expect(url.replace(/^https?:\/\//, ''), url).not.toContain('//');
+    expect(url).toMatch(/^https?:\/\/[^/]+\/v1\/share\/[^/]+$/);
+
     // Le lien s'ouvre SANS session : c'est tout son objet.
     const token = url.split('/v1/share/')[1];
     const publique = await app.inject({ method: 'GET', url: `/v1/share/${token}` });

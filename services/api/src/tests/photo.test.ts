@@ -87,6 +87,10 @@ describe('POST /v1/me/photo', () => {
     expect(body.mime).toBe('image/jpeg');
     expect(body.size_bytes).toBe(image.byteLength);
     expect(body.photo_url).toContain(`/v1/media/${body.photo_key}`);
+    // Une barre oblique finale sur PUBLIC_BASE_URL produisait `…io//v1/media/<id>`, qui
+    // répond 404 — sans une ligne dans les journaux. La base est normalisée à la lecture
+    // de l'environnement ; ici on vérifie le RÉSULTAT, quelle que soit la valeur donnée.
+    expect(body.photo_url.replace(/^https?:\/\//, '')).not.toContain('//');
 
     // L'URL rendue est celle qui marche : on la suit, et on retrouve les MÊMES octets.
     const lecture = await app.inject({
@@ -141,6 +145,49 @@ describe('POST /v1/me/photo', () => {
       headers: auth(passager),
     });
     expect(ancienne.statusCode).toBe(404);
+  }, 30_000);
+
+  it('un onboarding renvoyé APRÈS l’envoi n’efface pas la photo', async () => {
+    const passager = await createPassenger(app, 'Aïcha Ordre');
+    const key = (await upload(passager, jpeg())).json().photo_key;
+
+    // `photo_key` n'est plus acceptée dans le corps de l'onboarding : c'est l'envoi de
+    // photo qui la pose. Un profil enregistré ensuite ne doit donc rien écraser — l'ordre
+    // des écrans ne doit pas décider du sort de l'avatar.
+    const onboarding = await app.inject({
+      method: 'POST',
+      url: '/v1/me/onboarding',
+      headers: auth(passager),
+      payload: { first_name: 'Aïcha', family_name: 'Mballa' },
+    });
+
+    expect(onboarding.statusCode).toBe(200);
+    expect(onboarding.json().photo_key).toBe(key);
+    expect(onboarding.json().photo_url).toContain(key);
+  }, 30_000);
+
+  it('refuse une clé de photo envoyée dans un corps de requête', async () => {
+    const passager = await createPassenger(app, 'Aïcha Maline');
+    const autre = await createPassenger(app, 'Aïcha Voisine');
+    const keyDeLautre = (await upload(autre, jpeg())).json().photo_key;
+
+    // Sans ce refus, n'importe qui s'attribuait l'image d'un autre — ou une valeur qui ne
+    // pointe sur rien, et l'avatar cassé n'était visible que sur le téléphone d'en face.
+    for (const [url, payload] of [
+      ['/v1/me/onboarding', { first_name: 'Aïcha', family_name: 'Mballa', photo_key: keyDeLautre }],
+      ['/v1/me', { photo_key: keyDeLautre }],
+    ] as const) {
+      const response = await app.inject({
+        method: url === '/v1/me' ? 'PATCH' : 'POST',
+        url,
+        headers: auth(passager),
+        payload,
+      });
+      expect(response.statusCode, url).toBe(400);
+    }
+
+    const moi = await app.inject({ method: 'GET', url: '/v1/me', headers: auth(passager) });
+    expect(moi.json().photo_key).toBeNull();
   }, 30_000);
 
   it('DELETE retire la photo et la clé qui la référence', async () => {

@@ -114,6 +114,7 @@ export interface UpdateUserPatch {
   /** Date ISO (AAAA-MM-JJ) : la colonne est un `date`, sans heure ni fuseau. */
   birthDate?: string | null;
   locale?: string;
+  /** Écrite par l'envoi de photo seulement — jamais depuis un corps de requête. */
   photoKey?: string | null;
   onboardedAt?: Date;
 }

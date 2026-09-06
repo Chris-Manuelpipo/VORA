@@ -98,10 +98,26 @@ const schema = z.object({
 
   QUOTE_TTL_S: z.coerce.number().int().min(30).default(120),
 
-  // Base des liens publics de partage de trajet. Le lien est ouvert par un proche, dans
-  // un navigateur, hors de l'application : il lui faut une adresse joignable depuis
-  // l'extérieur, pas l'hôte interne sur lequel l'API écoute.
-  PUBLIC_BASE_URL: z.string().url().default('http://localhost:3000'),
+  /**
+   * Base des URL publiques — lien de partage ouvert par un proche dans un navigateur, hors
+   * de l'application : il lui faut une adresse joignable de l'EXTÉRIEUR, pas l'hôte interne
+   * sur lequel l'API écoute. Sert aussi aux photos de profil.
+   *
+   * La barre oblique finale est retirée ICI, à la lecture de l'environnement, et pas dans
+   * chaque appelant. Elle a coûté une panne réelle : `https://vora.cleverapps.io/` collée
+   * depuis une barre d'adresse produisait `…io//v1/share/<token>`, qui répond 404. L'API
+   * répondait 200 partout, les journaux étaient vides, et seul le proche qui ouvrait le
+   * lien voyait l'erreur — depuis un téléphone qui n'a même pas l'application.
+   *
+   * Deuxième ceinture dans `lib/urls.ts` : `publicUrl()` recolle base et chemin sans
+   * jamais doubler la barre. Les deux disent la même chose ; ce fichier ne peut pas
+   * importer `urls.ts`, qui dépend de lui.
+   */
+  PUBLIC_BASE_URL: z
+    .string()
+    .url()
+    .default('http://localhost:3000')
+    .transform((url) => url.replace(/\/+$/, '')),
   // Un trajet partagé reste consultable quelques heures : le temps du trajet, plus la
   // marge pour que le proche ouvre le lien après coup. Au-delà, le jeton ne vaut plus rien.
   SHARE_LINK_TTL_S: z.coerce.number().int().min(300).default(4 * 3600),

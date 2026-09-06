@@ -330,7 +330,8 @@ export async function completeOnboarding(
     sex: body.sex ?? null,
     birthDate: body.birth_date ?? null,
     ...(body.locale !== undefined ? { locale: body.locale } : {}),
-    ...(body.photo_key !== undefined ? { photoKey: body.photo_key } : {}),
+    // `photoKey` n'est jamais touchée ici : elle appartient à `POST /v1/me/photo`. Un
+    // onboarding renvoyé APRÈS l'envoi de la photo ne doit pas l'effacer.
     onboardedAt: new Date(),
   });
 
@@ -355,7 +356,7 @@ export async function updateMe(userId: string, patch: UpdateMeBody): Promise<MeD
   const updated = await repository.updateUser(userId, {
     displayName: patch.display_name,
     locale: patch.locale,
-    photoKey: patch.photo_key,
+    // Pas de `photoKey` : elle appartient à `POST /v1/me/photo` (voir `schemas.ts`).
   });
 
   if (!updated) {

@@ -75,7 +75,6 @@ export const onboardingBodySchema = z
       .nullable()
       .optional(),
     locale: z.enum(['fr', 'en']).optional(),
-    photo_key: z.string().max(256).nullable().optional(),
     /** Jusqu'à 3. Une liste vide EFFACE les contacts existants — « Plus tard » n'envoie rien. */
     trusted_contacts: z.array(trustedContactInputSchema).max(MAX_TRUSTED_CONTACTS).optional(),
   })
@@ -88,11 +87,18 @@ export const trustedContactSchema = z.object({
   phone_masked: z.string(),
 });
 
+/**
+ * `photo_key` N'EST PAS ICI, ni dans l'onboarding — délibérément.
+ *
+ * C'est `POST /v1/me/photo` qui la pose, et `DELETE /v1/me/photo` qui la retire. Laisser
+ * le client l'écrire, c'était accepter une clé étrangère non vérifiée : n'importe qui
+ * pouvait s'attribuer l'identifiant de l'image d'un autre, ou une valeur qui ne pointe
+ * sur rien — et l'avatar cassé n'aurait été visible que sur le téléphone d'en face.
+ */
 export const updateMeBodySchema = z
   .object({
     display_name: z.string().trim().min(2).max(60).optional(),
     locale: z.enum(['fr', 'en']).optional(),
-    photo_key: z.string().max(256).nullable().optional(),
   })
   .strict()
   .refine((body) => Object.keys(body).length > 0, {

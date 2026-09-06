@@ -4,7 +4,7 @@
 // sont le seul chemin entre une ligne `users` et une réponse HTTP. Le téléphone et l'e-mail
 // n'y apparaissent que masqués, et jamais dans le DTO destiné à l'autre partie.
 
-import { config } from '../../lib/config.js';
+import { publicUrl } from '../../lib/urls.js';
 import { formatPlate } from '../../domain/plates.js';
 import type { Offer } from '../../domain/rules.js';
 import type { DriverProfile, TrustedContact, User, Vehicle } from '../../db/schema.js';
@@ -18,7 +18,7 @@ import { formatVoraId } from './vora-id.js';
  * seule cette fonction change.
  */
 export function photoUrl(photoKey: string | null): string | null {
-  return photoKey ? `${config.PUBLIC_BASE_URL}/v1/media/${photoKey}` : null;
+  return photoKey ? publicUrl(`/v1/media/${photoKey}`) : null;
 }
 
 /** Le passager voit le PRÉNOM du chauffeur, pas son état civil complet. */
