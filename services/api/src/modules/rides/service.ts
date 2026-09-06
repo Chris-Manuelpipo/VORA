@@ -51,6 +51,7 @@ import { computeDriverEarnings, formatAmount } from '../pricing/fare.js';
 import { redeemQuote } from '../pricing/service.js';
 import { driverPresence } from '../dispatch/presence.js';
 import * as dispatch from '../dispatch/service.js';
+import * as identity from '../identity/service.js';
 import {
   boardingCodeMatches,
   forgetBoardingCode,
@@ -984,6 +985,17 @@ export async function raiseSos(input: {
     },
   });
 
+  /**
+   * LES CONTACTS DE CONFIANCE PARTENT AVEC L'ALERTE (PA-07).
+   *
+   * Ils vont à l'OPS, et à l'ops seulement : c'est une équipe humaine qui décrochera son
+   * téléphone. VORA n'a pas d'agrégateur SMS en 48 h (CLAUDE.md § 8.2), et prétendre
+   * « votre proche a été prévenu » sans l'avoir fait serait la pire des promesses sur un
+   * écran de SOS. Le numéro est ENTIER ici — l'ops doit pouvoir composer — et cette salle
+   * n'est ouverte qu'au rôle `ops` (`realtime/events.ts`). Il ne part vers aucune autre.
+   */
+  const trustedContacts = await identity.trustedContactsForAlert(input.actorId);
+
   publish(OPS_ROOM, OPS_ALERT, {
     kind: 'sos',
     alertId,
@@ -992,6 +1004,7 @@ export async function raiseSos(input: {
     status: ride.status,
     lat: position.lat,
     lng: position.lng,
+    trustedContacts,
     // Les deux parties par leur ID VORA : de quoi les rappeler depuis la fiche ops,
     // sans qu'aucun numéro ne transite par un canal de diffusion.
     passengerVoraId: bundle.passenger.voraId,
@@ -1013,6 +1026,8 @@ export async function raiseSos(input: {
   const notified = ['ops'];
   if (ride.driverId && actorType === 'passenger') notified.push('driver');
   if (actorType === 'driver') notified.push('passenger');
+  // Ce que l'écran a le droit d'affirmer : ses contacts sont entre les mains de l'ops.
+  if (trustedContacts.length > 0) notified.push('trusted_contacts');
 
   return { alertId, notified };
 }

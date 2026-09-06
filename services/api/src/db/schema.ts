@@ -33,6 +33,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import type { MessageCode, MessageSender } from '../domain/messages.js';
+import type { Sex } from '../domain/profile.js';
 import type { Offer, VehicleKind } from '../domain/rules.js';
 import type { Actor, RideEventType, RideStatus } from '../domain/states.js';
 import { geographyLineString, geographyPoint, geographyPolygon } from './geography.js';
@@ -57,6 +58,17 @@ export const users = pgTable(
     locale: text('locale').notNull().default('fr'),
 
     // PII. Ne sort jamais d'un DTO destiné à quelqu'un d'autre que son propriétaire.
+    //
+    // `displayName` est le PRÉNOM — c'est lui que voit l'autre partie, via `firstName()`.
+    // `familyName`, `sex` et `birthDate` sont remplis à l'onboarding et ne sortent
+    // JAMAIS : ni vers le chauffeur, ni dans un lien de partage, ni vers l'assistant de
+    // support (écart avec docs/ assumé, voir `domain/profile.ts`).
+    familyName: text('family_name'),
+    sex: text('sex').$type<Sex>(),
+    birthDate: date('birth_date'),
+    /** Quand l'onboarding a été passé. NULL = l'application doit le proposer. */
+    onboardedAt: timestamp('onboarded_at', { withTimezone: true }),
+
     phone: text('phone'),
     phoneVerifiedAt: timestamp('phone_verified_at', { withTimezone: true }),
     email: text('email'),
@@ -72,6 +84,30 @@ export const users = pgTable(
     phoneKey: uniqueIndex('users_phone_key').on(table.phone),
     emailKey: uniqueIndex('users_email_key').on(table.email),
     roleIdx: index('users_role_idx').on(table.role),
+  }),
+);
+
+/**
+ * Contacts de confiance (PA-07) : jusqu'à 3 personnes à prévenir en cas de SOS.
+ *
+ * Elles n'ont pas de compte VORA. Leur numéro ne ressort jamais entier de l'API — même
+ * à son propriétaire, qui reconnaît « Maman » sans avoir besoin des neuf chiffres.
+ */
+export const trustedContacts = pgTable(
+  'trusted_contacts',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    /** E.164, normalisé comme un numéro de compte. */
+    phone: text('phone').notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => ({
+    userIdx: index('trusted_contacts_user_idx').on(table.userId, table.createdAt),
+    userPhoneKey: uniqueIndex('trusted_contacts_user_phone_key').on(table.userId, table.phone),
   }),
 );
 
@@ -690,3 +726,4 @@ export type DriverEarning = typeof driverEarnings.$inferSelect;
 export type PaymentIntent = typeof paymentIntents.$inferSelect;
 export type Rating = typeof ratings.$inferSelect;
 export type RideMessage = typeof rideMessages.$inferSelect;
+export type TrustedContact = typeof trustedContacts.$inferSelect;

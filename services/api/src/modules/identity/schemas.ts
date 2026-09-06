@@ -6,6 +6,7 @@
 // renvoyait une entité brute, `phone` et `email` ne franchiraient pas la frontière.
 
 import { z } from 'zod';
+import { MAX_TRUSTED_CONTACTS, SEXES } from '../../domain/profile.js';
 
 // ─── Entrées ─────────────────────────────────────────────────────────────────
 
@@ -40,6 +41,51 @@ export const otpVerifyBodySchema = z
       .optional(),
   })
   .strict();
+
+// ─── Onboarding (PA-05 → PA-07) ──────────────────────────────────────────────
+
+/**
+ * Un contact de confiance. Le numéro entre en clair — il faut bien le saisir — mais il
+ * ne ressort JAMAIS : le DTO ne rend qu'une version masquée.
+ */
+export const trustedContactInputSchema = z
+  .object({
+    name: z.string().trim().min(2, 'Donnez un nom à ce contact (« Maman », « Paul »).').max(40),
+    phone: z.string().trim().min(6).max(24),
+  })
+  .strict();
+
+/**
+ * L'onboarding complet, en UN SEUL appel — et c'est délibéré : sur une 3G de Yaoundé,
+ * quatre requêtes, c'est quatre occasions d'échouer au milieu et de laisser un compte à
+ * moitié rempli. Renvoyable à l'identique depuis l'écran Profil : le dernier envoi fait foi.
+ */
+export const onboardingBodySchema = z
+  .object({
+    /** Le prénom. C'est LUI que verra le chauffeur, et rien d'autre du nom. */
+    first_name: z.string().trim().min(2, 'Votre prénom, tel qu’on vous appelle.').max(40),
+    family_name: z.string().trim().min(2, 'Votre nom de famille.').max(60),
+    /** `undisclosed` est une réponse, pas un champ vide : on ne repose pas la question. */
+    sex: z.enum(SEXES).nullable().optional(),
+    /** Date ISO (AAAA-MM-JJ). Facultative. */
+    birth_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date attendue au format AAAA-MM-JJ.')
+      .nullable()
+      .optional(),
+    locale: z.enum(['fr', 'en']).optional(),
+    photo_key: z.string().max(256).nullable().optional(),
+    /** Jusqu'à 3. Une liste vide EFFACE les contacts existants — « Plus tard » n'envoie rien. */
+    trusted_contacts: z.array(trustedContactInputSchema).max(MAX_TRUSTED_CONTACTS).optional(),
+  })
+  .strict();
+
+export const trustedContactSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  /** Masqué, même pour son propriétaire : « +237 6·· ··· ·67 ». */
+  phone_masked: z.string(),
+});
 
 export const updateMeBodySchema = z
   .object({
@@ -96,7 +142,12 @@ export const meSchema = z.object({
   vora_id: z.string(),
   vora_id_formatted: z.string(),
   role: z.enum(['passenger', 'driver', 'ops']),
+  /** Le prénom. Seul élément du nom que voit l'autre partie. */
   display_name: z.string(),
+  /** Nom de famille, sexe et date de naissance : visibles de leur propriétaire SEUL. */
+  family_name: z.string().nullable(),
+  sex: z.enum(SEXES).nullable(),
+  birth_date: z.string().nullable(),
   photo_key: z.string().nullable(),
   locale: z.string(),
   status: z.enum(['active', 'suspended', 'deleted']),
@@ -104,6 +155,20 @@ export const meSchema = z.object({
   email_masked: z.string().nullable(),
   created_at: z.string(),
   driver: driverProfileSchema.nullable(),
+  trusted_contacts: z.array(trustedContactSchema),
+  /**
+   * De quoi décider, côté application, s'il faut ouvrir l'onboarding après la connexion.
+   * `completed` ne devient vrai qu'une fois l'onboarding envoyé : quelqu'un qui a répondu
+   * « Plus tard » à la photo l'a bien terminé, et ne doit pas le revoir chaque matin.
+   */
+  onboarding: z.object({
+    completed: z.boolean(),
+    completed_at: z.string().nullable(),
+    /** Ce qui reste à remplir, exigé comme facultatif. Sert aux relances, pas aux blocages. */
+    missing: z.array(z.string()),
+    /** Le chauffeur a en plus son dossier de pièces (CH-03 → CH-06). */
+    driver_kyc_required: z.boolean(),
+  }),
 });
 
 export const otpVerifyResponseSchema = z.object({
@@ -130,6 +195,9 @@ export const publicUserSchema = z.object({
 export type OtpRequestBody = z.infer<typeof otpRequestBodySchema>;
 export type OtpVerifyBody = z.infer<typeof otpVerifyBodySchema>;
 export type UpdateMeBody = z.infer<typeof updateMeBodySchema>;
+export type OnboardingBody = z.infer<typeof onboardingBodySchema>;
+export type TrustedContactInput = z.infer<typeof trustedContactInputSchema>;
+export type TrustedContactDto = z.infer<typeof trustedContactSchema>;
 export type MeDto = z.infer<typeof meSchema>;
 export type PublicUserDto = z.infer<typeof publicUserSchema>;
 export type OtpRequestResponse = z.infer<typeof otpRequestResponseSchema>;

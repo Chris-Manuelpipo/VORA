@@ -11,13 +11,21 @@ import type { VehicleKind } from '../../domain/rules.js';
 import {
   maskDestination,
   normalizeDestination,
+  normalizePhone,
   type Channel,
 } from './channels.js';
+import { isPlausibleBirthDate } from '../../domain/profile.js';
 import { toMeDto } from './dto.js';
 import { generateOtpCode, hashOtpCode, verifyOtpCode } from './otp.js';
 import * as repository from './repository.js';
 import type { DeviceInput } from './repository.js';
-import type { MeDto, OtpRequestResponse, OtpVerifyResponse, UpdateMeBody } from './schemas.js';
+import type {
+  MeDto,
+  OnboardingBody,
+  OtpRequestResponse,
+  OtpVerifyResponse,
+  UpdateMeBody,
+} from './schemas.js';
 import { allocateVoraId } from './vora-id.js';
 
 /** Juste ce qu'il faut d'un logger pino : le service n'en demande pas plus. */
@@ -248,14 +256,84 @@ export async function composeMe(userId: string, role: UserRole): Promise<MeDto> 
     throw new AppError('NOT_FOUND', 'Ce compte est introuvable. Reconnectez-vous.');
   }
 
-  if (role !== 'driver') return toMeDto({ user });
+  const trustedContacts = await repository.listTrustedContacts(userId);
+
+  if (role !== 'driver') return toMeDto({ user, trustedContacts });
 
   const driverProfile = await repository.findDriverProfile(userId);
   const vehicle = driverProfile
     ? await repository.findDriverVehicle(userId, driverProfile.currentVehicleId)
     : null;
 
-  return toMeDto({ user, driverProfile, vehicle });
+  return toMeDto({ user, driverProfile, vehicle, trustedContacts });
+}
+
+// ─── Onboarding (PA-05 → PA-07) ──────────────────────────────────────────────
+
+/**
+ * Enregistre le profil personnel, en UN SEUL appel.
+ *
+ * Pourquoi un appel unique plutôt qu'un PATCH par écran : sur une 3G de Yaoundé, quatre
+ * requêtes sont quatre occasions d'échouer au milieu, et un compte à moitié rempli est
+ * pire qu'un compte vide — on ne sait plus quoi redemander. Ici, ou tout est écrit, ou
+ * rien ne l'est, et l'appel se rejoue à l'identique après une coupure.
+ *
+ * Rejouable aussi depuis l'écran Profil : le dernier envoi fait foi, y compris pour les
+ * contacts de confiance, qui sont REMPLACÉS et non ajoutés.
+ */
+export async function completeOnboarding(
+  userId: string,
+  body: OnboardingBody,
+): Promise<MeDto> {
+  const user = await repository.findUserById(userId);
+  if (!user) throw new AppError('NOT_FOUND', 'Ce compte est introuvable. Reconnectez-vous.');
+
+  // Garde-fou de SAISIE, pas règle d'âge : une date dans le futur ou un âge de 150 ans
+  // est une faute de frappe (voir `domain/profile.ts`).
+  if (body.birth_date && !isPlausibleBirthDate(new Date(`${body.birth_date}T00:00:00Z`))) {
+    throw new AppError(
+      'VALIDATION_ERROR',
+      'Cette date de naissance ne semble pas correcte. Vérifiez le jour, le mois et l\u2019année.',
+      { field: 'birth_date' },
+    );
+  }
+
+  // Les numéros des contacts passent par la MÊME normalisation que ceux des comptes :
+  // « 6 91 23 45 67 » et « +237691234567 » sont un seul contact. Sans cela, l'index
+  // unique refuserait le doublon avec un message que personne ne peut comprendre.
+  const contacts = body.trusted_contacts?.map((contact) => ({
+    name: contact.name,
+    phone: normalizePhone(contact.phone),
+  }));
+
+  if (contacts) {
+    const uniques = new Set(contacts.map((contact) => contact.phone));
+    if (uniques.size !== contacts.length) {
+      throw new AppError(
+        'VALIDATION_ERROR',
+        'Deux de vos contacts ont le même numéro. Retirez-en un, puis réessayez.',
+        { field: 'trusted_contacts' },
+      );
+    }
+  }
+
+  const updated = await repository.updateUser(userId, {
+    displayName: body.first_name,
+    familyName: body.family_name,
+    sex: body.sex ?? null,
+    birthDate: body.birth_date ?? null,
+    ...(body.locale !== undefined ? { locale: body.locale } : {}),
+    ...(body.photo_key !== undefined ? { photoKey: body.photo_key } : {}),
+    onboardedAt: new Date(),
+  });
+
+  if (!updated) throw new AppError('NOT_FOUND', 'Ce compte est introuvable. Reconnectez-vous.');
+
+  // `undefined` = l'écran des contacts n'a pas été envoyé (« Plus tard ») : on ne touche
+  // à rien. Une liste VIDE, elle, est une décision : elle efface.
+  if (contacts) await repository.replaceTrustedContacts(userId, contacts);
+
+  return composeMe(updated.id, updated.role);
 }
 
 export async function getMe(userId: string): Promise<MeDto> {
@@ -278,4 +356,22 @@ export async function updateMe(userId: string, patch: UpdateMeBody): Promise<MeD
   }
 
   return composeMe(updated.id, updated.role);
+}
+
+/**
+ * Les contacts de confiance d'une personne, AVEC leur numéro entier.
+ *
+ * Un seul appelant légitime : l'alerte SOS, qui les transmet à l'ops pour qu'une équipe
+ * humaine les appelle. C'est la seule sortie de l'API où ces numéros apparaissent en
+ * clair, et elle ne va que dans la salle `ops` (CLAUDE.md § 5.6 protège l'autre PARTIE
+ * d'une course ; l'ops, lui, doit pouvoir décrocher son téléphone).
+ *
+ * Partout ailleurs — `GET /v1/me` compris — c'est `toTrustedContactDto` qui répond, et
+ * il masque.
+ */
+export async function trustedContactsForAlert(
+  userId: string,
+): Promise<Array<{ name: string; phone: string }>> {
+  const contacts = await repository.listTrustedContacts(userId);
+  return contacts.map((contact) => ({ name: contact.name, phone: contact.phone }));
 }

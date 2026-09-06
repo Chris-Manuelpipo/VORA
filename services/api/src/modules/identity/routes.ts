@@ -3,6 +3,7 @@
 //   POST /v1/auth/otp/request   demande un code à 6 chiffres
 //   POST /v1/auth/otp/verify    vérifie le code, crée le compte au besoin, ouvre la session
 //   GET  /v1/me                 profil de l'utilisateur connecté
+//   POST /v1/me/onboarding      profil personnel + contacts de confiance (PA-05 → PA-07)
 //   PATCH /v1/me                nom affiché, langue, photo
 //
 // Les routes ne contiennent aucune règle : elles valident, appellent le service, renvoient.
@@ -11,6 +12,7 @@ import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { config } from '../../lib/config.js';
 import {
   meSchema,
+  onboardingBodySchema,
   otpRequestBodySchema,
   otpRequestResponseSchema,
   otpVerifyBodySchema,
@@ -86,6 +88,31 @@ export const identityRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => service.getMe(request.user.sub),
+  );
+
+  /**
+   * Onboarding (PA-05 → PA-07), en UN SEUL appel, à la fin de la connexion.
+   *
+   * L'application l'ouvre quand `GET /v1/me` renvoie `onboarding.completed: false`, et
+   * ne le rouvre plus ensuite : quelqu'un qui a répondu « Plus tard » à la photo a bien
+   * terminé son onboarding. Le même appel sert d'enregistrement depuis l'écran Profil.
+   */
+  app.post(
+    '/me/onboarding',
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        tags: ['identity'],
+        summary: 'Enregistrer le profil personnel et les contacts de confiance',
+        description:
+          'Un seul appel, rejouable : le dernier envoi fait foi. Les contacts de confiance ' +
+          'sont REMPLACÉS (une liste vide les efface, un champ absent n’y touche pas). ' +
+          'Nom, sexe et date de naissance restent visibles de leur propriétaire seul.',
+        body: onboardingBodySchema,
+        response: { 200: meSchema },
+      },
+    },
+    async (request) => service.completeOnboarding(request.user.sub, request.body),
   );
 
   app.patch(

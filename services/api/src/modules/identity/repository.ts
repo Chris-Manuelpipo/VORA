@@ -10,14 +10,17 @@ import {
   devices,
   driverProfiles,
   otpChallenges,
+  trustedContacts,
   users,
   vehicles,
   type DriverProfile,
   type OtpChallenge,
+  type TrustedContact,
   type User,
   type UserRole,
   type Vehicle,
 } from '../../db/schema.js';
+import type { Sex } from '../../domain/profile.js';
 import type { VehicleKind } from '../../domain/rules.js';
 import type { Channel } from './channels.js';
 
@@ -102,8 +105,13 @@ export async function createUser(input: CreateUserInput): Promise<{
 
 export interface UpdateUserPatch {
   displayName?: string;
+  familyName?: string;
+  sex?: Sex | null;
+  /** Date ISO (AAAA-MM-JJ) : la colonne est un `date`, sans heure ni fuseau. */
+  birthDate?: string | null;
   locale?: string;
   photoKey?: string | null;
+  onboardedAt?: Date;
 }
 
 export async function updateUser(id: string, patch: UpdateUserPatch): Promise<User | null> {
@@ -111,8 +119,12 @@ export async function updateUser(id: string, patch: UpdateUserPatch): Promise<Us
     .update(users)
     .set({
       ...(patch.displayName !== undefined ? { displayName: patch.displayName } : {}),
+      ...(patch.familyName !== undefined ? { familyName: patch.familyName } : {}),
+      ...(patch.sex !== undefined ? { sex: patch.sex } : {}),
+      ...(patch.birthDate !== undefined ? { birthDate: patch.birthDate } : {}),
       ...(patch.locale !== undefined ? { locale: patch.locale } : {}),
       ...(patch.photoKey !== undefined ? { photoKey: patch.photoKey } : {}),
+      ...(patch.onboardedAt !== undefined ? { onboardedAt: patch.onboardedAt } : {}),
     })
     .where(eq(users.id, id))
     .returning();
@@ -288,4 +300,36 @@ export async function findDriverVehicle(
     .orderBy(vehicles.createdAt)
     .limit(1);
   return fallback ?? null;
+}
+
+// ─── Contacts de confiance ───────────────────────────────────────────────────
+
+export async function listTrustedContacts(userId: string): Promise<TrustedContact[]> {
+  return db
+    .select()
+    .from(trustedContacts)
+    .where(eq(trustedContacts.userId, userId))
+    .orderBy(trustedContacts.createdAt);
+}
+
+/**
+ * REMPLACE la liste des contacts de confiance, en une transaction.
+ *
+ * Remplacer plutôt qu'ajouter : l'écran PA-07 montre trois lignes qu'on édite ensemble,
+ * et un envoi partiel après une coupure réseau doit pouvoir être rejoué sans créer de
+ * doublon. Une liste vide efface — c'est le sens de « je retire mes contacts ».
+ */
+export async function replaceTrustedContacts(
+  userId: string,
+  contacts: Array<{ name: string; phone: string }>,
+): Promise<TrustedContact[]> {
+  return db.transaction(async (tx) => {
+    await tx.delete(trustedContacts).where(eq(trustedContacts.userId, userId));
+    if (contacts.length === 0) return [];
+
+    return tx
+      .insert(trustedContacts)
+      .values(contacts.map((contact) => ({ userId, ...contact })))
+      .returning();
+  });
 }

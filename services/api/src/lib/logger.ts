@@ -19,6 +19,15 @@ const REDACTED_PATHS = [
   '*.phone_e164',
   '*.boardingCode',
   '*.boarding_code',
+  // Profil personnel de l'onboarding : rempli par l'utilisateur, jamais utile dans un
+  // journal. `trustedContacts` porte des numéros de PROCHES, qui n'ont même pas de compte
+  // chez nous — c'est la donnée la moins à sa place dans un fichier de logs.
+  'req.body.family_name',
+  'req.body.birth_date',
+  '*.family_name',
+  '*.birth_date',
+  '*.trusted_contacts',
+  '*.trustedContacts',
 ];
 
 export const loggerOptions: FastifyServerOptions['logger'] = {

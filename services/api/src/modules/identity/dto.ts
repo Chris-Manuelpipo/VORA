@@ -6,9 +6,9 @@
 
 import { formatPlate } from '../../domain/plates.js';
 import type { Offer } from '../../domain/rules.js';
-import type { DriverProfile, User, Vehicle } from '../../db/schema.js';
-import { maskUserChannels } from './channels.js';
-import type { MeDto, PublicUserDto } from './schemas.js';
+import type { DriverProfile, TrustedContact, User, Vehicle } from '../../db/schema.js';
+import { maskDestination, maskUserChannels } from './channels.js';
+import type { MeDto, PublicUserDto, TrustedContactDto } from './schemas.js';
 import { formatVoraId } from './vora-id.js';
 
 /** Le passager voit le PRÉNOM du chauffeur, pas son état civil complet. */
@@ -21,10 +21,39 @@ export interface MeSources {
   user: User;
   driverProfile?: DriverProfile | null;
   vehicle?: Vehicle | null;
+  trustedContacts?: TrustedContact[];
+}
+
+/**
+ * Un contact de confiance, vu par son propriétaire. Le numéro reste MASQUÉ, même pour
+ * lui : il reconnaît « Maman » sans les neuf chiffres, et une capture d'écran du profil
+ * ne doit pas suffire à composer le numéro d'un proche. Pour le corriger, on le
+ * renvoie — c'est un formulaire de trois lignes, pas une base à éditer.
+ */
+export function toTrustedContactDto(contact: TrustedContact): TrustedContactDto {
+  return {
+    id: contact.id,
+    name: contact.name,
+    phone_masked: maskDestination('phone', contact.phone),
+  };
+}
+
+/**
+ * Ce qui reste à remplir. Ni bloquant, ni impératif : l'application s'en sert pour
+ * proposer, plus tard, ce que la personne a sauté — la photo, ses contacts de confiance.
+ */
+function missingProfileFields(user: User, contacts: TrustedContact[]): string[] {
+  const missing: string[] = [];
+  if (!user.familyName) missing.push('family_name');
+  if (!user.sex) missing.push('sex');
+  if (!user.birthDate) missing.push('birth_date');
+  if (!user.photoKey) missing.push('photo');
+  if (contacts.length === 0) missing.push('trusted_contacts');
+  return missing;
 }
 
 /** `GET /v1/me` — la vue de l'utilisateur sur son propre compte. */
-export function toMeDto({ user, driverProfile, vehicle }: MeSources): MeDto {
+export function toMeDto({ user, driverProfile, vehicle, trustedContacts = [] }: MeSources): MeDto {
   const { phone_masked, email_masked } = maskUserChannels(user);
 
   return {
@@ -32,12 +61,27 @@ export function toMeDto({ user, driverProfile, vehicle }: MeSources): MeDto {
     vora_id_formatted: formatVoraId(user.voraId),
     role: user.role,
     display_name: user.displayName,
+    // Nom, sexe et date de naissance : à leur propriétaire SEUL. `toPublicUserDto`,
+    // plus bas, ne les connaît même pas — c'est ce qui rend la fuite impossible plutôt
+    // qu'improbable.
+    family_name: user.familyName,
+    sex: user.sex,
+    birth_date: user.birthDate,
     photo_key: user.photoKey,
     locale: user.locale,
     status: user.status,
     phone_masked,
     email_masked,
     created_at: user.createdAt.toISOString(),
+    trusted_contacts: trustedContacts.map(toTrustedContactDto),
+    onboarding: {
+      completed: user.onboardedAt !== null,
+      completed_at: user.onboardedAt?.toISOString() ?? null,
+      missing: missingProfileFields(user, trustedContacts),
+      // Le chauffeur a en plus son dossier de pièces (CH-03 → CH-06). Tant qu'il n'est
+      // pas validé, il peut se connecter mais pas se mettre en ligne.
+      driver_kyc_required: user.role === 'driver' && driverProfile?.status !== 'approved',
+    },
     driver: driverProfile
       ? {
           kind: driverProfile.kind,

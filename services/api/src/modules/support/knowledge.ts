@@ -171,9 +171,10 @@ export const FAQ: readonly FaqEntry[] = [
       'lien',
     ],
     answer:
-      "Le bouton SOS, en rouge sur l'écran de course, alerte l'équipe VORA avec votre position et prévient " +
-      'votre contact de confiance. « Partager mon trajet » envoie à un proche un lien qui montre en direct ' +
-      'où vous êtes, le véhicule et la plaque, sans compte à créer. ' +
+      "Le bouton SOS, en rouge sur l'écran de course, alerte immédiatement l'équipe VORA avec votre " +
+      "position, et lui transmet vos contacts de confiance pour qu'elle les appelle. " +
+      '« Partager mon trajet » envoie à un proche un lien qui montre en direct où vous êtes, le véhicule ' +
+      'et la plaque, sans compte à créer. ' +
       "En cas de danger immédiat, appelez d'abord les secours, puis appuyez sur SOS.",
   },
   {
