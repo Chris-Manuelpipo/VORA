@@ -4,15 +4,22 @@
 //   POST /v1/auth/otp/verify    vérifie le code, crée le compte au besoin, ouvre la session
 //   GET  /v1/me                 profil de l'utilisateur connecté
 //   POST /v1/me/onboarding      profil personnel + contacts de confiance (PA-05 → PA-07)
+//   POST /v1/me/photo           envoi de la photo de profil (octets bruts)
+//   DELETE /v1/me/photo         retrait de la photo
+//   GET  /v1/media/:id          les octets d'une image
 //   PATCH /v1/me                nom affiché, langue, photo
 //
 // Les routes ne contiennent aucune règle : elles valident, appellent le service, renvoient.
 
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod';
 import { config } from '../../lib/config.js';
+import { AppError } from '../../lib/errors.js';
+import { IMAGE_MIME_TYPES, MAX_IMAGE_BYTES } from '../../lib/images.js';
 import {
+  mediaParamsSchema,
   meSchema,
   onboardingBodySchema,
+  photoUploadSchema,
   otpRequestBodySchema,
   otpRequestResponseSchema,
   otpVerifyBodySchema,
@@ -113,6 +120,99 @@ export const identityRoutes: FastifyPluginAsyncZod = async (app) => {
       },
     },
     async (request) => service.completeOnboarding(request.user.sub, request.body),
+  );
+
+  /**
+   * Photo de profil. Le corps est l'IMAGE ELLE-MÊME, brute, avec son `Content-Type` :
+   *
+   *     POST /v1/me/photo
+   *     Content-Type: image/jpeg
+   *     <octets>
+   *
+   * Pas de multipart, pas de base64. Le multipart demanderait une dépendance de plus pour
+   * transporter un seul fichier sans métadonnée ; le base64 gonflerait de 33 % une requête
+   * qui part d'un téléphone en 3G. `dio` envoie des octets bruts sans rien de spécial.
+   *
+   * L'en-tête annoncé ne décide de RIEN : le type réel est déduit des premiers octets
+   * (`lib/images.ts`). C'est ce qui empêche de stocker un fichier HTML et de le faire
+   * resservir plus tard par `GET /v1/media/:id`.
+   */
+  app.post(
+    '/me/photo',
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        tags: ['identity'],
+        summary: 'Envoyer sa photo de profil (corps = octets de l’image)',
+        description:
+          'Corps brut, `Content-Type: image/jpeg | image/png | image/webp`. 2 Mo maximum — ' +
+          'redimensionnez à 512 px de côté avant l’envoi. La photo remplace la précédente. ' +
+          'Le type est déduit des octets, jamais de l’en-tête.',
+        response: { 201: photoUploadSchema },
+      },
+      // La borne du corps, en plus de celle du service : une requête de 40 Mo doit être
+      // refusée AVANT d'être entièrement lue en mémoire.
+      bodyLimit: MAX_IMAGE_BYTES,
+      config: { rateLimit: { max: 10, timeWindow: '5 minutes' } },
+    },
+    async (request, reply) => {
+      const bytes = request.body;
+      if (!Buffer.isBuffer(bytes) || bytes.byteLength === 0) {
+        throw new AppError(
+          'VALIDATION_ERROR',
+          "Aucune image reçue. Envoyez le fichier avec l'en-tête Content-Type: image/jpeg.",
+          { accepted: IMAGE_MIME_TYPES },
+        );
+      }
+
+      return reply.status(201).send(await service.uploadPhoto(request.user.sub, bytes));
+    },
+  );
+
+  app.delete(
+    '/me/photo',
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        tags: ['identity'],
+        summary: 'Retirer sa photo de profil',
+        response: { 200: meSchema },
+      },
+    },
+    async (request) => service.removePhoto(request.user.sub),
+  );
+
+  /**
+   * Les octets d'une image.
+   *
+   * Authentifiée, mais SANS contrôle de propriétaire : une photo de profil existe pour
+   * être vue par l'autre partie de la course — le passager doit voir le visage de son
+   * chauffeur avant de monter. Les deux barrières sont le jeton et l'UUID, qui ne se
+   * devine pas. Voir `service.readMedia` pour le raisonnement complet.
+   */
+  app.get(
+    '/media/:id',
+    {
+      preHandler: [app.authenticate],
+      schema: {
+        tags: ['identity'],
+        summary: 'Lire une image (photo de profil)',
+        params: mediaParamsSchema,
+      },
+      config: { rateLimit: { max: 120, timeWindow: '1 minute' } },
+    },
+    async (request, reply) => {
+      const media = await service.readMedia(request.params.id);
+
+      // Une image ne change jamais d'identifiant (la table est immuable) : le téléphone
+      // peut la garder sans jamais revenir demander. `private` parce qu'il a fallu un
+      // jeton pour l'obtenir — elle n'a rien à faire dans un cache partagé.
+      return reply
+        .header('content-type', media.mime)
+        .header('cache-control', 'private, max-age=31536000, immutable')
+        .header('etag', `"${media.sha256}"`)
+        .send(media.bytes);
+    },
   );
 
   app.patch(

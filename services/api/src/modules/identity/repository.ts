@@ -9,11 +9,14 @@ import { db } from '../../db/client.js';
 import {
   devices,
   driverProfiles,
+  media,
   otpChallenges,
   trustedContacts,
   users,
   vehicles,
   type DriverProfile,
+  type Media,
+  type MediaPurpose,
   type OtpChallenge,
   type TrustedContact,
   type User,
@@ -21,6 +24,7 @@ import {
   type Vehicle,
 } from '../../db/schema.js';
 import type { Sex } from '../../domain/profile.js';
+import type { ImageMimeType } from '../../lib/images.js';
 import type { VehicleKind } from '../../domain/rules.js';
 import type { Channel } from './channels.js';
 
@@ -331,5 +335,65 @@ export async function replaceTrustedContacts(
       .insert(trustedContacts)
       .values(contacts.map((contact) => ({ userId, ...contact })))
       .returning();
+  });
+}
+
+// ─── Images ──────────────────────────────────────────────────────────────────
+
+/** Les octets et leurs métadonnées. Lu par `GET /v1/media/:id`. */
+export async function findMedia(id: string): Promise<Media | null> {
+  const [row] = await db.select().from(media).where(eq(media.id, id)).limit(1);
+  return row ?? null;
+}
+
+/**
+ * Enregistre une image et REMPLACE la précédente du même usage, en une transaction.
+ *
+ * Remplacer plutôt qu'empiler : sans cela, chaque changement d'avatar laisserait une
+ * ligne de 60 Ko derrière lui, et la table grossirait d'images que plus personne ne
+ * référence. Le tout est transactionnel avec la mise à jour de `users.photo_key` — on ne
+ * peut pas se retrouver avec une clé qui pointe sur une ligne supprimée.
+ */
+export async function replaceMedia(input: {
+  ownerId: string;
+  purpose: MediaPurpose;
+  mime: ImageMimeType;
+  bytes: Buffer;
+  sha256: string;
+}): Promise<Media> {
+  return db.transaction(async (tx) => {
+    await tx
+      .delete(media)
+      .where(and(eq(media.ownerId, input.ownerId), eq(media.purpose, input.purpose)));
+
+    const [row] = await tx
+      .insert(media)
+      .values({
+        ownerId: input.ownerId,
+        purpose: input.purpose,
+        mime: input.mime,
+        sizeBytes: input.bytes.byteLength,
+        sha256: input.sha256,
+        bytes: input.bytes,
+      })
+      .returning();
+
+    if (!row) throw new Error("Enregistrement de l'image : aucune ligne renvoyée.");
+
+    if (input.purpose === 'avatar') {
+      await tx.update(users).set({ photoKey: row.id }).where(eq(users.id, input.ownerId));
+    }
+
+    return row;
+  });
+}
+
+/** Retire l'image de ce type et la clé qui la référence. */
+export async function deleteMedia(ownerId: string, purpose: MediaPurpose): Promise<void> {
+  await db.transaction(async (tx) => {
+    await tx.delete(media).where(and(eq(media.ownerId, ownerId), eq(media.purpose, purpose)));
+    if (purpose === 'avatar') {
+      await tx.update(users).set({ photoKey: null }).where(eq(users.id, ownerId));
+    }
   });
 }

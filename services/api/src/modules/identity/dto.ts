@@ -4,12 +4,22 @@
 // sont le seul chemin entre une ligne `users` et une réponse HTTP. Le téléphone et l'e-mail
 // n'y apparaissent que masqués, et jamais dans le DTO destiné à l'autre partie.
 
+import { config } from '../../lib/config.js';
 import { formatPlate } from '../../domain/plates.js';
 import type { Offer } from '../../domain/rules.js';
 import type { DriverProfile, TrustedContact, User, Vehicle } from '../../db/schema.js';
 import { maskDestination, maskUserChannels } from './channels.js';
 import type { MeDto, PublicUserDto, TrustedContactDto } from './schemas.js';
 import { formatVoraId } from './vora-id.js';
+
+/**
+ * URL publique d'une image stockée. Construite ici, une seule fois : le client n'a pas à
+ * savoir comment on range nos octets, et le jour où ils partent dans un stockage objet,
+ * seule cette fonction change.
+ */
+export function photoUrl(photoKey: string | null): string | null {
+  return photoKey ? `${config.PUBLIC_BASE_URL}/v1/media/${photoKey}` : null;
+}
 
 /** Le passager voit le PRÉNOM du chauffeur, pas son état civil complet. */
 export function firstName(displayName: string): string {
@@ -68,6 +78,7 @@ export function toMeDto({ user, driverProfile, vehicle, trustedContacts = [] }: 
     sex: user.sex,
     birth_date: user.birthDate,
     photo_key: user.photoKey,
+    photo_url: photoUrl(user.photoKey),
     locale: user.locale,
     status: user.status,
     phone_masked,
@@ -119,6 +130,7 @@ export function toPublicUserDto(
     vora_id: user.voraId,
     first_name: firstName(user.displayName),
     photo_key: user.photoKey,
+    photo_url: photoUrl(user.photoKey),
     rating: driverProfile ? Number(driverProfile.rating) : null,
     verified: driverProfile ? driverProfile.status === 'approved' : false,
   };

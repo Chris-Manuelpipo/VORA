@@ -5,6 +5,13 @@
 // serveur, et de le déplacer vers NestJS après le hackathon sans le réécrire.
 
 import { AppError } from '../../lib/errors.js';
+import { sha256Hex } from '../../lib/crypto.js';
+import {
+  IMAGE_MIME_TYPES,
+  MAX_IMAGE_BYTES,
+  sniffImageType,
+  type ImageMimeType,
+} from '../../lib/images.js';
 import { config } from '../../lib/config.js';
 import type { UserRole } from '../../db/schema.js';
 import type { VehicleKind } from '../../domain/rules.js';
@@ -15,7 +22,7 @@ import {
   type Channel,
 } from './channels.js';
 import { isPlausibleBirthDate } from '../../domain/profile.js';
-import { toMeDto } from './dto.js';
+import { photoUrl, toMeDto } from './dto.js';
 import { generateOtpCode, hashOtpCode, verifyOtpCode } from './otp.js';
 import * as repository from './repository.js';
 import type { DeviceInput } from './repository.js';
@@ -374,4 +381,79 @@ export async function trustedContactsForAlert(
 ): Promise<Array<{ name: string; phone: string }>> {
   const contacts = await repository.listTrustedContacts(userId);
   return contacts.map((contact) => ({ name: contact.name, phone: contact.phone }));
+}
+
+// ─── Photo de profil ─────────────────────────────────────────────────────────
+
+export interface UploadedPhoto {
+  photo_key: string;
+  photo_url: string;
+  mime: ImageMimeType;
+  size_bytes: number;
+}
+
+/**
+ * Enregistre la photo de profil.
+ *
+ * Le TYPE VIENT DES OCTETS, pas de l'en-tête `Content-Type` : celui-ci est envoyé par le
+ * client, donc par n'importe qui, et un fichier HTML annoncé « image/jpeg » serait
+ * resservi plus tard à un navigateur (voir `lib/images.ts`). On lit le nombre magique, et
+ * c'est lui qui décide de ce qu'on stocke et de ce qu'on renverra.
+ */
+export async function uploadPhoto(userId: string, bytes: Buffer): Promise<UploadedPhoto> {
+  if (bytes.byteLength > MAX_IMAGE_BYTES) {
+    throw new AppError(
+      'VALIDATION_ERROR',
+      'Cette photo est trop lourde. Réduisez-la à 512 pixels de côté, puis réessayez.',
+      { max_bytes: MAX_IMAGE_BYTES, received_bytes: bytes.byteLength },
+    );
+  }
+
+  const mime = sniffImageType(bytes);
+  if (!mime) {
+    throw new AppError(
+      'VALIDATION_ERROR',
+      "Ce fichier n'est pas une image. Choisissez une photo au format JPEG, PNG ou WebP.",
+      { accepted: IMAGE_MIME_TYPES },
+    );
+  }
+
+  const row = await repository.replaceMedia({
+    ownerId: userId,
+    purpose: 'avatar',
+    mime,
+    bytes,
+    sha256: sha256Hex(bytes.toString('base64')),
+  });
+
+  return {
+    photo_key: row.id,
+    photo_url: photoUrl(row.id)!,
+    mime: row.mime,
+    size_bytes: row.sizeBytes,
+  };
+}
+
+export async function removePhoto(userId: string): Promise<MeDto> {
+  await repository.deleteMedia(userId, 'avatar');
+  const user = await repository.findUserById(userId);
+  if (!user) throw new AppError('NOT_FOUND', 'Ce compte est introuvable. Reconnectez-vous.');
+  return composeMe(user.id, user.role);
+}
+
+/**
+ * Les octets d'une image, pour `GET /v1/media/:id`.
+ *
+ * Aucun contrôle de propriétaire, et c'est VOULU : une photo de profil est faite pour
+ * être vue par l'autre partie de la course — c'est même une règle de la charte (le
+ * passager voit le visage de son chauffeur avant de monter). Les deux barrières sont
+ * ailleurs : la route exige un jeton valide, et l'identifiant est un UUID, qui ne se
+ * devine pas. Vérifier en plus « êtes-vous sur une course avec cette personne ? »
+ * coûterait une requête à chaque affichage d'avatar, pour une donnée que l'application
+ * montre de toute façon.
+ */
+export async function readMedia(id: string) {
+  const row = await repository.findMedia(id);
+  if (!row) throw new AppError('NOT_FOUND', "Cette image n'existe pas.");
+  return row;
 }

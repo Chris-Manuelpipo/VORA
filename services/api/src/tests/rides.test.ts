@@ -374,10 +374,17 @@ describe('commande → offre → acceptation → code → course → espèces', 
     const brut = JSON.stringify([vuDuPassager, vuDuChauffeur]);
     expect(brut).not.toMatch(/\+237/);
     expect(brut).not.toMatch(/"phone"|"email"/);
+    // LISTE POSITIVE, et volontairement rigide : elle échoue dès qu'un champ apparaît
+    // dans la vue de l'autre partie. C'est le but — un champ ajouté à `publicUserSchema`
+    // doit être une décision prise ici, pas un effet de bord découvert en production.
+    // `photo_url` a été ajouté avec l'envoi de photo : c'est l'URL de l'avatar, que le
+    // passager doit justement voir avant de monter (charte § 5.6), et elle ne porte
+    // qu'un UUID.
     expect(Object.keys(vuDuPassager.driver)).toEqual([
       'vora_id',
       'first_name',
       'photo_key',
+      'photo_url',
       'rating',
       'verified',
     ]);

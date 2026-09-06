@@ -13,6 +13,7 @@ import {
 import { registerAuth } from './lib/auth.js';
 import { config } from './lib/config.js';
 import { registerErrorHandler } from './lib/http.js';
+import { IMAGE_MIME_TYPES } from './lib/images.js';
 import { loggerOptions } from './lib/logger.js';
 import { registerOpenApi } from './lib/openapi.js';
 import { dispatchRoutes } from './modules/dispatch/routes.js';
@@ -117,6 +118,21 @@ export async function buildApp(options: BuildOptions = {}): Promise<FastifyInsta
       }
     },
   );
+
+  /**
+   * Les images arrivent en OCTETS BRUTS (`POST /v1/me/photo`).
+   *
+   * Pas de multipart : ce serait une dépendance de plus pour transporter un seul fichier
+   * sans métadonnée. Pas de base64 non plus : il gonfle de 33 % une requête qui part d'un
+   * téléphone en 3G. On enregistre donc un analyseur par type accepté, qui se contente de
+   * rendre le tampon tel quel — la validation, elle, est faite sur les octets par
+   * `lib/images.ts`, et jamais sur cet en-tête, qui est déclaratif.
+   */
+  for (const mime of IMAGE_MIME_TYPES) {
+    app.addContentTypeParser(mime, { parseAs: 'buffer' }, (_request, body, done) => {
+      done(null, body);
+    });
+  }
 
   await app.register(cors, {
     origin: config.corsOrigins,

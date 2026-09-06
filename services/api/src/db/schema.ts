@@ -19,6 +19,7 @@ import {
   bigserial,
   boolean,
   char,
+  customType,
   date,
   index,
   integer,
@@ -34,9 +35,21 @@ import {
 } from 'drizzle-orm/pg-core';
 import type { MessageCode, MessageSender } from '../domain/messages.js';
 import type { Sex } from '../domain/profile.js';
+import type { ImageMimeType } from '../lib/images.js';
 import type { Offer, VehicleKind } from '../domain/rules.js';
 import type { Actor, RideEventType, RideStatus } from '../domain/states.js';
 import { geographyLineString, geographyPoint, geographyPolygon } from './geography.js';
+
+/**
+ * `bytea` : Drizzle ne l'expose pas, node-postgres le rend déjà en `Buffer` dans les deux
+ * sens. Douze lignes valent mieux qu'une dépendance de plus.
+ */
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({
+  dataType: () => 'bytea',
+});
+
+/** À quoi sert une image. Une seule valeur aujourd'hui — voir la migration 0006. */
+export type MediaPurpose = 'avatar';
 
 const createdAt = () => timestamp('created_at', { withTimezone: true }).notNull().defaultNow();
 const updatedAt = () => timestamp('updated_at', { withTimezone: true }).notNull().defaultNow();
@@ -108,6 +121,33 @@ export const trustedContacts = pgTable(
   (table) => ({
     userIdx: index('trusted_contacts_user_idx').on(table.userId, table.createdAt),
     userPhoneKey: uniqueIndex('trusted_contacts_user_phone_key').on(table.userId, table.phone),
+  }),
+);
+
+/**
+ * Images stockées EN BASE (voir la migration 0006 pour le pourquoi). Le reste du code ne
+ * manipule qu'un identifiant : `users.photoKey` porte l'id d'une ligne d'ici, et le jour
+ * où ces octets partent dans un stockage objet, il portera une URL sans que rien d'autre
+ * ne change.
+ */
+export const media = pgTable(
+  'media',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    ownerId: uuid('owner_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    purpose: text('purpose').$type<MediaPurpose>().notNull(),
+    /** Type RÉEL, déduit des octets — jamais l'en-tête annoncé par le client. */
+    mime: text('mime').$type<ImageMimeType>().notNull(),
+    sizeBytes: integer('size_bytes').notNull(),
+    /** Empreinte du contenu : ETag pour le cache du téléphone. */
+    sha256: text('sha256').notNull(),
+    bytes: bytea('bytes').notNull(),
+    createdAt: createdAt(),
+  },
+  (table) => ({
+    ownerIdx: index('media_owner_idx').on(table.ownerId, table.purpose),
   }),
 );
 
@@ -727,3 +767,4 @@ export type PaymentIntent = typeof paymentIntents.$inferSelect;
 export type Rating = typeof ratings.$inferSelect;
 export type RideMessage = typeof rideMessages.$inferSelect;
 export type TrustedContact = typeof trustedContacts.$inferSelect;
+export type Media = typeof media.$inferSelect;

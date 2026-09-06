@@ -7,6 +7,7 @@
 
 import { z } from 'zod';
 import { MAX_TRUSTED_CONTACTS, SEXES } from '../../domain/profile.js';
+import { IMAGE_MIME_TYPES } from '../../lib/images.js';
 
 // ─── Entrées ─────────────────────────────────────────────────────────────────
 
@@ -149,6 +150,8 @@ export const meSchema = z.object({
   sex: z.enum(SEXES).nullable(),
   birth_date: z.string().nullable(),
   photo_key: z.string().nullable(),
+  /** URL prête à poser dans un widget Image. `null` tant qu'aucune photo n'est envoyée. */
+  photo_url: z.string().nullable(),
   locale: z.string(),
   status: z.enum(['active', 'suspended', 'deleted']),
   phone_masked: z.string().nullable(),
@@ -188,6 +191,7 @@ export const publicUserSchema = z.object({
   vora_id: z.string(),
   first_name: z.string(),
   photo_key: z.string().nullable(),
+  photo_url: z.string().nullable(),
   rating: z.number().nullable(),
   verified: z.boolean(),
 });
@@ -202,3 +206,13 @@ export type MeDto = z.infer<typeof meSchema>;
 export type PublicUserDto = z.infer<typeof publicUserSchema>;
 export type OtpRequestResponse = z.infer<typeof otpRequestResponseSchema>;
 export type OtpVerifyResponse = z.infer<typeof otpVerifyResponseSchema>;
+
+/** Réponse de `POST /v1/me/photo`. */
+export const photoUploadSchema = z.object({
+  photo_key: z.string().uuid(),
+  photo_url: z.string(),
+  mime: z.enum(IMAGE_MIME_TYPES),
+  size_bytes: z.number().int(),
+});
+
+export const mediaParamsSchema = z.object({ id: z.string().uuid() }).strict();
