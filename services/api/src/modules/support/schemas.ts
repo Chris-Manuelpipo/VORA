@@ -48,6 +48,28 @@ export const answerSchema = z.object({
 
 export type AnswerDto = z.infer<typeof answerSchema>;
 
+/**
+ * Les sujets que l'assistant sait traiter, pour les proposer AVANT que l'utilisateur
+ * n'écrive. Une question suggérée tombe à coup sûr sur la bonne fiche : elle escalade
+ * moins souvent, et elle coûte moins cher qu'une reformulation approximative.
+ *
+ * Ce sont les MÊMES fiches que celles qui répondent : la liste ne peut pas se désynchroniser
+ * de la FAQ, parce qu'elle en est extraite.
+ */
+export const supportTopicsSchema = z.object({
+  topics: z.array(
+    z.object({
+      /** Identifiant stable, celui qui revient dans `sources[]` d'une réponse. */
+      id: z.string(),
+      title: z.string(),
+      /** Question type, à envoyer telle quelle si l'utilisateur tape dessus. */
+      example: z.string(),
+    }),
+  ),
+});
+
+export type SupportTopicsDto = z.infer<typeof supportTopicsSchema>;
+
 // ─── Contexte envoyé au modèle ───────────────────────────────────────────────
 
 /**

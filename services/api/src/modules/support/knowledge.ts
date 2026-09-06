@@ -22,6 +22,12 @@ export interface FaqEntry {
   /** Identifiant stable : c'est lui qui remonte dans `sources[]` de la réponse API. */
   id: string;
   title: string;
+  /**
+   * Une question type, telle qu'un utilisateur la poserait. Sert aux suggestions de
+   * l'application (`GET /v1/support/topics`) : une question suggérée tombe à coup sûr sur
+   * la bonne fiche, donc escalade moins souvent et coûte moins cher qu'une reformulation.
+   */
+  example: string;
   /** `both` = la réponse vaut des deux côtés. */
   audience: Audience | 'both';
   /**
@@ -36,6 +42,7 @@ export interface FaqEntry {
 export const FAQ: readonly FaqEntry[] = [
   {
     id: 'prix-ferme',
+    example: "Le prix peut-il changer après ma commande ?",
     title: 'Le prix ferme',
     audience: 'both',
     keywords: [
@@ -64,6 +71,7 @@ export const FAQ: readonly FaqEntry[] = [
   },
   {
     id: 'paiement',
+    example: "Comment je paie ma course ?",
     title: 'Payer la course',
     audience: 'both',
     keywords: [
@@ -89,6 +97,7 @@ export const FAQ: readonly FaqEntry[] = [
   },
   {
     id: 'code-montee',
+    example: "À quoi sert le code à 4 chiffres ?",
     title: 'Le code de montée',
     audience: 'both',
     keywords: [
@@ -110,6 +119,7 @@ export const FAQ: readonly FaqEntry[] = [
   },
   {
     id: 'annulation',
+    example: "Annuler maintenant, ça me coûte combien ?",
     title: 'Annuler une course',
     audience: 'both',
     keywords: [
@@ -131,6 +141,7 @@ export const FAQ: readonly FaqEntry[] = [
   },
   {
     id: 'zones-moto',
+    example: "Pourquoi la moto n'est pas proposée ?",
     title: 'Les zones interdites aux motos',
     audience: 'both',
     keywords: [
@@ -154,6 +165,7 @@ export const FAQ: readonly FaqEntry[] = [
   },
   {
     id: 'sos-partage',
+    example: "Comment prévenir un proche pendant ma course ?",
     title: 'SOS et partage de trajet',
     audience: 'both',
     keywords: [
@@ -179,6 +191,7 @@ export const FAQ: readonly FaqEntry[] = [
   },
   {
     id: 'vie-privee',
+    example: "Le chauffeur voit-il mon numéro de téléphone ?",
     title: 'Numéro de téléphone et ID VORA',
     audience: 'both',
     keywords: [
@@ -204,6 +217,7 @@ export const FAQ: readonly FaqEntry[] = [
   },
   {
     id: 'attente-chauffeur',
+    example: "Pourquoi aucun chauffeur ne répond ?",
     title: 'Aucun chauffeur trouvé',
     audience: 'passenger',
     keywords: [
@@ -227,6 +241,7 @@ export const FAQ: readonly FaqEntry[] = [
   },
   {
     id: 'gains-chauffeur',
+    example: "Combien me reste-t-il sur une course ?",
     title: 'Commission, retenue DGI et net',
     audience: 'driver',
     keywords: [

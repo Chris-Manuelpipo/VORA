@@ -16,12 +16,13 @@
 import { AppError } from '../../lib/errors.js';
 import { logger } from '../../lib/logger.js';
 import type { UserRole } from '../../db/schema.js';
-import { buildContext, contextFingerprint, type Viewer } from './context.js';
+import { audienceOf, buildContext, contextFingerprint, type Viewer } from './context.js';
+import { FAQ } from './knowledge.js';
 import { inventsAmount } from './guard.js';
 import { cacheKey, consumeQuota, readCache, writeCache } from './limits.js';
 import { fallbackAnswer, selectProvider, stubProvider, type Answer } from './provider.js';
 import { renderContext } from './prompt.js';
-import type { AnswerDto } from './schemas.js';
+import type { AnswerDto, SupportTopicsDto } from './schemas.js';
 
 export interface AskInput {
   userId: string;
@@ -149,6 +150,19 @@ function log(entry: {
     },
     'Question de support',
   );
+}
+
+/**
+ * Les sujets proposables à cette personne. Aucun appel de modèle, aucun coût : c'est une
+ * lecture de la FAQ, filtrée par audience — on ne propose pas « combien me reste-t-il sur
+ * une course ? » à un passager.
+ */
+export function topics(role: UserRole): SupportTopicsDto {
+  return {
+    topics: FAQ.filter(
+      (entry) => entry.audience === 'both' || entry.audience === audienceOf(role),
+    ).map((entry) => ({ id: entry.id, title: entry.title, example: entry.example })),
+  };
 }
 
 /** État du module, pour la page ops et le contrôle avant la démonstration. */

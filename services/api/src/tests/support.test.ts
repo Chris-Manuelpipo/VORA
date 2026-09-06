@@ -273,6 +273,47 @@ describe('POST /v1/support/ask', () => {
     expect(refus.json().message).toMatch(/revient dans/i);
   }, 60_000);
 
+  it('propose des sujets, sans rien coûter ni consommer de quota', async () => {
+    const passager = await createPassenger(app, 'Aïcha Sujets');
+
+    const response = await app.inject({
+      method: 'GET',
+      url: '/v1/support/topics',
+      headers: auth(passager),
+    });
+
+    expect(response.statusCode).toBe(200);
+    const { topics } = response.json() as {
+      topics: Array<{ id: string; title: string; example: string }>;
+    };
+
+    // Les mêmes fiches que celles qui répondent : la liste ne peut pas se désynchroniser.
+    expect(topics.map((sujet) => sujet.id)).toContain('prix-ferme');
+    // Filtrée par audience : on ne propose pas « combien me reste-t-il ? » à un passager.
+    expect(topics.map((sujet) => sujet.id)).not.toContain('gains-chauffeur');
+
+    // Chaque question suggérée doit RÉELLEMENT tomber sur sa fiche, sinon la suggestion
+    // envoie l'utilisateur vers une escalade — l'inverse du service rendu.
+    for (const sujet of topics) {
+      const reponse = await askSupport(passager, sujet.example);
+      expect(reponse.statusCode, sujet.example).toBe(200);
+      expect(reponse.json().sources, sujet.example).toContain(sujet.id);
+      expect(reponse.json().escalate, sujet.example).toBe(false);
+    }
+  }, 60_000);
+
+  it('les sujets du chauffeur incluent ses gains', async () => {
+    const chauffeur = await createDriver(app, { displayName: 'Boris Sujets' });
+    const response = await app.inject({
+      method: 'GET',
+      url: '/v1/support/topics',
+      headers: auth(chauffeur),
+    });
+
+    const ids = (response.json() as { topics: Array<{ id: string }> }).topics.map((s) => s.id);
+    expect(ids).toContain('gains-chauffeur');
+  }, 30_000);
+
   it('exige un jeton : le support parle à des gens identifiés', async () => {
     const response = await app.inject({
       method: 'POST',
