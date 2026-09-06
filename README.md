@@ -3,7 +3,7 @@
 VTC et motos-taxis à Yaoundé. Prix ferme avant la commande, chauffeurs vérifiés,
 et aucune course moto en zone interdite.
 
-> Hackathon 48 h. **La mémoire du projet est dans [CLAUDE.md](CLAUDE.md)** : stack, écarts assumés avec
+> Hackathon 48 h. **La mémoire du projet** (non versionnée, propre à l'équipe) : stack, écarts assumés avec
 > le dossier de conception, règles métier non négociables, charte graphique, périmètre.
 > Le README complet à 20 sections exigé par le manuel arrive en fin de parcours (P10).
 
@@ -14,7 +14,7 @@ Flutter 3.x avec le SDK Android (minSdk 24).
 
 **Pas de Docker en développement** : l'espace disque des postes est limité. Les fichiers Docker
 décrivent le déploiement cible et vivent dans [`infra/docker/`](infra/docker/README.md).
-Installation de PostgreSQL par système (Ubuntu/Debian, macOS, Windows) : [CLAUDE.md § 4](CLAUDE.md).
+Installation de PostgreSQL par système (Ubuntu/Debian, macOS, Windows) : voir la mémoire du projet, § 4.
 
 ## Démarrer
 
@@ -152,7 +152,7 @@ d'un autre utilisateur** ; `src/tests/support.test.ts` le vérifie sur une vraie
 ## Messages pendant la course
 
 `GET` et `POST /v1/rides/{id}/messages` : **six codes prédéfinis**, aucun texte libre, aucun vocal,
-aucun appel (périmètre de [CLAUDE.md § 8.3](CLAUDE.md)).
+aucun appel (périmètre défini au § 8.3 de la mémoire du projet).
 
 | Passager | Chauffeur |
 |---|---|
@@ -174,7 +174,7 @@ offre 15 s par chauffeur, 3 vagues maximum · code de montée à 4 chiffres obli
 aucune course moto touchant une zone interdite · numéros de téléphone jamais exposés,
 identification par ID VORA à 8 chiffres.
 
-Détail et justifications : [CLAUDE.md § 5](CLAUDE.md).
+Détail et justifications : § 5 de la mémoire du projet.
 
 ## Équipe
 
