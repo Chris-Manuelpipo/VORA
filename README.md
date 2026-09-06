@@ -67,6 +67,43 @@ scripts/         outillage base de données (setup, reset, psql, base de test)
 docs/            brief produit, vision UX, conception, charte, maquettes — source de vérité
 ```
 
+## Inscription, connexion, onboarding
+
+Il n'y a pas deux parcours : `POST /v1/auth/otp/request` puis `POST /v1/auth/otp/verify`
+créent le compte ou ouvrent la session, et la réponse le dit dans `is_new_account`. Pas de
+mot de passe, donc pas d'écran « Se connecter » séparé.
+
+**Onboarding** — `POST /v1/me/onboarding`, en un seul appel : prénom et nom (exigés), sexe,
+date de naissance, langue, et jusqu'à **3 contacts de confiance**. Un seul appel parce que sur
+une 3G, quatre requêtes sont quatre occasions de laisser un compte à moitié rempli ; rejouable,
+le dernier envoi fait foi. `GET /v1/me` porte `onboarding.completed` : c'est ce champ, et lui
+seul, qui décide si l'application ouvre le parcours après la connexion.
+
+> **Écart assumé avec `docs/`** : la vision UX (PA-05) ne demandait que le prénom — « elle ne
+> veut pas remplir un formulaire ». On collecte aussi nom, sexe et date de naissance, pour
+> l'affichage du profil et les statistiques ops. Ces trois données ne traversent **jamais** :
+> ni vers le chauffeur, ni dans le lien public de partage, ni vers l'assistant de support.
+> `src/tests/onboarding.test.ts` le vérifie sur une vraie course, pour les trois sorties.
+
+**Contacts de confiance** — ils servent : le SOS les transmet à la salle `ops` avec leur numéro
+entier, pour qu'une équipe humaine appelle. Partout ailleurs, y compris pour leur propriétaire,
+le numéro est masqué (`+237 6·· ··· ·67`). VORA n'a pas d'agrégateur SMS en 48 h : on ne promet
+donc pas au passager que son proche a été prévenu, on dit que l'équipe VORA les a.
+
+**Photo de profil** — `POST /v1/me/photo` avec les **octets bruts** de l'image et son
+`Content-Type` (`image/jpeg`, `image/png`, `image/webp`), 2 Mo maximum. Ni multipart ni base64.
+`GET /v1/media/:id` la ressert, `DELETE /v1/me/photo` la retire.
+
+Le type est **déduit des octets, jamais de l'en-tête** : un fichier HTML annoncé « image/jpeg »
+serait resservi plus tard à un navigateur et son script s'exécuterait sur notre domaine. Les
+octets vivent dans PostgreSQL — le disque de la plateforme de déploiement est éphémère, et un
+stockage objet demande un compte et des secrets. C'est la cible, pas l'étape : le jour venu,
+`photo_key` portera une URL et rien d'autre ne bougera.
+
+> Sur téléphone réel, `PUBLIC_BASE_URL` doit pointer sur l'IP de la machine : c'est elle qui
+> construit `photo_url`, comme les liens de partage. Laissée sur `localhost`, l'avatar ne
+> s'affiche pas — et rien dans les logs ne le dira.
+
 ## Assistant de support
 
 `POST /v1/support/ask` répond à une question d'un passager ou d'un chauffeur, en deux à quatre
